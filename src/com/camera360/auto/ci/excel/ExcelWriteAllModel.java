@@ -3,110 +3,98 @@ package com.camera360.auto.ci.excel;
 import com.camera360.auto.ci.analyser.CiResult;
 import com.camera360.auto.ci.analyser.CiResultSet;
 import com.camera360.auto.ci.analyser.JenkinsResult;
-import com.camera360.auto.ci.utils.TimeUtils;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * 把分析的CI结果写入到excel表中
  *
- * Month
+ * Camera360
+ *           lint
+ *           check
+ *           style
+ *           pmd
  *
- *      Week
- *
- *          Day
- *
- *              Build
- *
- *                  lint            Checkstyle pmd cpd   lint  Checkstyle pmd cpd   lint  Checkstyle pmd cpd
- *                  上周本 周 新增
- *  Camera360
- *  Baby360
- *  LiteCamera
- *  EffectSDK
- *
- * 质量表
- * *                  lint    Checkstyle  pmd  cpd
- *  Camera360        (n-0)commit
- *  Baby360
- *  LiteCamera
- *  EffectSDK
- *
+ * Baby360
+ *           lint
+ *           ...
  *
  * Created by tangsong on 12/3/14.
  */
 
-public class ExcelWriteModel {
+public class ExcelWriteAllModel {
 
     private static final int N = 4;
     private String mPath;
+
+    private int mRow = 0;
 
     public void write(LinkedList<JenkinsResult> list) {
         // create a new workbook
         HSSFWorkbook wb = new HSSFWorkbook();
         // create a new sheet
         HSSFSheet thisWeek = wb.createSheet();
-        wb.createSheet("week");
-        wb.createSheet("daily");
+        wb.createSheet("all");
 
-        HSSFRow head = thisWeek.createRow(0);
-        HSSFRow headDetail = thisWeek.createRow(1);
-        CiResult.CheckType[] allCheckType = CiResult.CheckType.values();
-        for (CiResult.CheckType type : allCheckType) {
-            head.createCell(getIndex(type)).setCellValue(type.toString());
-            headDetail.createCell(getIndex(type)).setCellValue("本周开始");
-            headDetail.createCell(getIndex(type) + 1).setCellValue("本周结束");
-            headDetail.createCell(getIndex(type) + 2).setCellValue("累积新增");
-            headDetail.createCell(getIndex(type) + 3).setCellValue("提交质量");
-        }
-
+        HSSFRow head = thisWeek.createRow(mRow++);
+        head.createCell(0).setCellValue("编译记录");
 
         for (int i = 0; i < list.size(); i++) {
-            HSSFRow projectRow = thisWeek.createRow(i + 2);
+
             JenkinsResult project = list.get(i);
-            projectRow.createCell(0).setCellValue(project.projectName);
 
-            int changeCount = 0;
+            HSSFRow title = thisWeek.createRow(mRow++);
+            //写入工程名称
+            title.createCell(0).setCellValue(project.projectName);
 
-            LinkedList<CiResultSet> thisWeekResults = new LinkedList<CiResultSet>(project.result);
 
-            if (thisWeekResults.size() <= 0) {
+            LinkedList<CiResultSet> allResults = new LinkedList<CiResultSet>(project.result);
+            if (allResults.size() <= 0) {
                 continue;
             }
 
-            for (int j = 0; j < thisWeekResults.size(); j ++) {
-                CiResultSet oneBuild = thisWeekResults.get(j);
+            int changeCount = 0;
+            int reuseRow = mRow;
+            for (int j = 0; j < allResults.size(); j ++) {
+
+                mRow = reuseRow;
+
+                final CiResultSet oneBuild = allResults.get(j);
+
                 for (CiResult check : oneBuild.resultList) {
                     switch (check.type) {
+                        case CheckStyle:
+                        case Lint:
+                        case PMD:
+                        case CPD: {
+                            if (j == 0) {
+
+                                thisWeek.createRow(mRow++).createCell(j + 1).setCellValue(check.type.toString());
+                                thisWeek.getRow(mRow - 1).createCell(j + 2).setCellValue(check.count);
+                            } else {
+                                thisWeek.getRow(mRow++).createCell(j + 2).setCellValue(check.count);
+                            }
+                        }
+                        break;
                         case Commits:
                             //统计提交次数
                             changeCount += check.count;
                             break;
-                        case CheckStyle:
-                            break;
                     }
                 }
+
             }
 
-            CiResultSet first = thisWeekResults.getFirst();
-            CiResultSet last = thisWeekResults.getLast();
-
-            for (int x = 0; x < first.resultList.size(); x++) {
-                recordDelta(last.resultList.get(x), first.resultList.get(x), projectRow);
-            }
-
-            projectRow.getCell(getIndex(CiResult.CheckType.Commits)).setCellValue(changeCount);
+            mRow++;
         }
 
         try {
             // create a new file
-            FileOutputStream out = new FileOutputStream("workbook.xls");
+            FileOutputStream out = new FileOutputStream("report_all_build.xls");
             wb.write(out);
             out.close();
         } catch (IOException e) {

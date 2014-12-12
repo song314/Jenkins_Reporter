@@ -1,6 +1,7 @@
 package com.camera360.auto.ci;
 
 import com.camera360.auto.ci.analyser.*;
+import com.camera360.auto.ci.excel.ExcelWriteAllModel;
 import com.camera360.auto.ci.excel.ExcelWriteModel;
 import com.camera360.auto.ci.utils.L;
 import com.camera360.auto.ci.utils.TimeUtils;
@@ -54,7 +55,10 @@ public class Main {
             Collections.sort(item.result, new CiResultSetSort());
         }
 
-        ExcelWriteModel excelWriteModel = new ExcelWriteModel();
+//        ExcelWriteModel excelWriteModel = new ExcelWriteModel();
+//        excelWriteModel.write(list);
+
+        ExcelWriteAllModel excelWriteModel = new ExcelWriteAllModel();
         excelWriteModel.write(list);
     }
 
