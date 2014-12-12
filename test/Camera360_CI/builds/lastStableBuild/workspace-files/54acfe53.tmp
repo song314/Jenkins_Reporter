@@ -1,0 +1,587 @@
+package com.pinguo.edit.sdk.camera.focus;
+
+import android.hardware.Camera;
+import android.os.Looper;
+import android.os.Message;
+
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by huowaa on 13-10-22.
+ */
+public class FocusStateMachine extends StateMachine {
+    private final static String TAG = "FocusStateMachine";
+
+    // touch focus msg
+    public static final int MSG_TOUCH = 1;
+    // half press down msg
+    public static final int MSG_HALF_PRESS_DOWN = 2;
+    // half press up, need cancel focus
+    public static final int MSG_HALF_PRESS_UP = 3;
+    // should do take picture
+    public static final int MSG_SNAP = 4;
+    // start sensor focus
+    public static final int MSG_START_SENSOR_FOCUS = 5;
+    // do focus successful
+    public static final int MSG_FOCUS_SUCCESS = 7;
+    // do focus failure
+    public static final int MSG_FOCUS_FAIL = 8;
+    // focusing time out
+    public static final int MSG_FOCUSING_TIMEOUT = 9;
+    // clear the focus view
+    public static final int MSG_CLEAR_FOCUS = 10;
+    // not support touch focus. just same as half down
+    public static final int MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH = 11;
+
+    public static final int MSG_FOR_DELAY_DISMISS_FOCUS_VIEW_TIME = 1000;
+
+    private StateIdle mIdle = new StateIdle();
+    private StateFocusing mFocusing = new StateFocusing();
+    private StateFocusingSnapOnFinish mFocusingSnapOnFinish = new StateFocusingSnapOnFinish();
+    private StateSuccess mSuccess = new StateSuccess();
+    private StateFail mFail = new StateFail();
+
+    private FocusManager mFocusManager = null;
+    private Map<String, State> mStateMap = new HashMap<String, State>();
+
+    // 定时器
+//    private Handler mHandler = new Handler() {
+//        @Override
+//        public void handleMessage(Message msg) {
+//            CMLogger.e(TAG, "Post focusing timeout message");
+//            sendMessage(obtainMessage(FocusStateMachine.MSG_FOCUSING_TIMEOUT));
+//        }
+//    };
+    private final Runnable mTimeoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            CMLogger.e(TAG, "Post focusing timeout message");
+            sendMessage(obtainMessage(FocusStateMachine.MSG_FOCUSING_TIMEOUT));
+        }
+    };
+
+    public FocusStateMachine(String machineName, String initStateName, FocusManager manager, Looper loop) {
+        super(machineName, loop);
+        this.mFocusManager = manager;
+        CMLogger.d(TAG, "new focus state machine");
+
+        addState(mIdle);
+        addState(mFocusing);
+        addState(mFocusingSnapOnFinish);
+        addState(mSuccess);
+        addState(mFail);
+
+        mStateMap.put(FocusManager.STATE_IDLE, mIdle);
+        mStateMap.put(FocusManager.STATE_FOCUSING, mFocusing);
+        mStateMap.put(FocusManager.STATE_FOCUSING_SNAP_ON_FINISH, mFocusingSnapOnFinish);
+        mStateMap.put(FocusManager.STATE_SUCCESS, mSuccess);
+        mStateMap.put(FocusManager.STATE_FAIL, mFail);
+
+        State destState = mStateMap.get(initStateName);
+        if (null != destState) {
+            setInitialState(destState);
+        } else {
+            setInitialState(mIdle);
+        }
+    }
+
+    public String getState() {
+        IState currState = getCurrentState();
+        return currState.getName();
+    }
+
+    @Override
+    protected void onHalting() {
+        CMLogger.d(TAG, "halting");
+        synchronized (this) {
+            notifyAll();
+        }
+    }
+
+    /**
+     * 当相机release后remove所有penging的message
+     */
+    public void removeAllPendingMessage() {
+        CMLogger.i(TAG, "removeAllPendingMessage");
+        this.getHandler().removeMessages(MSG_TOUCH);
+        this.getHandler().removeMessages(MSG_HALF_PRESS_DOWN);
+        this.getHandler().removeMessages(MSG_HALF_PRESS_UP);
+        this.getHandler().removeMessages(MSG_SNAP);
+        this.getHandler().removeMessages(MSG_START_SENSOR_FOCUS);
+        this.getHandler().removeMessages(MSG_FOCUS_SUCCESS);
+        this.getHandler().removeMessages(MSG_FOCUS_FAIL);
+        this.getHandler().removeMessages(MSG_FOCUSING_TIMEOUT);
+        this.getHandler().removeMessages(MSG_CLEAR_FOCUS);
+        this.getHandler().removeMessages(MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH);
+        this.getHandler().removeCallbacks(mTimeoutRunnable);
+    }
+
+    /*------------------- State classes -------------------*/
+    private class StateIdle extends State {
+        private String mName = FocusManager.STATE_IDLE;
+
+        @Override
+        public void enter() {
+            removeMessages(FocusStateMachine.MSG_CLEAR_FOCUS);
+            CMLogger.d(TAG, mName + "enter");
+        }
+
+        @Override
+        public void exit() {
+            CMLogger.d(TAG, mName + "exit");
+        }
+
+        @Override
+        public boolean processMessage(Message msg) {
+            CMLogger.d(TAG, "StateIdle.processMessage what=" + msg.what);
+
+            boolean retVal;
+            switch (msg.what) {
+                //1. 人工消息：触屏
+                /**             touchSnap=false     touchSnap=true
+                 *  auto        focusing            FSOF
+                 *  micro       focusing            FSOF
+                 *  infinity    ignore              {capture}idle
+                 */
+                case FocusStateMachine.MSG_TOUCH:
+                    if (false == mFocusManager.isTouchSnap()) {//非触屏拍照
+                        // 如果能聚焦,就设置聚焦区域,然后开始聚焦
+                        if (mFocusManager.needAutoFocusCall()) {
+                            mFocusManager.setFocusArea(msg.arg1, msg.arg2);
+                            mFocusManager.autoFocus();
+                            transitionTo(mFocusing);
+                        }
+
+                    } else { //触屏拍照
+                        // 如果能开始聚焦,则开始聚焦,并发送消息,通知此时预约拍照
+                        CMLogger.i(TAG, "mFocusManager.needAutoFocusCall() = " + mFocusManager.getFocusMode() + "/" + mFocusManager.needAutoFocusCall());
+                        if (mFocusManager.needAutoFocusCall()) {
+                            mFocusManager.setFocusArea(msg.arg1, msg.arg2);
+                            mFocusManager.showFocusViewStart();
+                            mFocusManager.autoFocus();
+                            transitionTo(mFocusingSnapOnFinish);
+                        } else if (mFocusManager.getFocusMode().equals(Camera.Parameters.FOCUS_MODE_INFINITY)) {
+                            mFocusManager.capture();
+                        }
+                    }
+
+                    retVal = HANDLED;
+                    break;
+
+                //2. 人工消息：半按，传感器聚焦,不指出设置聚焦区域的触屏聚焦
+                /**
+                 * auto         自动对焦
+                 * micro        ignore
+                 * infinity     ignore
+                 */
+                case FocusStateMachine.MSG_HALF_PRESS_DOWN:
+                case FocusStateMachine.MSG_START_SENSOR_FOCUS:
+                    if (mFocusManager.needFocus()) {
+                        transitionTo(mFocusing);
+                        mFocusManager.autoFocus();
+                    }
+
+                    retVal = HANDLED;
+                    break;
+                case MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH:
+                    if (false == mFocusManager.isTouchSnap()) {//非触屏拍照
+                        if (mFocusManager.needAutoFocusCall()) {
+                            mFocusManager.autoFocus();
+                            transitionTo(mFocusing);
+                        }
+
+                    } else { //触屏拍照
+                        if (mFocusManager.needAutoFocusCall()) {
+                            mFocusManager.showFocusViewStart();
+                            mFocusManager.autoFocus();
+                            transitionTo(mFocusingSnapOnFinish);
+                        } else if (mFocusManager.getFocusMode().equals(Camera.Parameters.FOCUS_MODE_INFINITY)) {
+                            mFocusManager.capture();
+                        }
+                    }
+
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_SNAP:
+                    if (mFocusManager.getFocusMode().equals(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                        // 判断连拍：
+                        // 连拍不聚焦条件：非首次拍照&&拍照间隔<xx&&上次聚焦成功
+                        // 注意：此时最近一次拍照的时间是记录在captureTime中的，最近一次聚焦信息是放在focusSuccess和focusFinishTime中的
+                        long timeDiff = System.currentTimeMillis() - mFocusManager.getCaptureTime();
+                        if (mFocusManager.getCaptureTime() > 0
+                                && timeDiff < FocusManager.CONTINUOUS_SNAP_MAX_INTERVAL
+                                && mFocusManager.isFocusSuccess()) {
+                            mFocusManager.capture();
+                        } else {
+                            mFocusManager.showFocusViewStart();
+                            mFocusManager.autoFocus();
+                            transitionTo(mFocusingSnapOnFinish);
+                        }
+                    } else {
+                        mFocusManager.capture();
+                    }
+                    retVal = HANDLED;
+                    break;
+                default:
+                    retVal = NOT_HANDLED;
+                    break;
+            }
+
+            return retVal;
+        }
+
+        @Override
+        public String getName() {
+            return mName;
+        }
+    }
+
+    private class StateFocusing extends State {
+        private String mName = FocusManager.STATE_FOCUSING;
+
+        @Override
+        public void enter() {
+            CMLogger.d(TAG, mName + "enter");
+
+            // 控制超时
+            // 注意，这里必须用StateMachine提供的handler!
+            CMLogger.e(TAG, "Set timeout handler");
+            getHandler().removeCallbacks(mTimeoutRunnable);
+            if (mFocusManager.getAutoFocusCallBack() != null) {
+                mFocusManager.getAutoFocusCallBack().showStart();
+                CMLogger.e(TAG, "show focus view start");
+            }
+            getHandler().postDelayed(mTimeoutRunnable, FocusManager.FOCUSING_TIMEOUT);
+        }
+
+        @Override
+        public void exit() {
+            CMLogger.d(TAG, mName + "exit");
+            getHandler().removeCallbacks(mTimeoutRunnable);
+        }
+
+        @Override
+        public boolean processMessage(Message msg) {
+            CMLogger.d(TAG, "StateFocusing.processMessage what=" + msg.what);
+
+            boolean retVal;
+            switch (msg.what) {
+                //1. 人工消息：拍照，转入FocusingSnapOnFinish（不响应传感器消息）
+                case FocusStateMachine.MSG_SNAP:
+                    transitionTo(mFocusingSnapOnFinish);
+                    retVal = HANDLED;
+                    break;
+
+                //2. 人工消息：touch，重新聚焦（不响应半按消息）
+                case FocusStateMachine.MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH:
+                case FocusStateMachine.MSG_TOUCH:
+                    if (mFocusManager.isTouchSnap()) {
+                        transitionTo(mFocusingSnapOnFinish);
+                    }
+                    retVal = HANDLED;
+                    break;
+
+                //3. 自动消息：聚焦成功，转入Success
+                case FocusStateMachine.MSG_FOCUS_SUCCESS:
+                case FocusStateMachine.MSG_FOCUS_FAIL:
+
+                    // First, update UI.
+                    if (msg.what == FocusStateMachine.MSG_FOCUS_SUCCESS) {
+                        mFocusManager.showFocusViewSuccess(false);
+                        transitionTo(mSuccess);
+                    } else {
+                        mFocusManager.showFocusViewFail(false);
+                        transitionTo(mFail);
+                    }
+
+                    // 非实体键聚焦才隐藏掉聚焦框，实体键聚焦隐藏的时机是在实体键up的时候发生。或者触发了拍照
+                    if (!mFocusManager.isShutterDownFocus()) {
+                        sendMessageDelayed(MSG_CLEAR_FOCUS, MSG_FOR_DELAY_DISMISS_FOCUS_VIEW_TIME);
+                    }
+                    retVal = HANDLED;
+                    break;
+
+//                //4. 自动消息：聚焦失败，转入Fail
+//                case FocusStateMachine.MSG_FOCUS_FAIL:
+//                    if (mFocusManager.getAutoFocusCallBack() != null) {
+//                        mFocusManager.getAutoFocusCallBack().showFail(false);
+//                    }
+//                    transitionTo(mFail);
+//                    retVal = HANDLED;
+//                    break;
+
+                // 5.自动消息：timeout
+                case FocusStateMachine.MSG_FOCUSING_TIMEOUT:
+                    mFocusManager.cancelAutoFocus();
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                // 此时收到半按聚焦消息,不处理
+                case FocusStateMachine.MSG_HALF_PRESS_DOWN:
+                    retVal = HANDLED;
+                    break;
+                // 收到半按取消聚焦消息,就取消聚焦
+                case FocusStateMachine.MSG_HALF_PRESS_UP:
+                    mFocusManager.cancelAutoFocus();
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                default:
+                    retVal = NOT_HANDLED;
+                    break;
+            }
+
+            return retVal;
+        }
+
+        @Override
+        public String getName() {
+            return mName;
+        }
+    }
+
+    private class StateFocusingSnapOnFinish extends State {
+        private String mName = FocusManager.STATE_FOCUSING_SNAP_ON_FINISH;
+
+        @Override
+        public void enter() {
+            CMLogger.d(TAG, mName + "enter");
+
+            CMLogger.e(TAG, "Set timeout handler");
+            getHandler().removeCallbacks(mTimeoutRunnable);
+            getHandler().postDelayed(mTimeoutRunnable, FocusManager.FOCUSING_TIMEOUT);
+        }
+
+        @Override
+        public void exit() {
+            CMLogger.d(TAG, mName + "exit");
+
+            getHandler().removeCallbacks(mTimeoutRunnable);
+        }
+
+        @Override
+        public boolean processMessage(Message msg) {
+            CMLogger.d(TAG, "StateFocusingSnapOnFinish.processMessage what=" + msg.what);
+
+            boolean retVal;
+            switch (msg.what) {
+                // 不响应除聚焦成功、聚焦失败之外的消息
+                //1. 自动消息：聚焦成功，转入Success
+                case FocusStateMachine.MSG_FOCUS_SUCCESS:
+                    //TODO focus finish success
+                    mFocusManager.showFocusViewSuccess(false);
+                    transitionTo(mSuccess);
+                    sendMessageDelayed(MSG_CLEAR_FOCUS, MSG_FOR_DELAY_DISMISS_FOCUS_VIEW_TIME);
+                    retVal = HANDLED;
+
+                    // send snap message
+                    sendMessage(obtainMessage(FocusStateMachine.MSG_SNAP));
+                    break;
+
+                //2. 自动消息：聚焦失败，转入Fail
+                case FocusStateMachine.MSG_FOCUS_FAIL:
+                    mFocusManager.showFocusViewFail(false);
+                    mFocusManager.capture();
+                    transitionTo(mFail);
+                    sendMessageDelayed(MSG_CLEAR_FOCUS, MSG_FOR_DELAY_DISMISS_FOCUS_VIEW_TIME);
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_FOCUSING_TIMEOUT:
+                    //3. 自动消息：超时在FSOP状态下就算聚焦超时也要进行拍照.超时用作聚焦失败处理
+                    mFocusManager.cancelAutoFocus();
+                    mFocusManager.showFocusViewFail(false);
+                    mFocusManager.capture();
+                    transitionTo(mFail);
+                    sendMessageDelayed(MSG_CLEAR_FOCUS, MSG_FOR_DELAY_DISMISS_FOCUS_VIEW_TIME);
+                    retVal = HANDLED;
+
+                    //TODO: capture
+                    // send snap message
+//                    sendMessage(obtainMessage(FocusStateMachine.MSG_SNAP));
+                    break;
+                default:
+                    retVal = NOT_HANDLED;
+                    break;
+            }
+
+            return retVal;
+        }
+
+        @Override
+        public String getName() {
+            return mName;
+        }
+    }
+
+    private class StateSuccess extends State {
+        private String mName = FocusManager.STATE_SUCCESS;
+
+        @Override
+        public void enter() {
+            CMLogger.d(TAG, mName + "enter");
+            if (null != mFocusManager) {
+                mFocusManager.setFocusSuccess(true);
+                mFocusManager.setFocusFinishTime(System.currentTimeMillis());
+            }
+        }
+
+        @Override
+        public void exit() {
+            CMLogger.d(TAG, mName + "exit");
+        }
+
+        @Override
+        public boolean processMessage(Message msg) {
+            CMLogger.d(TAG, "StateSuccess.processMessage what=" + msg.what);
+
+            boolean retVal;
+            switch (msg.what) {
+                case FocusStateMachine.MSG_SNAP:
+                    // 如果当前状态是success，说明上次聚焦已经成功了，当收到拍照事件的时候，不需要重新聚焦，直接拍照
+                    if (null != mFocusManager) {
+                        if (!CameraBusinessSettingModel.instance().getIsIgnoreXiaomiFlashBlackProblem() && GAdapter.IS_MI_3) {
+                            CMLogger.i(TAG, "cancel auto focus for xiaomi");
+                            mFocusManager.cancelAutoFocus();
+                            CameraBusinessSettingModel.instance().setIsIgnoreXiaomiFlashBlackProblem(true);
+                            deferMessage(msg);
+                            transitionTo(mIdle);
+                        } else {
+                            mFocusManager.capture();
+                            // 这行代码本来不应该加上，加的原因是因为有shutter button的长按聚焦，如果它直接up，
+                            // 需要触发拍照事件，但不同于实体的按键一定会有一个up事件到来，所以，需要手动取消聚焦框
+                            // 需要优化这行代码  TODO
+                            mFocusManager.resetTouchFocus();
+                        }
+                    }
+                    // 虽然状态图是需要转移到idle状态，但是我认识不应该
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_HALF_PRESS_DOWN:
+                    deferMessage(msg);
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_HALF_PRESS_UP:
+                    mFocusManager.cancelAutoFocus();
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                case MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH:
+                case FocusStateMachine.MSG_TOUCH:
+                    //TODO cancel current focus, start touch focus
+                    deferMessage(msg);
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+
+                    // send touch message
+//                    sendMessage(obtainMessage(FocusStateMachine.MSG_TOUCH));
+                    break;
+                case FocusStateMachine.MSG_CLEAR_FOCUS:
+                    CMLogger.i(TAG, "clear focus view = " + mFocusManager.isShutterDownFocus());
+                    // 如果此时在聚焦框还美消失,但是收到半按开始聚焦消息,直接不消息这个UI
+                    if (!mFocusManager.isShutterDownFocus()) {
+                        mFocusManager.resetTouchFocus();
+                    }
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_START_SENSOR_FOCUS:
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    sendMessage(obtainMessage(FocusStateMachine.MSG_START_SENSOR_FOCUS));
+                    break;
+                default:
+                    retVal = NOT_HANDLED;
+                    break;
+            }
+
+            return retVal;
+        }
+
+        @Override
+        public String getName() {
+            return mName;
+        }
+    }
+
+    private class StateFail extends State {
+        private String mName = FocusManager.STATE_FAIL;
+
+        @Override
+        public void enter() {
+            CMLogger.d(TAG, mName + "enter");
+            if (null != mFocusManager) {
+                mFocusManager.setFocusSuccess(false);
+                mFocusManager.setFocusFinishTime(System.currentTimeMillis());
+            }
+        }
+
+        @Override
+        public void exit() {
+            CMLogger.d(TAG, mName + "exit");
+        }
+
+        @Override
+        public boolean processMessage(Message msg) {
+            CMLogger.d(TAG, "StateFail.processMessage what=" + msg.what);
+
+            boolean retVal;
+            switch (msg.what) {
+                case FocusStateMachine.MSG_SNAP:
+                    // 失败的聚焦情况下，如果收到拍照消息，应该转送这个消息给IDLE状态去处理
+                    // 是否需要重新聚焦
+//                    if(null != mFocusManager)
+//                        mFocusManager.capture();
+                    deferMessage(msg);
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_HALF_PRESS_DOWN:
+                    deferMessage(msg);
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_HALF_PRESS_UP:
+                    mFocusManager.resetTouchFocus();
+                    mFocusManager.cancelAutoFocus();
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    break;
+                case MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH:
+                case FocusStateMachine.MSG_TOUCH:
+                    //TODO cancel current focus, start touch focus
+//                    sendMessage(obtainMessage(FocusStateMachine.MSG_TOUCH));
+                    deferMessage(msg);
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+
+                    // send touch message
+//                    sendMessage(obtainMessage(FocusStateMachine.MSG_TOUCH));
+                    break;
+                case FocusStateMachine.MSG_CLEAR_FOCUS:
+                    mFocusManager.resetTouchFocus();
+                    retVal = HANDLED;
+                    break;
+                case FocusStateMachine.MSG_START_SENSOR_FOCUS:
+                    transitionTo(mIdle);
+                    retVal = HANDLED;
+                    sendMessage(obtainMessage(FocusStateMachine.MSG_START_SENSOR_FOCUS));
+                    break;
+                default:
+                    retVal = NOT_HANDLED;
+                    break;
+            }
+
+            return retVal;
+        }
+
+        @Override
+        public String getName() {
+            return mName;
+        }
+    }
+}

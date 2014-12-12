@@ -1,0 +1,66 @@
+package us.pinguo.androidsdk;
+
+public class PGRect {
+	private final static float INVALID_FLOAT = -1.0f;
+
+	private float rect_x_1;
+	private float rect_y_1;
+	private float rect_x_2;
+	private float rect_y_2;
+
+	public PGRect() {
+		rect_x_1 = INVALID_FLOAT;
+		rect_y_1 = INVALID_FLOAT;
+		rect_x_2 = INVALID_FLOAT;
+		rect_y_2 = INVALID_FLOAT;
+	}
+
+	public PGRect(float x_1, float y_1, float x_2, float y_2) {
+		rect_x_1 = x_1;
+		rect_y_1 = y_1;
+		rect_x_2 = x_2;
+		rect_y_2 = y_2;
+	}
+
+	public void setX_1(float v) {
+		rect_x_1 = v;
+	}
+
+	public void setY_1(float v) {
+		rect_y_1 = v;
+	}
+
+	public void setX_2(float v) {
+		rect_x_2 = v;
+	}
+
+	public void setY_2(float v) {
+		rect_y_2 = v;
+	}
+
+	public float getX_1() {
+		return rect_x_1;
+	}
+
+	public float getY_1() {
+		return rect_y_1;
+	}
+
+	public float getX_2() {
+		return rect_x_2;
+	}
+
+	public float getY_2() {
+		return rect_y_2;
+	}
+
+    @Override
+    public String toString() {
+        return "PGRect{" +
+                "rect_x_1=" + rect_x_1 +
+                ", rect_y_1=" + rect_y_1 +
+                ", rect_x_2=" + rect_x_2 +
+                ", rect_y_2=" + rect_y_2 +
+                '}';
+    }
+}

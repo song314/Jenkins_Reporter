@@ -1,0 +1,395 @@
+package com.pinguo.edit.sdk.edit;
+
+import android.animation.Animator;
+import android.animation.ValueAnimator;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.PointF;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.MotionEvent;
+import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+
+/**
+ * Created by taoli on 14-6-26.
+ */
+public class ImageViewTouch extends ImageLoaderView implements Animator.AnimatorListener {
+
+    private final int mViewWidth;
+    private final int mViewHeight;
+    private int mCropImageWidth = 0;
+    
+    private static final int CLIP_ANIMATION_DURATION = 200;
+
+//    private Bitmap mImage = null;
+
+    // 获取图片的原始坐标
+    private PointF mStartPoint = new PointF();
+
+    // 设置点击的模式，是单点触摸还是多点
+    private int mMode = 0;
+    private static final int MODE_SINGLE = 1;
+    private static final int MODE_MULTI = 2;
+    private static final int MODE_CLIPING = 3;
+
+    private Matrix mBaseMatrix = new Matrix();
+    private Matrix mCurrentMatrix = new Matrix();
+
+    // 两点开始的距离
+    private double mStartDistance;
+
+    // 两点的中心位置
+    private PointF mMidPoint;
+    private float mInitScale;
+    private float mInitTransY;
+    private float mInitTransX;
+
+    private int mAnimationCount;
+    private float mStartScale;
+
+    private int mPhotoWidth;
+    private int mPhotoHeight;
+
+    private int mShowWidth;
+    private int mShowHeight;
+    private float mMaxScale;
+    private Matrix mLastModeMatrix;
+    public static final int IMAGE_MODE_CENTER_INSIDE = 0;
+    public static final int IMAGE_MODE_FIT_LONG_SIDE = 1;
+    public static final int IMAGE_MODE_MATCH_SIDE = 2;
+    private int mCurrentMode = IMAGE_MODE_MATCH_SIDE;
+
+    public ImageViewTouch(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        WindowManager windowManager = (WindowManager)
+                context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(dm);
+
+        mViewWidth = dm.widthPixels;
+        mViewHeight = dm.heightPixels;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        if (mCurrentMode != IMAGE_MODE_FIT_LONG_SIDE) {
+            return true;
+        }
+
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
+            // 表示用户开始触摸
+            case MotionEvent.ACTION_DOWN:
+                if (mMode == MODE_CLIPING) {
+                    return false;
+                }
+                mMode = MODE_SINGLE;
+
+                mCurrentMatrix.set(getImageMatrix());
+                mStartPoint.set(event.getX(), event.getY());
+
+                break;
+            // 当屏幕上已经有触点，又有一个手指按下屏幕
+            case MotionEvent.ACTION_POINTER_DOWN:
+                mMode = MODE_MULTI;
+                mStartDistance = getDistance(event);
+                mMidPoint = getMidPoint(event);
+
+                mCurrentMatrix.set(getImageMatrix());
+                float[] values = new float[9];
+                mCurrentMatrix.getValues(values);
+                mStartScale = values[Matrix.MSCALE_X];
+                break;
+            // 手指在屏幕上移动
+            case MotionEvent.ACTION_MOVE:
+                if (mMode == MODE_SINGLE) {
+                    float x = event.getX() - mStartPoint.x;
+                    float y = event.getY() - mStartPoint.y;
+                    mBaseMatrix.set(mCurrentMatrix);
+                    mBaseMatrix.postTranslate(x, y);
+
+                } else if (mMode == MODE_MULTI) {
+                    double endDistance = getDistance(event);
+                    if (endDistance > 10f) {
+                        float scale = (float) (endDistance / mStartDistance);
+
+                        // 不允许缩小图片
+                        float curScale = mStartScale * scale;
+                        if (curScale > mInitScale && curScale < mMaxScale) {
+                            mBaseMatrix.set(mCurrentMatrix);
+                            mBaseMatrix.postScale(scale, scale, mMidPoint.x, mMidPoint.y);
+                        }
+                        GLogger.i("", "startScale:" + mStartScale + ",scale:" + scale + ",ji:" + mStartScale * scale);
+                    }
+                }
+
+                break;
+            // 手指离开屏幕
+            case MotionEvent.ACTION_UP:
+                clipToBounds();
+                mMode = 0;
+                break;
+            // 当一个手指离开屏幕，但在屏幕上还有触点。
+            case MotionEvent.ACTION_POINTER_UP:
+//                clipToBounds();
+                mMode = 0;
+                break;
+
+            default:
+                break;
+        }
+        setImageMatrix(mBaseMatrix);
+        return true;
+    }
+
+    private PointF getMidPoint(MotionEvent event) {
+        float midX = (event.getX(0) + event.getX(1)) / 2;
+        float midY = (event.getY(0) + event.getY(1)) / 2;
+        return new PointF(midX, midY);
+    }
+
+    private double getDistance(MotionEvent event) {
+        float dx = event.getX(1) - event.getX(0);
+        float dy = event.getY(1) - event.getY(0);
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    @Override
+    public void setImageBitmap(Bitmap bm) {
+        super.setImageBitmap(bm);
+        mShowHeight = bm.getHeight();
+        mShowWidth = bm.getWidth();
+
+        initSize();
+    }
+
+//    public SizeInfo getCropPictureSize() {
+//        return new SizeInfo(mImage.getWidth(), mImage.getHeight());
+//    }
+
+    public int getMode() {
+        return mCurrentMode;
+    }
+
+    public void setMode(int mode) {
+
+        mCurrentMode = mode;
+        if (mode == IMAGE_MODE_CENTER_INSIDE) {
+            setScaleType(ScaleType.MATRIX);
+
+            mLastModeMatrix = new Matrix();
+            mLastModeMatrix.set(getImageMatrix());
+
+            int longSide = Math.max(mShowHeight, mShowWidth);
+            float scale = (float) mViewWidth / longSide;
+
+            int newHeight = Math.round(mShowHeight * scale);
+            int newWidth = Math.round(mShowWidth * scale);
+
+            int transX = -(newWidth - mViewWidth) / 2;
+            int transY = -(newHeight - mViewHeight) / 2;
+
+            Matrix matrix = new Matrix();
+            matrix.setScale(scale, scale);
+            matrix.postTranslate(transX, transY);
+            setImageMatrix(matrix);
+            invalidate();
+
+        } else if (mode == IMAGE_MODE_MATCH_SIDE) {
+            mLastModeMatrix = new Matrix();
+            mLastModeMatrix.set(getImageMatrix());
+            setScaleType(ScaleType.FIT_CENTER);
+
+        } else {
+            setScaleType(ScaleType.MATRIX);
+            if (null != mLastModeMatrix) {
+                setImageMatrix(mLastModeMatrix);
+
+            } else {
+                setImageMatrix(mBaseMatrix);
+            }
+
+        }
+    }
+
+    private void clipToBounds() {
+
+        mMode = MODE_CLIPING;
+
+        RectF drawableRectF = getDrawableRectF();
+
+        float[] values = new float[9];
+        getImageMatrix().getValues(values);
+
+        float transformX = values[Matrix.MTRANS_X];
+        float transformY = values[Matrix.MTRANS_Y];
+
+        if (drawableRectF.left > 0) {
+            setTranslateXAnimation(transformX, 0, CLIP_ANIMATION_DURATION, 0);
+        } else if (drawableRectF.right < mViewWidth) {
+            float drawableWidth = drawableRectF.right - drawableRectF.left;
+            setTranslateXAnimation(transformX, mViewWidth - drawableWidth, CLIP_ANIMATION_DURATION, 0);
+        }
+
+        if (drawableRectF.top > (float) (mViewHeight - mViewWidth) / 2) {
+            setTranslateYAnimation(transformY, (float) (mViewHeight - mViewWidth) / 2, CLIP_ANIMATION_DURATION, 0);
+        } else if (drawableRectF.bottom < mViewHeight - (float) (mViewHeight - mViewWidth) / 2) {
+            float deltaY = mViewHeight - (float) (mViewHeight - mViewWidth) / 2 - drawableRectF.bottom;
+            setTranslateYAnimation(transformY, drawableRectF.top + deltaY, CLIP_ANIMATION_DURATION, 0);
+        }
+    }
+
+    public void initSize() {
+        // 将初始图像居中全屏显示
+        mInitTransX = -(mShowWidth - mViewWidth) / 2;
+        mInitTransY = -(mShowHeight - mViewHeight) / 2;
+        GLogger.i("", "showWidth:" + mShowWidth + ",viewWidth:" + mViewWidth + ",initTransX:" + mInitTransX);
+        GLogger.i("", "showHeight:" + mShowHeight + "viewHeight:" + mViewHeight + ",initTransY:" + mInitTransY);
+
+        mInitScale = 1;
+        mMaxScale = Math.min((float) mPhotoWidth / 100, (float) mPhotoHeight / 100);
+
+        mBaseMatrix.setScale(mInitScale, mInitScale);
+        mBaseMatrix.postTranslate(mInitTransX, mInitTransY);
+        setImageMatrix(mBaseMatrix);
+
+        mCropImageWidth = mViewWidth;
+//        mImage = drawable.getBitmap();
+    }
+
+    private void setTranslateXAnimation(float curTransX, float destTransX,
+                                        int duration, long delay) {
+        ValueAnimator animatorX = ValueAnimator.ofFloat(curTransX, destTransX);
+        animatorX.addUpdateListener(new MyTransXAnimatorListener(mBaseMatrix));
+        animatorX.addListener(this);
+        animatorX.setDuration(duration);
+        animatorX.setStartDelay(delay);
+        animatorX.setInterpolator(new DecelerateInterpolator());
+        animatorX.start();
+    }
+
+    private void setTranslateYAnimation(float curTransY, float destTransY,
+                                        int duration, long delay) {
+
+        ValueAnimator animatorY = ValueAnimator.ofFloat(curTransY, destTransY);
+        animatorY.addUpdateListener(new MyTransYAnimatorListener(mBaseMatrix));
+        animatorY.addListener(this);
+        animatorY.setDuration(duration);
+        animatorY.setStartDelay(delay);
+        animatorY.setInterpolator(new DecelerateInterpolator());
+        animatorY.start();
+    }
+
+    @Override
+    public void onAnimationStart(Animator animation) {
+        mAnimationCount++;
+    }
+
+    @Override
+    public void onAnimationEnd(Animator animation) {
+        mAnimationCount--;
+        if (mAnimationCount == 0) {
+            mMode = 0;
+        }
+    }
+
+    public void setSize(int width, int height) {
+        mPhotoWidth = width;
+        mPhotoHeight = height;
+    }
+
+    @Override
+    public void onAnimationCancel(Animator animation) {
+        mAnimationCount--;
+        if (mAnimationCount == 0) {
+            mMode = 0;
+        }
+    }
+
+    @Override
+    public void onAnimationRepeat(Animator animation) {
+
+    }
+
+    private class MyTransYAnimatorListener implements ValueAnimator.AnimatorUpdateListener {
+
+        private Matrix mPrimaryMatrix;
+        private float mLastY;
+
+        public MyTransYAnimatorListener(Matrix imageMatrix) {
+            mPrimaryMatrix = imageMatrix;
+        }
+
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            float dy = (Float) animation.getAnimatedValue();
+            if (0 == mLastY) {
+                mLastY = dy;
+            }
+            mPrimaryMatrix.postTranslate(0, dy - mLastY);
+            mLastY = dy;
+            setImageMatrix(mPrimaryMatrix);
+        }
+    }
+
+    private class MyTransXAnimatorListener implements ValueAnimator.AnimatorUpdateListener {
+
+        private Matrix mPrimaryMatrix;
+        private float mLastX;
+
+        public MyTransXAnimatorListener(Matrix imageMatrix) {
+            mPrimaryMatrix = imageMatrix;
+        }
+
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            float dx = (Float) animation.getAnimatedValue ();
+            if (0 == mLastX) {
+                mLastX = dx;
+            }
+            mPrimaryMatrix.postTranslate(dx - mLastX, 0);
+            mLastX = dx;
+            setImageMatrix(mPrimaryMatrix);
+        }
+    }
+
+    private RectF getDrawableRectF() {
+        float[] values = new float[9];
+        mBaseMatrix.getValues(values);
+        // 图片4个顶点的坐标
+        float[] x = new float[4];
+        float[] y = new float[4];
+
+        x[0] = values[Matrix.MSCALE_X] * 0 + values[Matrix.MSKEW_X] * 0
+                + values[Matrix.MTRANS_X];
+        y[0] = values[Matrix.MSKEW_Y] * 0 + values[Matrix.MSCALE_Y] * 0
+                + values[Matrix.MTRANS_Y];
+        x[1] = values[Matrix.MSCALE_X] * mShowWidth + values[Matrix.MSKEW_X] * 0
+                + values[Matrix.MTRANS_X];
+        y[1] = values[Matrix.MSKEW_Y] * mShowHeight + values[Matrix.MSCALE_Y] * 0
+                + values[Matrix.MTRANS_Y];
+        x[2] = values[Matrix.MSCALE_X] * 0 + values[Matrix.MSKEW_X]
+                * mShowHeight + values[Matrix.MTRANS_X];
+        y[2] = values[Matrix.MSKEW_Y] * 0 + values[Matrix.MSCALE_Y]
+                * mShowHeight + values[Matrix.MTRANS_Y];
+        x[3] = values[Matrix.MSCALE_X] * mShowWidth + values[Matrix.MSKEW_X]
+                * mShowHeight + values[Matrix.MTRANS_X];
+        y[3] = values[Matrix.MSKEW_Y] * mShowWidth + values[Matrix.MSCALE_Y]
+                * mShowHeight + values[Matrix.MTRANS_Y];
+
+        float left = x[0];
+        float top = y[0];
+        float right = left + x[1] - x[0];
+        float bottom = top + y[2] - y[0];
+
+        return new RectF(left, top, right, bottom);
+     }
+}

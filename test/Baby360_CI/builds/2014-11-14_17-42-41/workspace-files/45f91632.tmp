@@ -1,0 +1,113 @@
+package com.pinguo.edit.sdk;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.CheckBox;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.utils.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+
+/**
+ * Created by taoli on 14-7-16.
+ */
+public class CompositeSDKEntryActivity extends Activity {
+
+    private CheckBox mCheckBox;
+    private View mImageLoading;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+
+        setContentView(R.layout.composite_sdk_sample_sdk);
+
+        mCheckBox = (CheckBox) findViewById(R.id.org_cb);
+
+
+        findViewById(R.id.start_camera_btn).setOnClickListener(
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PGCompositeSDKApi.startCamera(CompositeSDKEntryActivity.this, mCheckBox.isChecked());
+            }
+        });
+
+        findViewById(R.id.start_gallery_btn).setOnClickListener(
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PGCompositeSDKApi.startGallery(CompositeSDKEntryActivity.this);
+            }
+        });
+
+        findViewById(R.id.copy_filter_btn).setOnClickListener(
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                copyFilterData();
+                copyJsonData();
+
+                Toast.makeText(CompositeSDKEntryActivity.this, "保存成功!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mImageLoading = findViewById(R.id.img_welcome);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Animation animation = new AlphaAnimation(1.0f, 0);
+                animation.setDuration(1000);
+                mImageLoading.startAnimation(animation);
+                mImageLoading.setVisibility(View.GONE);
+            }
+        }, 2000);
+    }
+
+    private void copyFilterData() {
+        String srcFolder = "/data/data/com.pinguo.edit.sdk/files/effect/composite/icon/";
+        File srcFolderFile = new File(srcFolder);
+
+        String destFolder = "/sdcard/mix_sdk_filter_backup/";
+        File destFolderFile = new File(destFolder);
+
+        try {
+            FileUtils.copyFolder(srcFolderFile, destFolderFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void copyJsonData() {
+        EffectModel effectModel = EffectModel.getInstance().init(this);
+        List<EffectType> effectTypeList = effectModel.getEffectTypeList(Effect.Type.Composite);
+        List<CompositeEffect> compositeEffectList = effectTypeList.get(0).compositeEffects;
+
+        String outputDir = "/sdcard/mix_sdk_filter_backup/json/";
+        FileUtils.checkFolder(outputDir);
+        File outputFile;
+        for (CompositeEffect effect:compositeEffectList) {
+            outputFile = new File(outputDir + effect.key);
+            try {
+                FileUtils.writeFileContent(outputFile, effect.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

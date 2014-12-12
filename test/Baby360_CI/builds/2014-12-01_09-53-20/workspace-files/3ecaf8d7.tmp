@@ -1,0 +1,227 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.SeekBar;
+
+import java.util.Random;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.Lighting;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class ShadowMenu extends FilterMenu {
+
+    private final static String TAG = ShadowMenu.class.getSimpleName();
+    private View mOpacityAngleLayout;
+    private View mOpacityLayout;
+    private SeekBar mOpacityAngleSeekBar;
+
+    private ParamFloatItem mOpacityParamFloatItem;
+    private ParamFloatItem mAngleParamFloatItem;
+
+    private int mAngleMinValue;
+    private int mAngleMaxValue;
+
+    private String mLastOpactityValue;
+    private String mLastAngleValue;
+
+    private Random mAngleRandom;
+    private View.OnClickListener mAngleClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            int randomValue = mAngleRandom.nextInt(mAngleMaxValue+1-mAngleMinValue);
+            float angleValue = randomValue * mAngleParamFloatItem.step;
+            mAngleParamFloatItem.value = angleValue;
+            setParamsModel(mAngleParamFloatItem.effectKey,mAngleParamFloatItem.key,String.valueOf(angleValue));
+            makePhoto();
+
+            GLogger.i(TAG,"angelValue:"+angleValue);
+        }
+    };
+
+    public ShadowMenu(Context context,SDKManager sdkManager,GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context,sdkManager,compositeRendererMethod);
+    }
+
+    @Override
+    public void setSeekbarLayout(View seekbarLayout) {
+        super.setSeekbarLayout(seekbarLayout);
+
+        mEditSeekBar = (SeekBar) mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"texture_edit_seekbar"));
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.Lighting.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.Lighting;
+    }
+
+    @Override
+    protected  boolean isOnClickShowScroll(){
+        return true;
+    }
+
+    @Override
+    protected void showScrollViewClick(){
+
+        mOpacityLayout = mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"opacity_layout"));
+        mOpacityLayout.setVisibility(View.GONE);
+        mOpacityAngleLayout = mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"opacity_angle_layout"));
+        mOpacityAngleLayout.setVisibility(View.VISIBLE);
+        mOpacityAngleSeekBar = (SeekBar)mOpacityAngleLayout.findViewById(ResourceHelper.getId(mContext,"texture_edit_seekbar"));
+        mOpacityAngleLayout.findViewById(ResourceHelper.getId(mContext,"angle")).setOnClickListener(mAngleClickListener);
+
+        Animation slideInFromTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromTopAnimation.setDuration(400);
+        mScrollValueName.startAnimation(slideInFromTopAnimation);
+        mScrollValueName.setVisibility(View.VISIBLE);
+        mScrollValueName.setText(getScrollValueNameString());
+
+        Animation slideInFromBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromBottomAnimation.setDuration(400);
+        mSeekbarLayout.startAnimation(slideInFromBottomAnimation);
+        mSeekbarLayout.setVisibility(View.VISIBLE);
+
+        setEditSeekBarInfo(mOpacityAngleSeekBar, Math.round(mOpacityParamFloatItem.min), Math.round(mOpacityParamFloatItem.max), Math.round(mOpacityParamFloatItem.noEffectValue),
+                mOpacityParamFloatItem.step);
+
+        mAngleRandom = new Random();
+        mAngleMinValue = Math.round(mAngleParamFloatItem.min/mAngleParamFloatItem.step);
+        mAngleMaxValue = Math.round(mAngleParamFloatItem.max/mAngleParamFloatItem.step);
+
+        setCompareBitmap();
+    }
+
+    @Override
+    public void quitScrollView() {
+        super.hideScrollView();
+
+        if (null != mLastOpactityValue) {
+            mOpacityParamFloatItem.value = Float.parseFloat(mLastOpactityValue);
+            setParamsModel(mOpacityParamFloatItem.effectKey, mOpacityParamFloatItem.key, mLastOpactityValue);
+        }
+
+        if (null != mLastAngleValue) {
+            mAngleParamFloatItem.value = Float.parseFloat(mLastAngleValue);
+            setParamsModel(mAngleParamFloatItem.effectKey, mAngleParamFloatItem.key, mLastAngleValue);
+        }
+
+        makePhoto();
+
+        hideScrollView();
+    }
+
+    @Override
+    public void hideScrollView() {
+        mOpacityAngleSeekBar.setOnSeekChangeListener(null);
+
+        if (null != mSeekbarLayout) {
+            Animation slideOutToBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f);
+            slideOutToBottomAnimation.setDuration(400);
+            slideOutToBottomAnimation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mOpacityLayout.setVisibility(View.VISIBLE);
+                    mOpacityAngleLayout.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            mSeekbarLayout.startAnimation(slideOutToBottomAnimation);
+            mSeekbarLayout.setVisibility(View.GONE);
+        }
+
+        if (null != mScrollValueName) {
+            Animation slideOutToTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f);
+            slideOutToTopAnimation.setDuration(400);
+            mScrollValueName.startAnimation(slideOutToTopAnimation);
+            mScrollValueName.setVisibility(View.GONE);
+        }
+
+        if (null != mContainer) {
+            mContainer.setComparePhoto(mOrgBitmap);
+        }
+
+        mEditSeekBar.setOnSeekChangeListener(null);
+    }
+
+    @Override
+    protected float getEditSeekBarValue(){
+        mLastOpactityValue = String.valueOf(mOpacityParamFloatItem.value);
+        return mOpacityParamFloatItem.value;
+    }
+
+    @Override
+    protected void setParamItem(float currentValue) {
+        mOpacityParamFloatItem.value = currentValue;
+        setParamsModel(mOpacityParamFloatItem.effectKey, mOpacityParamFloatItem.key, String.valueOf(currentValue));
+    }
+
+    @Override
+    protected void initParams(Effect effect) {
+        mOpacityParamFloatItem = (ParamFloatItem) effect.getParamItem(
+                Lighting.PARAM_KEY_OPACITY, effect.gpuCmdStr);
+        if (null == mOpacityParamFloatItem) {
+            mOpacityParamFloatItem = (ParamFloatItem) effect.getParamItem(
+                    Lighting.PARAM_KEY_OPACITY, effect.cpuCmd);
+        }
+
+        if (null != mOpacityParamFloatItem) {
+            mLastOpactityValue = String.valueOf(mOpacityParamFloatItem.value);
+            setParamsModel(mOpacityParamFloatItem.effectKey,
+                    mOpacityParamFloatItem.key, mLastOpactityValue);
+        }
+
+        mAngleParamFloatItem = (ParamFloatItem) effect.getParamItem(
+                Lighting.PARAM_KEY_TEXTURE_ANGLE, effect.gpuCmdStr);
+        if (null == mAngleParamFloatItem) {
+            mAngleParamFloatItem = (ParamFloatItem) effect.getParamItem(
+                    Lighting.PARAM_KEY_TEXTURE_ANGLE, effect.cpuCmd);
+        }
+
+        if (null != mAngleParamFloatItem) {
+            mLastAngleValue = String.valueOf(mAngleParamFloatItem.value);
+            setParamsModel(mAngleParamFloatItem.effectKey,
+                    mAngleParamFloatItem.key, mLastAngleValue);
+        }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        if (null != mOpacityAngleLayout) {
+            mOpacityAngleLayout.setVisibility(View.GONE);
+        }
+
+        if (null != mOpacityLayout) {
+            mOpacityLayout.setVisibility(View.VISIBLE);
+        }
+    }
+}

@@ -1,0 +1,73 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.view.View;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.MenuItemViewBigWithPadding;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class FrameMenu extends BaseMenu{
+
+    private final static String TAG = FilterMenu.class.getSimpleName();
+
+    public FrameMenu(Context context,SDKManager sdkManager,GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context,sdkManager,compositeRendererMethod);
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.Frame.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.Frame;
+    }
+
+    @Override
+    protected  boolean isOnClickShowScroll(){
+        return true;
+    }
+
+    @Override
+    protected View.OnClickListener getShowScrollViewClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // do nothing
+            }
+        };
+    }
+
+    @Override
+    protected View addSecondMenuView(String icon, String name, View.OnClickListener onCompositeClick, boolean isShowScrollView, Object tag, boolean enableClickAnimation) {
+        MenuItemViewBigWithPadding effectMenuItemView = new MenuItemViewBigWithPadding(mContext);
+        effectMenuItemView.setIconForImageUrl(icon);
+        effectMenuItemView.setNameText(name);
+        effectMenuItemView.enableDivider(true);
+        effectMenuItemView.setScrollViewDrawable(ResourceHelper.getIdByName(
+                mContext, "drawable", "composite_sdk_beauty_effect_no_scroll"));
+        effectMenuItemView.setBackgroundResource(
+                ResourceHelper.getIdByName(mContext, "color", "composite_sdk_composite_group_item_bg"));
+        Effect effect = (Effect) tag;
+        effectMenuItemView.setScrollViewBgColor(effect.color);
+        effectMenuItemView.setDownLineColor(effect.color);
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        if(isShowScrollView){
+            effectMenuItemView.setOnShowScrollViewClick(getShowScrollViewClickListener());
+        }
+        effectMenuItemView.setTag(tag);
+
+        getSecondHorizontalLayout().addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), enableClickAnimation, false);
+
+        return effectMenuItemView;
+    }
+}

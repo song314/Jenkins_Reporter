@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.pinguo.ui.widget.ProgressDialog
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:layout_centerInParent="true"
+    android:background="#00000000"
+    android:visibility="gone"
+    android:gravity="center" >
+
+    <RelativeLayout
+        android:id="@+id/progress_lay"
+        android:layout_width="39dp"
+        android:layout_height="39dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_centerInParent="true"
+        android:background="@drawable/progress_bg"
+        android:gravity="center" >
+
+        <ProgressBar
+            android:indeterminateDrawable="@drawable/progress"
+            android:layout_centerInParent="true"
+            android:layout_width="29dp"
+            android:layout_height="29dp"></ProgressBar>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/progress_tips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/progress_lay"
+        android:visibility="gone"
+        android:padding="2dp"
+        android:background="#22000000"
+        android:textColor="#ffffff"
+        android:textSize="14sp">
+    </TextView>
+
+</com.pinguo.ui.widget.ProgressDialog>

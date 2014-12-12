@@ -1,0 +1,9 @@
+commit 64ba8291b256f00d2931e1ee7d42570559c057d4
+tree 18b04dba1baf4919fdc6e9892f7225029e861cd1
+parent 6a2a92e3d02564dc1734b578f45b93dae5f7e72d
+author pinguo-tangsong <tangsong@camera360.com> 1415869492 +0800
+committer pinguo-tangsong <tangsong@camera360.com> 1415869492 +0800
+
+    [TangSong]add gradle config
+
+:100644 100644 c49fab771e0861907c6613a2a1ce1a28c23a6ce5 f44a8fe1fde8c15b8877f7a90d3406e992977db1 M	build.gradle

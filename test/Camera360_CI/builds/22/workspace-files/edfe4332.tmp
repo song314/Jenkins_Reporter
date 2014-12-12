@@ -1,0 +1,132 @@
+package com.pinguo.edit.sdk.filter.square.view;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.LinearLayout;
+
+/**
+ * Created by taoli on 14-4-23.
+ */
+public class TransparentHeadPTRListView extends PTRWithCountListView {
+
+    private View mHeaderView;
+    private int mTopMargin;
+    private OnFlingListener mListener;
+
+    public TransparentHeadPTRListView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public TransparentHeadPTRListView(Context context, Mode mode) {
+        super(context, mode);
+    }
+
+    public void setCoverView(final View coverView, final View maskView,
+                             final int coverHeight, final int adjustHeight) {
+
+        mHeaderView = new LinearLayout(getContext());
+        AbsListView.LayoutParams params
+                = new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, coverHeight + adjustHeight);
+        mHeaderView.setLayoutParams(params);
+        ((ViewGroup) mHeaderView).requestDisallowInterceptTouchEvent(true);
+        mHeaderView.setBackgroundColor(Color.TRANSPARENT);
+        getRefreshableView().addHeaderView(mHeaderView);
+        getRefreshableView().setCacheColorHint(Color.parseColor("#00000000"));
+        getRefreshableView().setSelector(android.R.color.transparent);
+        getRefreshableView().setOnTouchListener(mOnListTouchListener);
+
+        getRefreshableView().setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                View topChild = view.getChildAt(0);
+                if (null == topChild) {
+                    return;
+                }
+
+                if (firstVisibleItem <= 1) {
+                    if (null != maskView) {
+                        ViewLayoutUtils.setViewsTopMargin(maskView, topChild.getTop() * 2 / 3);
+                    }
+
+                    if (null != coverView) {
+                        ViewLayoutUtils.setViewsTopMargin(coverView, topChild.getTop() / 3);
+                    }
+                }
+
+                if (null != coverView) {
+                    MarginLayoutParams params = (MarginLayoutParams) coverView.getLayoutParams();
+                    mTopMargin = params.topMargin;
+                }
+            }
+        });
+    }
+
+    public void setHeaderView(View headerView) {
+        getRefreshableView().removeHeaderView(mHeaderView);
+        getRefreshableView().addHeaderView(headerView);
+        mHeaderView = headerView;
+    }
+
+    private float mLastY;
+    private OnTouchListener mOnListTouchListener = new OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    mLastY = event.getY();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (0 == mLastY) {
+                        mLastY = event.getY();
+                        break;
+                    }
+                    if (event.getY() - mLastY > 10) {
+                        if (null != mListener) {
+                            mListener.onFlingDown();
+                        }
+                    } else if (event.getY() - mLastY < -10) {
+                        if (null != mListener) {
+                            mListener.onFlingUp();
+                        }
+                    }
+                    mLastY = event.getY();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (event.getY() - mLastY > 10) {
+                        if (null != mListener) {
+                            mListener.onFlingDown();
+                        }
+                    } else if (event.getY() - mLastY < -10) {
+                        if (null != mListener) {
+                            mListener.onFlingUp();
+                        }
+                    }
+                    mLastY = 0;
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        }
+    };
+
+    public void setOnFlingListener(OnFlingListener listener) {
+        mListener = listener;
+    }
+
+    public interface OnFlingListener {
+        void onFlingUp();
+
+        void onFlingDown();
+    }
+}

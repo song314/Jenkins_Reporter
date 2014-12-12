@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="bottom"
+    android:id="@+id/root">
+
+    <ListView
+        android:id="@+id/share_site_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:divider="#00000000"
+        android:cacheColorHint="#00000000"
+        android:listSelector="#00000000">
+    </ListView>
+
+    <!--
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginBottom="130dp"
+        android:layout_gravity="bottom"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:background="@drawable/composite_sdk_send_photo_bg"
+        android:text="@string/composite_sdk_facebook"
+        android:id="@+id/facebook_btn"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginBottom="130dp"
+        android:layout_gravity="bottom"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:background="@drawable/composite_sdk_send_photo_bg"
+        android:text="@string/composite_sdk_share_site_wechat"
+        android:id="@+id/wechat_btn" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginBottom="65dp"
+        android:layout_gravity="bottom"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:background="@drawable/composite_sdk_save_composite_effect_bg"
+        android:id="@+id/wechat_friend_btn"
+        android:text="@string/composite_sdk_share_site_wechat_friend" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_marginBottom="65dp"
+        android:layout_gravity="bottom"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:background="@drawable/composite_sdk_save_composite_effect_bg"
+        android:id="@+id/twitter_btn"
+        android:text="@string/composite_sdk_save_twitter" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_gravity="bottom"
+        android:textColor="#4c4c4c"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:background="@drawable/composite_sdk_quit_bg"
+        android:text="@string/composite_sdk_quit"
+        android:id="@+id/quit_btn" />
+    -->
+    <include
+        layout="@layout/progress_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/progress_layout" />
+
+</FrameLayout>
+

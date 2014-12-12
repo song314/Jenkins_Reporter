@@ -1,0 +1,65 @@
+package com.pinguo.edit.sdk.login.view;
+
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.EditText;
+
+
+/**
+ * 编辑框的最右边有一个叉子图片，点击图片清楚文本框的内容
+ *
+ * @author 谢朝军
+ */
+public class EditTextWithFork extends EditText {
+    private Drawable mClear = null;
+    private Drawable mClearPressed = null;
+
+    public EditTextWithFork(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+
+//    	mClear=getResources().getDrawable(R.drawable.edittext_clear_default);
+//    	mClearPressed=getResources().getDrawable(R.drawable.edittext_clear_press);
+//    	mClear.setBounds(0, 0, mClear.getIntrinsicWidth(), mClear.getIntrinsicHeight());
+//    	mClearPressed.setBounds(0, 0, mClearPressed.getIntrinsicWidth(), mClearPressed.getIntrinsicHeight());
+
+        setCompoundDrawables(getCompoundDrawables()[0], getCompoundDrawables()[1],
+                mClear, getCompoundDrawables()[3]);
+    }
+
+    /**
+     * 设置清除按钮的事件
+     */
+    public void setClearButtonEvent() {
+        setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                EditTextWithFork et = EditTextWithFork.this;
+                if (et.getCompoundDrawables()[2] == null)
+                    return false;
+                if (event.getX() > et.getWidth() - et.getPaddingRight() - mClear.getIntrinsicWidth()) {
+                    if (event.getAction() != MotionEvent.ACTION_UP || event.getAction() != MotionEvent.ACTION_CANCEL) {
+                        setCompoundDrawables(getCompoundDrawables()[0], getCompoundDrawables()[1],
+                                mClearPressed, getCompoundDrawables()[3]);
+                    }
+                }
+                if (event.getAction() != MotionEvent.ACTION_UP)
+                    return false;
+
+                if (event.getX() > et.getWidth() - et.getPaddingRight() - mClear.getIntrinsicWidth()) {
+                    //点击的是叉子图片侧清除文本
+                    et.setText("");
+                    setCompoundDrawables(getCompoundDrawables()[0], getCompoundDrawables()[1],
+                            mClear, getCompoundDrawables()[3]);
+                }
+                return false;
+            }
+        });
+    }
+}

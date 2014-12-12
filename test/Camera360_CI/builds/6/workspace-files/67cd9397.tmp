@@ -1,0 +1,198 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+import com.pinguo.edit.sdk.utils.LocaleSupport;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public class EffectType extends LocaleSupport<EffectType> implements Comparable<EffectType>, Cloneable{
+    private static final String TAG = EffectType.class.getSimpleName();
+    public static final String COMPOSITE_DEFAULT_TYPE_NAME = "";
+    public static final String COMPOSITE_DEFAULT_TYPE_COLOR = "";
+    public static final String COMPOSITE_DEFAULT_TYPE_GUID = "";
+    public static final String COMPOSITE_DEFAULT_TYPE_ICON = "";
+
+    public String key = "";
+    public String type = ""; // Filter/Lighting/Frame/AdvanceBase，大小写敏感
+    public String guid = ""; // 安装滤镜包的时候，json自带guid
+    public String locale = "";
+    public String name = "";
+    public String tag = "";
+    public String description = "";
+    public String icon = "";
+    public long optime;
+    public int isNew;
+    public String color = ""; // 图标浮层颜色
+    public String[] effectNames;
+    public List<Effect> effects; // for Filter/Lighting/Frame/AdvanceBase effect types
+    public List<CompositeEffect> compositeEffects; // for CompositeEffect type
+
+    // 组合滤镜
+    //public static final EffectType EFFECT_TYPE_COMPOSITE  = new EffectType();
+
+    public static final String COMPOSITE_DEFAULT_TYPE_KEY = "Composite_Default";    //默认组合特效类型key
+
+//    static {
+//        // composite
+//        initComposite();
+//    }
+//
+//    private static void initComposite() {
+//        EFFECT_TYPE_COMPOSITE.key = COMPOSITE_DEFAULT_TYPE_KEY;
+//        EFFECT_TYPE_COMPOSITE.name = "Composite"; // TODO 多语言支持
+//        EFFECT_TYPE_COMPOSITE.type = Effect.Type.Composite.name();
+//        EFFECT_TYPE_COMPOSITE.optime = 0;
+//        EFFECT_TYPE_COMPOSITE.isNew = 0;
+//    }
+
+    /**
+     * 获取默认CompositeType对象，用于save的时候指定对应的EffectType
+     */
+    public static EffectType getEmptyDefaultCompositeType() {
+        EffectType effectType = new EffectType();
+        effectType.key = EffectType.COMPOSITE_DEFAULT_TYPE_KEY;
+        effectType.type = Effect.Type.Composite.name();
+        effectType.name = EffectType.COMPOSITE_DEFAULT_TYPE_NAME;
+        effectType.color = EffectType.COMPOSITE_DEFAULT_TYPE_COLOR;
+        effectType.guid = EffectType.COMPOSITE_DEFAULT_TYPE_GUID;
+        effectType.icon = EffectType.COMPOSITE_DEFAULT_TYPE_ICON;
+
+        return effectType;
+    }
+
+    public void addEffect(Effect effect)
+    {
+        if (null == effects)
+        {
+            effects = new ArrayList<Effect>();
+        }
+        effects.add(effect);
+    }
+
+    public void addCompositeEffect(CompositeEffect effect) {
+        if ( null == compositeEffects ) {
+            compositeEffects = new ArrayList<CompositeEffect>();
+        }
+
+        if ( this.type.equals(Effect.Type.Composite.name())
+                || this.type.equals(Effect.Type.CompositeLib.name()) ) {
+            effect.typeKey = this.key;     // 转化为Composite
+            compositeEffects.add(effect);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof EffectType)) return false;
+
+        EffectType that = (EffectType) o;
+
+        if (isNew != that.isNew) return false;
+        if (optime != that.optime) return false;
+        if (!key.equals(that.key)) return false;
+        if (!locale.equals(that.locale)) return false;
+        if (!name.equals(that.name)) return false;
+        if (!type.equals(that.type)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = key.hashCode();
+        result = 31 * result + locale.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + (int) (optime ^ (optime >>> 32));
+        result = 31 * result + isNew;
+        return result;
+    }
+
+    @Override
+    public EffectType clone()
+    {
+        EffectType effectType = null;
+
+        try
+        {
+            effectType = (EffectType) super.clone();
+        } catch (CloneNotSupportedException e)
+        {
+            e.printStackTrace();
+        }
+
+        if ( null != effectType )
+            return effectType;
+        else
+            return new EffectType();
+    }
+
+    @Override
+    public EffectType getLocaleObject(Locale locale)
+    {
+        int idx = getIndex(locale);
+        String locStr = getLocaleString(locale);
+
+        String[] nameArr = name.split(LOCAL_SEPERATOR);
+        String name = this.name;
+        if (null != nameArr && nameArr.length > 0)
+        {
+            if (idx < nameArr.length)
+            {
+                name = nameArr[idx];
+            } else
+            {
+                name = nameArr[0];
+            }
+        }
+
+        String[] tagArr = tag.split(LOCAL_SEPERATOR);
+        String tag = this.tag;
+        if (null != tagArr && tagArr.length > 0) {
+            if (idx < tagArr.length) {
+                tag = tagArr[idx];
+            } else {
+                tag = tagArr[0];
+            }
+        }
+
+        String[] desArr = description.split(LOCAL_SEPERATOR);
+        String description = this.description;
+        if (null != desArr && desArr.length > 0)
+        {
+            if (idx < desArr.length) {
+                description = desArr[idx];
+            } else {
+                description = desArr[0];
+            }
+        }
+
+        EffectType effectType =  this.clone();
+        effectType.locale = locStr;
+        effectType.name = name;
+        effectType.tag = tag;
+        effectType.description = description;
+
+        return effectType;
+    }
+
+    @Override
+    public int compareTo(EffectType another)
+    {
+        long ret = optime - another.optime;
+
+        if (ret < 0)
+            return -1;
+        else if (ret > 0)
+            return 1;
+        else
+            return 0;
+    }
+}

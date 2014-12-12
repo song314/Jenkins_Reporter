@@ -1,0 +1,108 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import us.pinguo.androidsdk.PGColorBuffer;
+
+/**
+ * Created by pinguo on 14-6-15.
+ */
+public class EntryCompositeCropRendererMethod extends CropEffectGroupRendererMethod {
+
+    private final static String TAG = EntryCompositeCropRendererMethod.class.getSimpleName();
+
+    private Bitmap mCropBlankBitmap;
+    private EntryCompositeCropListener mEntryCompositeCropListener;
+    private boolean isMakeEffectPhoto;
+
+    public void setMakeEffectPhoto(boolean isMakeEffectPhoto){
+        this.isMakeEffectPhoto = isMakeEffectPhoto;
+    }
+
+    public void setEntryCompositeCropListener(EntryCompositeCropListener listener){
+        this.mEntryCompositeCropListener = listener;
+    }
+
+    @Override
+    protected boolean prepare(){
+        clearImage(0);
+
+        if(!this.setImageFromBitmap(0, mBitmap)){
+            if(mRendererMethodActionListener!=null){
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.w(TAG, "setImageFromBitmap fail");
+            return false;
+        }
+
+
+        if (!this.setEffect("Effect=Normal")) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.w(TAG, "set effect fail");
+            return false;
+        }
+
+        if(mPGRect!=null){
+            if(!this.adjustImage(0, false, 0, mPGRect, false, false, 0, true)){
+                if (mRendererMethodActionListener != null) {
+                    mRendererMethodActionListener.fail();
+                }
+
+                GLogger.w(TAG, "adjust is fail");
+                return false;
+            }
+        }
+
+
+        if (!this.make()) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.w(TAG, "make fail");
+            return false;
+        }
+
+        PGColorBuffer pgColorBuffer = this.getMakedImage2Buffer();
+        if(pgColorBuffer==null){
+            if(mRendererMethodActionListener!=null){
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.w(TAG,"pgColorBuffer is null");
+            return false;
+        }
+        mCropBlankBitmap = Bitmap.createBitmap(pgColorBuffer.getColorBuffer(), pgColorBuffer.getImageWidth(), pgColorBuffer.getImageHeight(), Bitmap.Config.ARGB_8888);
+       //如果不需要做效果图在这里就停止了，不再向下执行
+        if(!isMakeEffectPhoto){
+            if(mRendererMethodActionListener!=null){
+                mRendererMethodActionListener.success(mCropBlankBitmap);
+            }
+        }
+
+        return isMakeEffectPhoto;
+    }
+
+    @Override
+    protected void makePhoto(){
+        PGColorBuffer pgColorBuffer = this.getMakedImage2Buffer();
+        if(pgColorBuffer==null){
+            if(mRendererMethodActionListener!=null){
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG,"pgColorBuffer is null");
+            return;
+        }
+        Bitmap bitmap = Bitmap.createBitmap(pgColorBuffer.getColorBuffer(), pgColorBuffer.getImageWidth(), pgColorBuffer.getImageHeight(), Bitmap.Config.ARGB_8888);
+        if(mEntryCompositeCropListener!=null){
+            mEntryCompositeCropListener.success(mCropBlankBitmap,bitmap);
+        }
+    }
+
+    public static interface EntryCompositeCropListener{
+
+        public void success(Bitmap cropBlank,Bitmap cropEffect);
+    }
+}

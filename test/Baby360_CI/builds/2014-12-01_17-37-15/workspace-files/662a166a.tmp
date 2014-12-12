@@ -1,0 +1,227 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.Sharpen;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShift;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftCircle;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftLine;
+
+/**
+ * Created by taoli on 14-7-2.
+ */
+public class TiltShiftMakePhotoModel extends MakePhotoModel {
+
+    public static final int MAKE_TYPE_PREVIEW = 0;
+    public static final int MAKE_TYPE_PIC = 1;
+
+    private int mMakeType = MAKE_TYPE_PREVIEW;
+
+    @Override
+    public boolean make(EffectGroupRendererMethod method,
+                     EffectGroupRendererMethod.RendererMethodActionListener listener) {
+
+        long l1 = System.currentTimeMillis();
+
+        TiltShift tiltShift = (TiltShift) getEffect();
+
+        if (mMakeType == MAKE_TYPE_PREVIEW) {
+
+            long l2 = System.currentTimeMillis();
+            GLogger.i("", getEffect().type + " preview1:"+(l2-l1));
+
+            method.setEffect("Effect=" + tiltShift.maskCmd);
+
+            long l3 = System.currentTimeMillis();
+            GLogger.i("", getEffect().type + " preview2:"+(l3-l2));
+
+            if (tiltShift.key.equals(TiltShiftCircle.class.getSimpleName())) {
+                String key = tiltShift.blurCmd + TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM;
+                ParamsModel paramsModel = getParamsMap().get(key);
+                if(!method.setEffectParams(tiltShift.maskCmd, paramsModel.getKey() + "=" + paramsModel.getValue())){
+                    if(listener != null){
+                        listener.fail();
+                    }
+                    GLogger.i("", "setEffect fail,childEffect=" + paramsModel.getEffectKey() + ",params=" + paramsModel.getKey() + ",value=" + paramsModel.getValue());
+                    return false;
+                }
+            } else {
+                String key1 = tiltShift.blurCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM1;
+                String key2 = tiltShift.blurCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM2;
+                ParamsModel paramsModel1 = getParamsMap().get(key1);
+                ParamsModel paramsModel2 = getParamsMap().get(key2);
+                if(!method.setEffectParams(tiltShift.maskCmd, paramsModel1.getKey() + "=" + paramsModel1.getValue())
+                        || !method.setEffectParams(tiltShift.maskCmd, paramsModel2.getKey() + "=" + paramsModel2.getValue())){
+                    if(listener != null){
+                        listener.fail();
+                    }
+                    GLogger.i("", "setEffect fail,childEffect=" + paramsModel1.getEffectKey() + ",params=" + paramsModel1.getKey() + ",value=" + paramsModel1.getValue());
+                    return false;
+                }
+            }
+
+            long l4 = System.currentTimeMillis();
+            GLogger.i("", getEffect().type + " preview3:"+(l4-l3));
+
+            if(!method.make()){
+                return false;
+            }
+            long l5 = System.currentTimeMillis();
+            GLogger.i("", getEffect().type + " preview4:"+(l5-l4));
+            return true;
+        } else if (mMakeType == MAKE_TYPE_PIC) {
+
+            if (!method.adjustImage(0, false, 0, null, false, false, 500, false)) {
+                if(listener != null){
+                    listener.fail();
+                }
+                return false;
+            }
+
+            if (!method.setEffect("Effect=" + tiltShift.blurCmd)) {
+                if(listener != null){
+                    listener.fail();
+                }
+                return false;
+            }
+
+            if (tiltShift.key.equals(TiltShiftCircle.class.getSimpleName())) {
+                String key1 = tiltShift.blurCmd + TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM;
+                ParamsModel paramsModel1 = getParamsMap().get(key1);
+                if (null != paramsModel1) {
+                    if(!method.setEffectParams(tiltShift.blurCmd, paramsModel1.getKey() + "=" + paramsModel1.getValue())) {
+                        if(listener != null){
+                            listener.fail();
+                        }
+                        GLogger.i("", "setEffect fail,childEffect=" + paramsModel1.getEffectKey()
+                                + ",params=" + paramsModel1.getKey() + ",value=" + paramsModel1.getValue());
+                        return false;
+                    }
+                }
+
+                String key2 = tiltShift.blurCmd + TiltShiftCircle.PARAM_KEY_CIRCLE_STRONG_PARAM;
+                ParamsModel paramsModel2 = getParamsMap().get(key2);
+                if (null != paramsModel2) {
+                    if(!method.setEffectParams(tiltShift.blurCmd, paramsModel2.getKey() + "=" + paramsModel2.getValue())) {
+                        if(listener != null){
+                            listener.fail();
+                        }
+                        GLogger.i("", "setEffect fail,childEffect=" + paramsModel2.getEffectKey()
+                                + ",params=" + paramsModel2.getKey() + ",value=" + paramsModel2.getValue());
+                        return false;
+                    }
+                }
+
+            } else {
+                String key1 = tiltShift.blurCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM1;
+                String key2 = tiltShift.blurCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM2;
+                ParamsModel paramsModel1 = getParamsMap().get(key1);
+                ParamsModel paramsModel2 = getParamsMap().get(key2);
+                if(!method.setEffectParams(tiltShift.blurCmd, paramsModel1.getKey() + "=" + paramsModel1.getValue())
+                        || !method.setEffectParams(tiltShift.blurCmd, paramsModel2.getKey() + "=" + paramsModel2.getValue())) {
+                    if(listener != null){
+                        listener.fail();
+                    }
+                    GLogger.i("", "setEffect fail,childEffect=" + paramsModel1.getEffectKey() + ",params=" + paramsModel1.getKey() + ",value=" + paramsModel1.getValue());
+                    return false;
+                }
+
+                String key3 = tiltShift.blurCmd + TiltShiftLine.PARAM_KEY_LINE_STRONG_PARAM;
+                ParamsModel paramsModel3 = getParamsMap().get(key3);
+                if (null != paramsModel3) {
+                    if(!method.setEffectParams(tiltShift.blurCmd, paramsModel3.getKey() + "=" + paramsModel3.getValue())) {
+                        if(listener != null){
+                            listener.fail();
+                        }
+                        GLogger.i("", "setEffect fail,childEffect=" + paramsModel3.getEffectKey() + ",params=" + paramsModel3.getKey() + ",value=" + paramsModel3.getValue());
+                        return false;
+                    }
+                }
+            }
+
+            method.make();
+
+            method.setResultImageToInput(1);
+
+            Bitmap bitmap = method.getBitmap();
+            if (null == bitmap) {
+                if (!method.setImageFromPath(0, method.getPath())) {
+                    if (!method.setSupportImageFromPNGPath(0, method.getPath())) {
+                        if(listener != null){
+                            listener.fail();
+                        }
+                        GLogger.i("", "setImageFromPath fail");
+                        return false;
+                    }
+                };
+            }
+
+            if (!method.setEffect("Effect=" + Sharpen.EFFECT_KEY_FAST_SHARPEN +
+                    "|Effect=" + tiltShift.singleCmd)) {
+                if(listener != null){
+                    listener.fail();
+                }
+                return false;
+            }
+
+            if (!method.setEffectParams(Sharpen.EFFECT_KEY_FAST_SHARPEN, "sharpness=0.5;")) {
+                if(listener != null){
+                    listener.fail();
+                }
+                return false;
+            }
+
+            if (tiltShift.key.equals(TiltShiftCircle.class.getSimpleName())) {
+                String key = tiltShift.singleCmd + TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM;
+                ParamsModel paramsModel = getParamsMap().get(key);
+                if(!method.setEffectParams(tiltShift.singleCmd, paramsModel.getKey() + "=" + paramsModel.getValue())) {
+                    if(listener != null){
+                        listener.fail();
+                    }
+                    GLogger.i("", "setEffect fail,childEffect=" + paramsModel.getEffectKey() + ",params=" + paramsModel.getKey() + ",value=" + paramsModel.getValue());
+                    return false;
+                }
+            } else {
+                String key1 = tiltShift.singleCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM1;
+                String key2 = tiltShift.singleCmd + TiltShiftLine.PARAM_KEY_LINE_PARAM2;
+                ParamsModel paramsModel1 = getParamsMap().get(key1);
+                ParamsModel paramsModel2 = getParamsMap().get(key2);
+                if(!method.setEffectParams(tiltShift.singleCmd, paramsModel1.getKey() + "=" + paramsModel1.getValue())
+                        || !method.setEffectParams(tiltShift.singleCmd, paramsModel2.getKey() + "=" + paramsModel2.getValue())){
+                    if(listener != null){
+                        listener.fail();
+                    }
+                    GLogger.i("", "setEffect fail,childEffect=" + paramsModel1.getEffectKey() + ",params=" + paramsModel1.getKey() + ",value=" + paramsModel1.getValue());
+                    return false;
+                }
+            }
+
+            method.make();
+            long l2 = System.currentTimeMillis();
+            GLogger.i("", getEffect().type + " picture:"+(l2-l1));
+        }
+
+        return true;
+    }
+
+    public void setMakeType(int makeType) {
+        mMakeType = makeType;
+    }
+
+    public int getMakeType() {
+        return mMakeType;
+    }
+
+    @Override
+    public boolean hasTexture() {
+        return mMakeType == MAKE_TYPE_PIC;
+    }
+
+    @Override
+    public int getTextureIndex() {
+        return 1;
+    }
+}

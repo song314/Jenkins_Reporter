@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2010 The Android Open Source Project Licensed under the Apache
+ * License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.gallery.data;
+
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.os.Handler;
+
+import com.pinguo.edit.sdk.gallery.AlbumAppImpl;
+import com.pinguo.edit.sdk.gallery.util.Utils;
+
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.WeakHashMap;
+
+public class DataManager {
+
+    private static final String TAG = "DataManager";
+    //
+    public static final Object LOCK = new Object();
+    //
+    public static final int MEDIA_TYPE_ALBUM_SET = 1001;
+    public static final int MEDIA_TYPE_SYSTEM_ALBUM = 1003;
+    public static final int MEDIA_TYPE_SYSTEM_IMAGE = 1005;
+    //
+    public static final String MEDIA_PATH_ID_SET = "path-set";
+    //
+    public static final String MEDIA_NAME = "media-name";
+    public static final String MEDIA_TYPE = "media-type";
+    public static final String MEDIA_PATH_ID = "media-path-id";
+    //
+    public static final Comparator<MediaItem> sDateTakenComparator = new DateTakenComparator();
+
+    private static class DateTakenComparator implements Comparator<MediaItem> {
+
+        public int compare(MediaItem item1, MediaItem item2) {
+            return -Utils.compare(item1.getDateInMs(), item2.getDateInMs());
+        }
+    }
+
+    private final Handler mDefaultMainHandler;
+    private AlbumAppImpl mApplication;
+    private final HashMap<Uri, NotifyBroker> mNotifierMap = new HashMap<Uri, NotifyBroker>();
+
+    public DataManager(AlbumAppImpl application) {
+        mApplication = application;
+        mDefaultMainHandler = new Handler(application.getApplication().getMainLooper());
+    }
+
+    public MediaSet getMediaSet(Path path) {
+        return (MediaSet) getMediaObject(path);
+    }
+
+    private MediaObject createMediaObject(Path path) {
+        switch (path.getType()) {
+            case MEDIA_TYPE_ALBUM_SET: {
+                return new AlbumSet(mApplication, path);
+            }
+            case MEDIA_TYPE_SYSTEM_ALBUM: {
+                return new Album(mApplication, path, "");
+            }
+            case MEDIA_TYPE_SYSTEM_IMAGE: {
+                return new Image(mApplication, path);
+            }
+        }
+        return null;
+    }
+
+    public MediaObject getMediaObject(Path path) {
+        MediaObject obj = path.getObject();
+        if (obj != null) {
+            return obj;
+        }
+        return createMediaObject(path);
+    }
+
+    public void delete(Path path) {
+        getMediaObject(path).delete();
+    }
+
+    public void registerChangeNotifier(Uri uri, ChangeNotifier notifier) {
+        NotifyBroker broker = null;
+        synchronized (mNotifierMap) {
+            broker = mNotifierMap.get(uri);
+            if (broker == null) {
+                broker = new NotifyBroker(mDefaultMainHandler);
+                mApplication.getApplication().getContentResolver()
+                        .registerContentObserver(uri, true, broker);
+                mNotifierMap.put(uri, broker);
+            }
+        }
+        broker.registerNotifier(notifier);
+    }
+
+    private static class NotifyBroker extends ContentObserver {
+
+        private WeakHashMap<ChangeNotifier, Object> mNotifiers = new WeakHashMap<ChangeNotifier, Object>();
+
+        public NotifyBroker(Handler handler) {
+            super(handler);
+        }
+
+        public synchronized void registerNotifier(ChangeNotifier notifier) {
+            mNotifiers.put(notifier, null);
+        }
+
+        @Override
+        public synchronized void onChange(boolean selfChange) {
+            for (ChangeNotifier notifier : mNotifiers.keySet()) {
+                notifier.onChange(selfChange);
+            }
+        }
+    }
+}

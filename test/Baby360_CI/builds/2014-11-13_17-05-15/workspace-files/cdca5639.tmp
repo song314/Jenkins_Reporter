@@ -1,0 +1,101 @@
+package com.pinguo.mix.api.upload;
+
+import android.os.Bundle;
+import android.util.Log;
+
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+import com.pinguo.mix.api.UploadRequest;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-4-11.
+ */
+class PhotoUpload extends BaseRequest {
+
+    private static final String TAG = PhotoUpload.class.getName();
+
+    private UploadRequest mRequest;
+
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+        if (!bundle.containsKey("file")) {
+            throw new IllegalArgumentException("File must not be empty!");
+        }
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        return null;
+    }
+
+    @Override
+    protected Object getResultData(BaseBean bean) {
+        return null;
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+        return null;
+    }
+
+    @Override
+    public void execute(final String url,
+                        final Bundle bundle,
+                        final ApiCallback callback) {
+
+        paramValidCheck(bundle);
+
+        String filePath = bundle.getString(ApiConstants.PARAM_FILE);
+        bundle.remove("file");
+
+        Map<String, String> params = buildParam(bundle);
+        mRequest = new UploadRequest(url, params, filePath, new ApiCallback<String>() {
+
+            @Override
+            public void onResponse(String data, Object... params) {
+                Log.i(TAG, "Get server response for url:" + url);
+                Log.i(TAG, "Get server response data:" + data);
+                BaseBean bean = parse(data);
+                if (null != callback) {
+                    callback.onResponse(getResultData(bean), getResultParam(bean));
+                }
+
+            }
+
+            @Override
+            public void onError(String error) {
+
+                if (null != callback) {
+                    callback.onError(error);
+                }
+            }
+        });
+
+        mRequest.execute();
+    }
+
+    @Override
+    public void cancel() {
+        mRequest.cancel();
+    }
+
+    protected Map<String, String> buildParam(Bundle bundle) {
+
+        if (null == bundle) {
+            return null;
+        }
+
+        Map<String, String> params = new HashMap<String, String>();
+        for (Object key : bundle.keySet()) {
+            String value = bundle.getString((String)key);
+            params.put((String)key, value);
+        }
+
+        return params;
+    }
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+        <View android:layout_width="2dp"
+              android:layout_height="26dp"
+              android:layout_centerInParent="true"
+              android:background="@android:color/white"
+              android:id="@+id/center_line"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/hottest"
+            android:layout_toLeftOf="@id/center_line">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_centerInParent="true"
+                android:text="@string/composite_sdk_hottest"
+                android:textColor="@drawable/composite_sdk_square_neck_text"/>
+            
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2.2dp"
+                android:layout_marginLeft="35.4dp"
+                android:layout_marginRight="35.4dp"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="4dp"
+                android:id="@+id/down_line"
+                android:background="@color/square_neck_text_selected"/>
+
+       </RelativeLayout>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/newest"
+            android:layout_toRightOf="@id/center_line">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_centerInParent="true"
+                android:text="@string/composite_sdk_newest"
+                android:textColor="@drawable/composite_sdk_square_neck_text"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2.2dp"
+                android:layout_marginLeft="35.4dp"
+                android:layout_marginRight="35.4dp"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="4dp"
+                android:id="@+id/down_line"
+                android:background="@color/square_neck_text_selected"/>
+        </RelativeLayout>
+
+
+</RelativeLayout>

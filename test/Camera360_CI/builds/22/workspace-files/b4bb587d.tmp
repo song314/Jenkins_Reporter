@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1a1c1e">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/composite_sdk_save_title_top_margin"
+        android:layout_marginLeft="@dimen/composite_sdk_save_layout_margin"
+        android:layout_marginRight="@dimen/composite_sdk_save_layout_margin"
+        android:id="@+id/option_item_title1">
+
+        <ImageView
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:src="@drawable/composite_sdk_save_quit"
+            android:id="@+id/quit" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:text="@string/composite_sdk_save_composite_style" />
+    </RelativeLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/composite_sdk_save_photos_top_margin"
+        android:layout_below="@id/option_item_title1"
+        android:layout_alignLeft="@id/option_item_title1"
+        android:layout_alignRight="@id/option_item_title1"
+        android:id="@+id/before_after_photo"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginRight="@dimen/composite_sdk_save_photo_margin"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:id="@+id/before_photo"
+                android:scaleType="fitCenter" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:textColor="#ffffff"
+                android:textSize="16dp"
+                android:text="@string/composite_sdk_save_before_photo" />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="@dimen/composite_sdk_save_photo_margin"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:id="@+id/after_photo"
+                android:scaleType="fitCenter"
+
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:textColor="#ffffff"
+                android:textSize="16dp"
+                android:text="@string/composite_sdk_save_after_photo" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/composite_sdk_save_name_edit_top_margin"
+        android:layout_alignLeft="@id/option_item_title1"
+        android:layout_alignRight="@id/option_item_title1"
+        android:layout_below="@id/before_after_photo"
+        android:textSize="@dimen/composite_sdk_save_name_edit_text_size"
+        android:textColor="#ffffff"
+        android:hint="@string/composite_sdk_composite_effect_name"
+        android:singleLine="true"
+        android:textColorHint="#626364"
+        android:background="@android:color/transparent"
+        android:id="@+id/name_edit" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignLeft="@id/option_item_title1"
+        android:layout_alignRight="@id/option_item_title1"
+        android:background="#767778"
+        android:layout_below="@id/name_edit"
+        android:layout_marginTop="5dp"
+        android:id="@+id/line" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_save_bottom_layout_height"
+        android:id="@+id/bottom_layout"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="#ffffff"
+            android:text="@string/composite_sdk_save"
+            android:textSize="18sp"
+            android:id="@+id/save"
+            android:background="@drawable/composite_sdk_save_botton_bg" />
+
+    </LinearLayout>
+
+    <EditText
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_alignLeft="@id/option_item_title1"
+        android:layout_alignRight="@id/option_item_title1"
+        android:layout_below="@id/line"
+        android:layout_above="@id/bottom_layout"
+        android:textSize="17sp"
+        android:gravity="top"
+        android:textColor="#ffffff"
+        android:hint="@string/composite_sdk_composite_add_des"
+        android:textColorHint="#626364"
+        android:background="@android:color/transparent"
+        android:id="@+id/des_edit" />
+
+    <include
+        layout="@layout/progress_dialog"
+        android:id="@+id/progress_layout" />
+
+
+</RelativeLayout>
+

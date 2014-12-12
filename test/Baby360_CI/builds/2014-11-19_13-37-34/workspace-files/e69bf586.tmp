@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="composite_sdk_param_TiltShift">APERTURE</string>
+    <string name="composite_sdk_param_EnhanceSkin">SKIN</string>
+    <string name="composite_sdk_param_EnhanceHdr">HDR</string>
+    <string name="composite_sdk_param_sharpness">SHARPEN</string>
+    <string name="composite_sdk_param_Temperature">TEMPERATURE</string>
+    <string name="composite_sdk_param_Hue">HUE</string>
+    <string name="composite_sdk_param_Exposure">EXPOSURE</string>
+    <string name="composite_sdk_param_Contrast">CONTRAST</string>
+    <string name="composite_sdk_param_Vibrance">VIBRANCE</string>
+    <string name="composite_sdk_param_Saturation">SATURATION</string>
+    <string name="composite_sdk_param_Lighting">LIGHTING</string>
+    <string name="composite_sdk_param_Filter">FILTER</string>
+    <string name="composite_sdk_param_vignetteStrong">VIGNETTE</string>
+    <string name="composite_sdk_param_centerStrong">CENTER LIGHT</string>
+    <string name="composite_sdk_param_Highlight">HIGHLIGHTS</string>
+    <string name="composite_sdk_param_Shadow">SHADOWS</string>
+
+    <string name="composite_sdk_pack_name_9ACB7198A5211F8D84D88E0557EEC228">SKY</string>
+    <string name="composite_sdk_pack_name_CE433928410B097C0E1EF563BAD3935E">RETRO</string>
+    <string name="composite_sdk_pack_name_7A4CB952182B48F72D548D2CBE4E2C4A">LOMO</string>
+    <string name="composite_sdk_pack_name_CA7AE1F381E8CFE743208917ACCE09A8">LOFT</string>
+    <string name="composite_sdk_pack_name_70D765278B9ED512E0BE5CC797100E4F">FILM</string>
+    <string name="composite_sdk_pack_name_7F0D0A4BD6D752B50CDD41CDCD426DBB">B&amp;W</string>
+    <string name="composite_sdk_pack_name_AA16AAEEF599F501A83BA70BCE739487">FASHION</string>
+    <string name="composite_sdk_pack_name_F1B680BF4C2440EADB45919E83621EBC">SKIN</string>
+    <string name="composite_sdk_pack_name_EDDDBBAEE8A00055F41178E9B355EF4B">CARTOON</string>
+    <string name="composite_sdk_pack_name_048183C174616BDD91917D03A31A25B5">HDR</string>
+    <string name="composite_sdk_pack_name_AA0EA332E35BD75B5D40514CFBCB12F6">MONO</string>
+    <string name="composite_sdk_pack_name_AF6B29D4D63C23C6B3C2F47AF1B82A43">TIMER</string>
+    <string name="composite_sdk_pack_name_DBC811F1E0988DF818F8658EE3C3C593">LEAKS</string>
+    <string name="composite_sdk_pack_name_2895EA8CBE5BE6407AB4AA66443DF59F">STAGE</string>
+    <string name="composite_sdk_pack_name_38D739C44F1C1518BC2621A88D1DD3BF">FLARE</string>
+    <string name="composite_sdk_pack_name_84A69162691D4EE713D6F4159BDC9DCB">SCRATCH</string>
+    <string name="composite_sdk_pack_name_C1AC4C4DC18DCE13D78A721F5A391E6A">PARTICLE</string>
+    <string name="composite_sdk_pack_name_A317AF21F75A274F12E7457D04A2C2C1">PAPER</string>
+
+</resources>

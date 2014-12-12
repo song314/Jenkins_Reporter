@@ -1,0 +1,215 @@
+package us.pinguo.androidsdk;
+
+import android.content.Context;
+
+public class PGImageSDK {
+    public final static int SDK_STATUS_CREATE = 0x10000000;// SDK还没有初始化
+    public final static int SDK_STATUS_DRAW = 0x10000001;// SDK可以进行渲染动作了
+    public final static int SDK_STATUS_DESTROY = 0x10000002;// SDK释放动作
+    public final static int SDK_STATUS_RELOAD = 0x10000003;// SDK重新加载shader
+
+    private Context mContext;
+    private String strKey;
+
+    private byte[] bShaderScript = null;
+    private int mRendererPointer = 0;
+    private int mEGLPointer = 0;
+    private int nSDKStatus = SDK_STATUS_CREATE;
+    private boolean bReload = false;
+    private boolean bRunning = false;
+    private PGGLThread mThread = null;
+    private PGRendererMethod mMethod = null;
+
+    private final Object mRenderActionLock = new Object();
+
+    public PGImageSDK(Context context, String key, byte[] config) {
+        bShaderScript = config;
+        init(context, key);
+    }
+
+    public boolean reloadResource(byte[] buffer) {
+        synchronized (mRenderActionLock) {
+            bShaderScript = buffer;
+
+            nSDKStatus = SDK_STATUS_RELOAD;
+
+            // 没有SurfaceView 处理
+            if (!bRunning) {
+                mThread.run();
+                try {
+                    mRenderActionLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                bRunning = true;
+            }
+
+            mRenderActionLock.notify();
+            try {
+                mRenderActionLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            nSDKStatus = SDK_STATUS_DRAW;
+
+            return bReload;
+        }
+    }
+
+    public boolean isRenderActionBusyRunning() {
+        return mThread != null && mThread.isBusyRunning();
+    }
+
+    public void renderAction(PGRendererMethod action) {
+        // synchronized (mRenderActionLock) {
+        if (bRunning) {
+            if (action == null || mRendererPointer == 0) {
+                return;
+            }
+        } else {
+            if (action == null) {
+                return;
+            }
+        }
+
+        mMethod = action;
+
+        // 没有SurfaceView 处理
+        synchronized (mRenderActionLock) {
+            if (!bRunning) {
+                mThread.run();
+
+                try {
+                    mRenderActionLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                bRunning = true;
+            }
+
+            mMethod.setRendererPointer(mRendererPointer);
+            mRenderActionLock.notify();
+        }
+    }
+
+    public void renderActionWithWait(PGRendererMethod action) {
+        synchronized (mRenderActionLock) {
+            if (bRunning) {
+                if (action == null || mRendererPointer == 0) {
+                    return;
+                }
+            } else {
+                if (action == null) {
+                    return;
+                }
+            }
+
+            mMethod = action;
+
+            // 没有SurfaceView 处理
+            if (!bRunning) {
+                mThread.run();
+
+                try {
+                    mRenderActionLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                bRunning = true;
+            }
+
+            mMethod.setRendererPointer(mRendererPointer);
+
+            mRenderActionLock.notify();
+
+            try {
+                mRenderActionLock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void destroySDK() {
+        synchronized (mRenderActionLock) {
+            nSDKStatus = SDK_STATUS_DESTROY;
+            mRenderActionLock.notify();
+        }
+    }
+
+    // 载入内容
+    private void init(Context context, String key) {
+        mContext = context;
+        strKey = key;
+        mThread = new PGGLThread();
+        mThread.setImageSDK(this);
+    }
+
+    // 以下函数主要提供给SDK内部处理，不提供外部调用
+    public int getSDKStatus() {
+        return nSDKStatus;
+    }
+
+    public void setSDKStatus(int type) {
+        nSDKStatus = type;
+    }
+
+    // SDK创建命令，不对外
+    public void create() {
+        mRendererPointer = PGNativeMethod.createAndroidSDK(strKey, mContext, bShaderScript);
+        nSDKStatus = SDK_STATUS_DRAW;
+    }
+
+    // SDK内部的实际销毁命令，不对外
+    public void destroy() {
+        PGNativeMethod.destroyAndroidSDK(mRendererPointer);
+
+        mRendererPointer = 0;
+    }
+
+    public byte[] getResource() {
+        return bShaderScript;
+    }
+
+    public void setResourceStatus(boolean b) {
+        bReload = b;
+    }
+
+    // 负责当动作需要阻塞的时候恢复
+    public Object getRenderActionLock() {
+        return mRenderActionLock;
+    }
+
+    // 获得创建的Render指针
+    public int getRenderPointer() {
+        return mRendererPointer;
+    }
+
+    // 获得实际的渲染动作
+    public PGRendererMethod getRenderMethod() {
+        return mMethod;
+    }
+
+    // 用于绑定的EGL指针
+    public boolean createEGLDisplay() {
+        mEGLPointer = PGNativeMethod.createEGLDisplay();
+
+        if (mEGLPointer != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void releaseEGLDisplay() {
+        if (mEGLPointer != 0) {
+            PGNativeMethod.destroyEGLDisplay(mEGLPointer);
+        }
+    }
+
+    public boolean isDestroy() {
+        return SDK_STATUS_DESTROY == nSDKStatus;
+    }
+}

@@ -1,0 +1,77 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.androidsdk.PGRect;
+
+/**
+ * Created by pinguo on 14-6-12.
+ */
+public class CropEffectGroupRendererMethod extends EffectGroupRendererMethod {
+
+    private final static String TAG = CropEffectGroupRendererMethod.class.getSimpleName();
+
+    protected PGRect mPGRect;
+
+    protected boolean setPhotoInfo(){
+        if(!super.setPhotoInfo()){
+            return false;
+        }
+
+        if(mPGRect!=null){
+            if(!this.adjustImage(0, false, 0, mPGRect, false, false, 0, true)){
+
+                GLogger.i(TAG,"adjust is fail");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected void makePhoto(){
+
+       boolean hasMakePhotoModel = true;
+       int count = mEffectModelArray.length;
+       int nullCount = 0;
+       for(MakePhotoModel makePhotoModel : mEffectModelArray){
+           if(makePhotoModel == null){
+               nullCount++;
+           }
+       }
+
+       if(count == nullCount){
+           hasMakePhotoModel = false;
+       }
+
+        //如果一种特效都不做的话则直接做普通特效
+       if(!hasMakePhotoModel){
+           if(!this.setEffect("Effect=Normal")){
+               if(mRendererMethodActionListener!=null){
+                   mRendererMethodActionListener.fail();
+               }
+               GLogger.i(TAG,"setEffect Normal is fail");
+               return ;
+           }
+
+           if(!this.make()){
+               if(mRendererMethodActionListener!=null){
+                   mRendererMethodActionListener.fail();
+               }
+               GLogger.i(TAG,"make fail");
+               return ;
+           }
+       }
+
+       super.makePhoto();
+    }
+
+    public void setPGRect(PGRect pgRect){
+        this.mPGRect = pgRect;
+    }
+
+    public PGRect getPGRect(){
+        return this.mPGRect;
+    }
+}

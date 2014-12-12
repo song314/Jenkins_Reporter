@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="#1a1c1e">
+
+    <!-- 顶部  -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="3dp"
+        android:layout_marginLeft="@dimen/composite_sdk_save_layout_margin"
+        android:layout_marginRight="@dimen/composite_sdk_save_layout_margin"
+        android:id="@+id/main_top">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="120dp"
+            android:singleLine="true"
+            android:layout_centerInParent="true"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:text="滤镜详情"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="#00000000"
+            android:id="@+id/re_take"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:text="back" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:id="@+id/top_info"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+        <com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="10dp"
+            android:id="@+id/user_icon"/>
+        <LinearLayout
+            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="5"
+            android:id="@+id/edit_info"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="35dp"
+                android:layout_marginLeft="15dp"
+                android:textColor="#ffffff"
+                android:text="@string/composite_sdk_save"
+                android:textSize="18sp"
+                android:id="@+id/author_name" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginBottom="15dp"
+                android:textColor="#ffffff"
+                android:text="@string/composite_sdk_save"
+                android:textSize="18sp"
+                android:id="@+id/filter_name"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none"
+        android:layout_below="@id/top_info">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:id="@+id/preview_org_img"
+                android:scaleType="fitCenter" />
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:id="@+id/preview_img"
+                android:scaleType="fitCenter"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:id="@+id/filter_param_title_lay"
+                android:layout_below="@id/preview_img"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/composite_sdk_share_filter_param_title">
+                </ImageView>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:visibility="visible"
+                    android:textColor="#a1a1a1"
+                    android:gravity="bottom"
+                    android:text="@string/composite_sdk_filter_param_title"
+                    android:textSize="18sp"/>
+
+            </LinearLayout>
+
+            <com.pinguo.edit.sdk.widget.ScrollInnerListView
+                android:id="@+id/param_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollFooter="#00000000"
+                android:overScrollHeader="#00000000"
+                android:cacheColorHint="#00000000"
+                android:listSelector="#00000000"
+                android:dividerHeight="20dp"
+                android:divider="#00000000"
+                android:fadingEdge="none"
+                android:fadingEdgeLength="0dp"
+                android:layout_marginTop="20dp"
+                android:paddingBottom="40dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_below="@id/filter_param_title_lay">
+            </com.pinguo.edit.sdk.widget.ScrollInnerListView>
+            <include
+                layout="@layout/progress_dialog"
+                android:id="@+id/progress_layout"
+                />
+        </RelativeLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:id="@+id/bottom_layout"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#cf000000">
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="#ffffff"
+            android:text="下载"
+            android:textSize="18sp"
+            android:id="@+id/down"
+            android:background="@drawable/composite_sdk_save_botton_bg"/>
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textColor="#ffffff"
+            android:text="分享"
+            android:textSize="18sp"
+            android:id="@+id/share"
+            android:background="@drawable/composite_sdk_save_botton_bg"/>
+    </LinearLayout>
+</RelativeLayout>
+

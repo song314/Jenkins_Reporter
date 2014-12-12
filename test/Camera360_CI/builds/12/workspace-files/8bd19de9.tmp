@@ -1,0 +1,115 @@
+package com.pinguo.mix.api;
+
+/**
+ * Created by taoli on 14-4-9.
+ */
+public class ApiConstants {
+
+    private static final String API_SLASH = "/";
+    private static final String API_URL = "http://mix.camera360.com";
+    private static final String API_URL_USERINFO = "http://share.camera360.com";
+    private static final String API_URL_APPUPDATE = "http://appres.camera360.com";
+//    private static final String API_URL_MIX_TEST = "http://mixtest.camera360.com";
+
+
+    public static final String API_URL_PHOTO_UPLOAD_AUTH
+            = API_URL + API_SLASH + "photo/upload/auth";
+
+    public static final String API_URL_ADD_PROCESS_INFO
+            = API_URL + API_SLASH + "process/info/add";
+
+    public static final String API_URL_GET_APP_UPDATE
+            = API_URL_APPUPDATE + API_SLASH + "mix/update";
+
+    public static final String API_URL_ADD_FILTER_INFO
+            = API_URL + API_SLASH + "filter/info/add";
+
+    public static final String API_URL_GET_WECHAT_USERINFO
+            = API_URL_USERINFO + API_SLASH + "share/GetWechat";
+
+    public static final String API_URL_GET_FACEBOOK_USERINFO
+            = API_URL_USERINFO + API_SLASH + "share/GetFacebookInfo";
+
+//    public static final String API_URL_PHOTO_UPLOAD_AUTH
+//            = API_URL + API_SLASH + "photo/upload/auth";
+//
+//    public static final String API_URL_ADD_PROCESS_INFO
+//            = API_URL + API_SLASH + "process/info/add";
+//
+//    public static final String API_URL_GET_APP_UPDATE
+//            = API_URL_APPUPDATE + API_SLASH + "mix/update";
+
+//    public static final String API_URL_ADD_FILTER_INFO
+//            = API_URL_MIX_TEST + API_SLASH + "filter/info/add";
+//
+//    public static final String API_URL_UPDATE_FILTER_INFO
+//            = API_URL_MIX_TEST + API_SLASH + "filter/info/update";
+//
+//    public static final String API_URL_GET_FILTER_INFO
+//            = API_URL_MIX_TEST + API_SLASH + "filter/info/get";
+//
+//    public static final String API_URL_GET_FILTER_NEWEST_INFO
+//            = API_URL_MIX_TEST + API_SLASH + "filter/info/newest";
+//
+//    public static final String API_URL_DOWNLOAD_FILTER_INFO
+//            = API_URL_MIX_TEST + API_SLASH + "filter/info/download";
+
+//    public static final String API_URL_GET_WECHAT_USERINFO
+//            = API_URL_USERINFO + API_SLASH + "share/GetWechat";
+//
+//    public static final String API_URL_GET_FACEBOOK_USERINFO
+//            = API_URL_USERINFO + API_SLASH + "share/GetFacebookInfo";
+
+    public static final String PARAM_TOKEN = "token";
+    public static final String PARAM_EXPIRES = "expires";
+
+    public static final String PARAM_ACCESS_TOKEN = "access_token";
+    public static final String PARAM_OPENID = "openid";
+
+    public static final String PARAM_TYPE = "type";
+    public static final String PARAM_NICK = "nick";
+    public static final String PARAM_CODE = "code";
+    public static final String PARAM_FILE = "file";
+    public static final String PARAM_FILTER_INFO = "info";
+    public static final String PARAM_ORIGIN_ETAG = "originEtag";
+    public static final String PARAM_EDIT_ETAG = "editEtag";
+    public static final String PARAM_AVATAR = "avatar";
+    public static final String PARAM_NICK_NAME = "nickName";
+
+    public static final String SECRET = "*jNb29>,1*)4`:\\Bo)023&3MnvQ14Lk@";
+    public static final String PARAM_FILTER_NAME = "filterName";
+    public static final String PARAM_LOCALE = "locale";
+    public static final String PARAM_APP_NAME = "appName";
+    public static final String PARAM_APP_VERSION = "appVersion";
+    public static final String PARAM_PLATFORM = "platform";
+    public static final String PARAM_APP_ID = "appId";
+    public static final String PARAM_DEVICE = "device";
+    public static final String PARAM_DEVICE_ID = "deviceId";
+    public static final String PARAM_IMEI = "imei";
+    public static final String PARAM_SYSTEM_VERSION = "systemVersion";
+    public static final String PARAM_MCC = "mcc";
+    public static final String PARAM_MNC = "mnc";
+    public static final String PARAM_CHANNEL = "channel";
+    public static final String PARAM_GEOINFO = "geoinfo";
+    public static final String PARAM_VERSION_CODE = "versionCode";
+    public static final String PARAM_VERSION_NAME = "versionName";
+    public static final String PARAM_TITLE = "title";
+    public static final String PARAM_DESCRIPTION = "description";
+    public static final String PARAM_PACKAGE_URL = "packageUrl";
+    public static final String PARAM_HAS_NEW_VERSION = "hasNewVersion";
+    public static final String PARAM_SUCCESS_TIME = "successTime";
+    public static final String PARAM_NEXT_NOTIFY_TIME = "nextNotifyTime";
+    public static final String PARAM_NEXT_NOTIFY_DAY_INTERVAL = "nextNotifyDayInterval";
+
+    public static final String PARAM_FILTER_ORIGIN_ETAG = "originEtag";
+    public static final String PARAM_FILTER_EDIT_ETAG = "editEtag";
+    public static final String PARAM_FILTER_DATA = "data";
+    public static final String PARAM_FILTER_DOWNLOAD_CNT = "downloadCnt";
+    public static final String PARAM_FILTER_USER_ID = "userId";
+    public static final String PARAM_FILTER_AVATAR = "avatar";
+    public static final String PARAM_FILTER_NICK_NAME = "nickName";
+    public static final String PARAM_FILTER_ID = "id";
+    public static final String PARAM_FILTER_LIMIT = "limit";
+    public static final String PARAM_FILTER_SKIP = "skip";
+    public static final String PARAM_IGNORE_VERSION_CODE = "ignoreVersionCode";
+}

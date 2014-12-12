@@ -1,0 +1,204 @@
+package com.pinguo.edit.sdk.filter.square.model;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+import com.pinguo.edit.sdk.filter.square.model.entity.OnLineCompositeBean;
+import com.pinguo.mix.api.ApiCallback;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * Created by hlf on 14-11-27.
+ * 对滤镜类型进行具体操作的数据类
+ */
+public abstract class OnLineCompositeTypeBaseManager {
+
+    private List<OnLineCompositeBean> mList = new ArrayList<OnLineCompositeBean>();
+    private OnLineCompositeCallback mLastCallBack;
+    private Lock mLock = new ReentrantLock();
+
+    public abstract Cursor getCursor(SQLiteDatabase db);
+
+    public abstract void loadModel(CompositeModel.OnModelLoadActionListener actionListener, SQLiteDatabase db,
+                                   Object... Objects);
+
+    public abstract void clearDB(SQLiteDatabase db);
+
+    public abstract void insertDB(SQLiteDatabase db, OnLineCompositeBean bean);
+
+    public List<OnLineCompositeBean> getList() {
+        return mList;
+    }
+
+    public void loadModelForDB(SQLiteDatabase db) {
+        Cursor cursor = getCursor(db);
+        if (null != cursor) {
+            int originEtagIndex = cursor.getColumnIndex("originEtag");
+            int editEtagIndex = cursor.getColumnIndex("editEtag");
+            int infoIndex = cursor.getColumnIndex("info");
+            int userIdIndex = cursor.getColumnIndex("userId");
+            int avatarIndex = cursor.getColumnIndex("avatar");
+
+            int nickNameIndex = cursor.getColumnIndex("nickName");
+            int filterNameIndex = cursor.getColumnIndex("filterName");
+            int dataIndex = cursor.getColumnIndex("data");
+            int downloadCntIndex = cursor.getColumnIndex("downloadCnt");
+            int idIndex = cursor.getColumnIndex("id");
+
+            while (cursor.moveToNext()) {
+                OnLineCompositeBean bean = new OnLineCompositeBean();
+                bean.setOriginEtag(cursor.getString(originEtagIndex));
+                bean.setEditEtag(cursor.getString(editEtagIndex));
+                bean.setInfo(cursor.getString(infoIndex));
+                bean.setUserId(cursor.getString(userIdIndex));
+                bean.setAvatar(cursor.getString(avatarIndex));
+
+                bean.setNickName(cursor.getString(nickNameIndex));
+                bean.setFilterName(cursor.getString(filterNameIndex));
+                bean.setData(cursor.getString(dataIndex));
+                bean.setDownloadCnt(cursor.getString(downloadCntIndex));
+                bean.setId(cursor.getString(idIndex));
+
+                mList.add(bean);
+            }
+            cursor.close();
+        }
+    }
+
+    private void addModelForDB(SQLiteDatabase db, List<OnLineCompositeBean> list, boolean firstPage) {
+        if (firstPage) {
+            clearDB(db);
+
+        }
+
+        db.beginTransaction();
+        try {
+            for (OnLineCompositeBean bean : list) {
+                insertDB(db, bean);
+
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    protected OnLineCompositeCallback newCompositeCallback(CompositeModel.OnModelLoadActionListener actionListener,
+                                                           SQLiteDatabase db) {
+        if (mLastCallBack != null) {
+            mLastCallBack.stop();
+        }
+
+        OnLineCompositeCallback callback = new OnLineCompositeCallback();
+        callback.setLock(mLock);
+        callback.setActionListener(actionListener);
+        callback.setSQLiteDatabase(db);
+        callback.setBaseManager(this);
+        callback.setList(getList());
+        mLastCallBack = callback;
+
+        return callback;
+    }
+
+    public static class OnLineCompositeCallback implements ApiCallback {
+
+        private boolean isStop;
+        private Lock mLock;
+        private CompositeModel.OnModelLoadActionListener mLoadActionListener;
+        private List<OnLineCompositeBean> mList;
+        private boolean mFirstPage;
+        private OnLineCompositeTypeBaseManager mBaseManager;
+        private SQLiteDatabase mDatabase;
+
+        /**
+         * 这个ApiCallback是之前cc代码移植过来的，存在冗余，object... params是用不上的
+         *
+         * @param data   字符串，服务端返回数据中的data数据
+         * @param params 冗余代码，用不上
+         */
+        @Override
+        public void onResponse(Object data, Object... params) {
+            if (!isStop) {
+                mLock.lock();
+                try {
+                    List<OnLineCompositeBean> onLineList = new ArrayList<OnLineCompositeBean>();
+                    JSONArray jsonArray = new JSONArray(data.toString());
+                    for (int i = 0;
+                         i < jsonArray.length();
+                         i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        OnLineCompositeBean bean = new OnLineCompositeBean();
+                        bean.setOriginEtag(jsonObject.getString("originEtag"));
+                        bean.setEditEtag(jsonObject.getString("editEtag"));
+                        bean.setInfo(jsonObject.getString("info"));
+                        bean.setUserId(jsonObject.getString("userId"));
+                        bean.setAvatar(jsonObject.getString("avatar"));
+                        bean.setNickName(jsonObject.getString("nickName"));
+                        bean.setFilterName(jsonObject.getString("filterName"));
+                        bean.setData(jsonObject.getString("downloadCnt"));
+                        bean.setId(jsonObject.getString("id"));
+                        onLineList.add(bean);
+                    }
+
+                    if (mFirstPage) {
+                        mList.clear();
+                    }
+                    mList.addAll(onLineList);
+                    if (mLoadActionListener != null) {
+                        mLoadActionListener.onResponse(onLineList);
+                    }
+                    mBaseManager.addModelForDB(mDatabase, onLineList, mFirstPage);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } finally {
+                    mLock.unlock();
+                }
+            }
+        }
+
+
+        @Override
+        public void onError(String error) {
+            if (mLoadActionListener != null && !isStop) {
+                mLoadActionListener.onError(error);
+            }
+        }
+
+        public void stop() {
+            isStop = true;
+        }
+
+        public void setLock(Lock lock) {
+            mLock = lock;
+        }
+
+        public void setActionListener(CompositeModel.OnModelLoadActionListener actionListener) {
+            mLoadActionListener = actionListener;
+        }
+
+        public void setFirstPage(boolean firstPage) {
+            mFirstPage = firstPage;
+        }
+
+        public void setList(List<OnLineCompositeBean> list) {
+            mList = list;
+        }
+
+        public void setSQLiteDatabase(SQLiteDatabase db) {
+            mDatabase = db;
+        }
+
+        public void setBaseManager(OnLineCompositeTypeBaseManager baseManager) {
+            mBaseManager = baseManager;
+        }
+    }
+}

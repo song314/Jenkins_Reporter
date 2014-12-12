@@ -1,0 +1,23 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.content.Context;
+import android.view.Gravity;
+import android.widget.Toast;
+
+/**
+ * Created by taoli on 14/11/18.
+ */
+public class ToastUtils {
+
+    public static Toast makeText(Context context, int textId, int duration) {
+        Toast toast = Toast.makeText(context, textId, duration);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        return toast;
+    }
+
+    public static Toast makeText(Context context, String text, int duration) {
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        return toast;
+    }
+}

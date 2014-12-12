@@ -1,0 +1,53 @@
+package com.pinguo.intent;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+
+import us.pinguo.android.effect.group.sdk.group.PhotoSaveController;
+import us.pinguo.sdk.GroupController;
+
+/**
+ * Created by taoli on 14-9-2.
+ */
+public class IntentGroupController extends GroupController implements PhotoSaveController.SaveCallback {
+    public IntentGroupController(Activity activity, View rootView, Bundle savedInstanceState) {
+        super(activity, rootView, savedInstanceState);
+    }
+
+    @Override
+    protected void save() {
+        PhotoSaveController.saveBigPhoto(mActivity, mPath, mSDKManager,
+                mCompositeForPathRendererMethod.getMakePhotoModelArray(), this);
+    }
+
+    @Override
+    public void onSaveFinished(String photoPath) {
+        Intent intent = new Intent();
+        intent.putExtra("path", photoPath);
+        mActivity.setResult(Activity.RESULT_OK, intent);
+        mActivity.finish();
+    }
+
+    @Override
+    public void onSaveFailed() {
+        if (null == mActivity) {
+            return;
+        }
+
+        if (mActivity.isFinishing()) {
+            return;
+        }
+
+        if (null != mProgressView) {
+            mProgressView.setVisibility(View.GONE);
+        }
+
+        ToastUtils.makeText(mActivity, R.string.composite_save_photo_failed, Toast.LENGTH_SHORT).show();
+    }
+}

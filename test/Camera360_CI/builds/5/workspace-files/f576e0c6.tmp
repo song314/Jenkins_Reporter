@@ -1,0 +1,664 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.MenuItemView;
+import com.pinguo.ui.widget.MenuItemWithValueView;
+import com.pinguo.ui.widget.SeekBar;
+
+import java.util.Iterator;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamColorBalanceItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamCurveItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceBase;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceHSL;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceVignette;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.EnhanceHdr;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.EnhanceSkin;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.Sharpen;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftCircle;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftLine;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by taoli on 14-7-5.
+ */
+public class DetailMenu extends BaseMenu {
+
+    private static final int MAKE_PHOTO_FINISH = 1000;
+    private View mAdjustLayout;
+    private View mTiltShiftLayout;
+
+    private Effect mCurEffect;
+
+    private SeekBar mParamSeekBar;
+
+    private static final int ADJUST_MODE_TILT_SHIFT = 0;
+    private static final int ADJUST_MODE_PARAM = 1;
+    private static final int ADJUST_MODE_SHARPEN = 2;
+    private static final int ADJUST_MODE_VIGNETTE = 3;
+    private static final int ADJUST_MODE_HIGHLIGHT_SHADOW = 4;
+    private static final int ADJUST_MODE_HDR = 5;
+    private static final int ADJUST_MODE_SKIN = 6;
+
+    private int mCurrentMode = ADJUST_MODE_PARAM;
+    private TiltShiftCircle mTiltShiftCircle;
+    private TiltShiftLine mTiltShiftLine;
+    private TiltShiftMenu mTiltShiftMenu;
+
+    private SharpenMenu mSharpenMenu;
+    private AdvanceVignetteMenu mVignetteMenu;
+    private AdvanceHSLHighlightShadowMenu mHighlightShadowMenu;
+    private HDRMenu mHDRMenu;
+    private SkinMenu mSkinMenu;
+
+    private int mImageWidth;
+    private int mImageHeight;
+
+    private ParamItem mCurParamItem;
+    private String mLastParamValue;
+    private Effect mAdvanceBase;
+    private Effect mAdvanceHSL;
+
+    private GLSurfaceViewCompositeRendererMethod mSubCompositeRendererMethod;
+    private BaseMenu mSubMenu;
+
+    public DetailMenu(Context context, SDKManager sdkManager, GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context, sdkManager, compositeRendererMethod);
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.AdvanceBase.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.AdvanceBase;
+    }
+
+    @Override
+    protected boolean isOnClickShowScroll() {
+        return false;
+    }
+
+    @Override
+    public void showSecondMenu() {
+        getSecondHorizontalLayout().setVisibility(View.VISIBLE);
+        getSecondHorizontalLayout().removeAllChildViews();
+
+        EnhanceHdr enhanceHdr = (EnhanceHdr) EffectDataManager.getInstance().getEffect(EnhanceHdr.class.getSimpleName());
+        addSecondMenuView("composite_sdk_hdr", enhanceHdr.name, getEffectClickListener(), isOnClickShowScroll(), enhanceHdr, false);
+
+        EnhanceSkin enhanceSkin = (EnhanceSkin) EffectDataManager.getInstance().getEffect(EnhanceSkin.class.getSimpleName());
+        addSecondMenuView("composite_sdk_skin", enhanceSkin.name, getEffectClickListener(), isOnClickShowScroll(), enhanceSkin, false);
+
+        Effect sharpen = EffectDataManager.getInstance().getEffect(Sharpen.class.getSimpleName());
+        ParamItem sharpenParamItem = sharpen.getParamItem(
+                Sharpen.PARAM_KEY_SHARPENESS, Sharpen.EFFECT_KEY_FAST_SHARPEN);
+        addSecondMenuView(sharpen.icon, sharpen.name, getEffectClickListener(), isOnClickShowScroll(), sharpenParamItem, false);
+
+        mTiltShiftCircle = new TiltShiftCircle();
+        mTiltShiftLine = new TiltShiftLine();
+
+        mAdvanceBase = EffectDataManager.getInstance().getEffect(AdvanceBase.class.getSimpleName());
+        AdvanceBase advanceBase = (AdvanceBase) EffectModel.getInstance().getEffectByKey(mAdvanceBase.key);
+        List<ParamItem> paramList = mAdvanceBase.getParam().getParamItemList();
+        for (ParamItem paramItem:paramList) {
+            if (paramItem instanceof ParamCurveItem) {
+                continue;
+            }
+
+            if (paramItem instanceof ParamColorBalanceItem) {
+                continue;
+            }
+
+            ParamItem tempParamItem = null;
+            List<ParamItem> tempParamItemList = advanceBase.getParam().getParamItemList();
+            Iterator<ParamItem> iterator = tempParamItemList.iterator();
+            while (iterator.hasNext()) {
+                ParamItem pi = iterator.next();
+                if (paramItem.key.equals(pi.key)) {
+                    tempParamItem = pi;
+                    break;
+                }
+            }
+
+            paramItem.icon = tempParamItem.icon;
+            paramItem.name = tempParamItem.name;
+            addSecondMenuView(paramItem.icon, paramItem.name,
+                    getEffectClickListener(), isOnClickShowScroll(), paramItem, false);
+        }
+
+        SharedPreferences preferences = mContext.getSharedPreferences(PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean isHSLSupport = preferences.getBoolean(PGCompositeSDKApi.PG_EDIT_SDK_SHADER_CHECK_RESULT, true);
+
+        mAdvanceHSL = EffectDataManager.getInstance().getEffect(AdvanceHSL.class.getSimpleName());
+        ParamFloatItem highlightItem = (ParamFloatItem) mAdvanceHSL.getParamItem(
+                AdvanceHSL.PARAM_KEY_HIGHLIGHT, AdvanceHSL.EFFECT_KEY_LIGHTZ_HSL);
+        ParamFloatItem tempHighLightItem = (ParamFloatItem) EffectModel.getInstance().getEffectByKey(mAdvanceHSL.key).getParamItem(AdvanceHSL.PARAM_KEY_HIGHLIGHT, AdvanceHSL.EFFECT_KEY_LIGHTZ_HSL);
+
+        highlightItem.icon = tempHighLightItem.icon;
+        highlightItem.name = tempHighLightItem.name;
+
+        if (isHSLSupport) {
+            addSecondMenuView(highlightItem.icon, highlightItem.name, getEffectClickListener(),
+                    isOnClickShowScroll(), highlightItem, false);
+        }
+
+        ParamFloatItem shadowItem = (ParamFloatItem) mAdvanceHSL.getParamItem(
+                AdvanceHSL.PARAM_KEY_SHADOW, AdvanceHSL.EFFECT_KEY_LIGHTZ_HSL);
+
+        ParamFloatItem tempShadowItem = (ParamFloatItem) EffectModel.getInstance().getEffectByKey(mAdvanceHSL.key).getParamItem(AdvanceHSL.PARAM_KEY_SHADOW, AdvanceHSL.EFFECT_KEY_LIGHTZ_HSL);
+
+        shadowItem.icon = tempShadowItem.icon;
+        shadowItem.name = tempShadowItem.name;
+
+        if (isHSLSupport) {
+            addSecondMenuView(shadowItem.icon, shadowItem.name, getEffectClickListener(),
+                    isOnClickShowScroll(), shadowItem, false);
+        }
+
+//        TiltShift tiltShift = new TiltShift();
+//        addSecondMenuView(tiltShift.icon, tiltShift.name, getEffectClickListener(),
+//                isOnClickShowScroll(), tiltShift, false);
+
+        AdvanceVignette vignette = (AdvanceVignette) EffectDataManager.getInstance().getEffect(
+                AdvanceVignette.class.getSimpleName());
+        ParamItem strongParamItem = vignette.getParamItem(
+                AdvanceVignette.PARAM_KEY_VIGNETTE_STRONG, AdvanceVignette.EFFECT_KEY_LIGHTZ_VIGNETTE);
+        ParamFloatItem tempStrongParamItem = (ParamFloatItem) EffectModel.getInstance().getEffectByKey(vignette.key).getParamItem(AdvanceVignette.PARAM_KEY_VIGNETTE_STRONG, AdvanceVignette.EFFECT_KEY_LIGHTZ_VIGNETTE);
+
+        strongParamItem.icon = tempStrongParamItem.icon;
+        strongParamItem.name = tempStrongParamItem.name;
+        addSecondMenuView(strongParamItem.icon, strongParamItem.name, getEffectClickListener(),
+                isOnClickShowScroll(), strongParamItem, false);
+
+        ParamItem centerStrongParamItem = vignette.getParamItem(
+                AdvanceVignette.PARAM_KEY_CENTER_STRONG, AdvanceVignette.EFFECT_KEY_LIGHTZ_VIGNETTE);
+
+        ParamFloatItem tempCenterStrongParamItem = (ParamFloatItem) EffectModel.getInstance().getEffectByKey(vignette.key).getParamItem(AdvanceVignette.PARAM_KEY_CENTER_STRONG, AdvanceVignette.EFFECT_KEY_LIGHTZ_VIGNETTE);
+
+        centerStrongParamItem.icon = tempCenterStrongParamItem.icon;
+        centerStrongParamItem.name = tempCenterStrongParamItem.name;
+        View lastView = addSecondMenuView(centerStrongParamItem.icon, centerStrongParamItem.name,
+                getEffectClickListener(), isOnClickShowScroll(), centerStrongParamItem, false);
+        MenuItemView menuItemView = (MenuItemView) lastView;
+        menuItemView.enableDivider(false);
+
+        mAdjustLayout = getSeekbarLayout().findViewById(
+                ResourceHelper.getIdByName(mContext, "id", "adjust_layout"));
+        mParamSeekBar = (SeekBar) mAdjustLayout.findViewById(
+                ResourceHelper.getIdByName(mContext, "id", "adjust_seek_bar"));
+
+        mTiltShiftLayout = getSeekbarLayout().findViewById(
+                ResourceHelper.getIdByName(mContext, "id", "tilt_shift_layout"));
+
+        getSecondHorizontalLayout().scrollToView(null);
+    }
+
+    @Override
+    protected View.OnClickListener getEffectClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (null != mSubMenu) {
+                    mSubMenu.finish();
+                }
+
+                if (null != mPhotoChangeListener) {
+                    mPhotoChangeListener.onPhotoChanged();
+                }
+
+                //当执行虚化的时候需要会把点击seekbar的点击事件抢走，所以需要在这里加入此代码抢回点击事件
+                setSeekbarLayout(getSeekbarLayout());
+
+                Object tag = v.getTag();
+                mParamSeekBar.setOnSeekChangeListener(null);
+                mCurParamItem = null;
+
+                mSubCompositeRendererMethod = new GLSurfaceViewCompositeRendererMethod();
+
+                mSubCompositeRendererMethod.setBitmap(mOrgBitmap);
+                mSubCompositeRendererMethod.setEffectModeArray(mEffectModelArray);
+                mSubCompositeRendererMethod.setShowBitmapWidth(mCompositeRendererMethod.getShowBitmapWidth());
+                mSubCompositeRendererMethod.setShowBitmapHeight(mCompositeRendererMethod.getShowBitmapHeight());
+
+                if (tag instanceof EnhanceHdr) {
+
+                    mHDRMenu = new HDRMenu(mContext, mSDKManager, mSubCompositeRendererMethod);
+                    //之所以加入这个是因为关于作图的数据源设计太差了，导致数据出错了，所有这里要转么设置进入数据
+//                    mHDRMenu.setMakePhotoModelArray(mEffectModelArray);
+                    mHDRMenu.setContainer(mContainer);
+                    mHDRMenu.setAdjustSeekBarLayout(mSeekbarLayout);
+                    mHDRMenu.setAutoHideTextView(mAutoHideTextView);
+                    mHDRMenu.setProgressBar(getProgressBar());
+                    mHDRMenu.setScreenLayout(getScreenLayout());
+                    mHDRMenu.showSecondMenu();
+
+                    mSubMenu = mHDRMenu;
+
+                    mCurEffect = EffectDataManager.getInstance().getEffect(EnhanceHdr.class.getSimpleName());
+                    mCurrentMode = ADJUST_MODE_HDR;
+                    mTiltShiftLayout.setVisibility(View.GONE);
+                    mAdjustLayout.setVisibility(View.VISIBLE);
+
+                    mCurParamItem = mCurEffect.getParamItem(
+                            EnhanceHdr.PARAM_KEY_HIGHLIGHT, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+
+                } else if (tag instanceof EnhanceSkin) {
+
+                    mSkinMenu = new SkinMenu(mContext, mSDKManager, mSubCompositeRendererMethod);
+                    mSkinMenu.setContainer(mContainer);
+                    mSkinMenu.setAdjustSeekBarLayout(mSeekbarLayout);
+                    mSkinMenu.setAutoHideTextView(mAutoHideTextView);
+                    mSkinMenu.setProgressBar(getProgressBar());
+                    mSkinMenu.setScreenLayout(getScreenLayout());
+                    mSkinMenu.showSecondMenu();
+
+                    mSubMenu = mSkinMenu;
+
+                    mCurEffect = EffectDataManager.getInstance().getEffect(EnhanceSkin.class.getSimpleName());
+                    mCurrentMode = ADJUST_MODE_SKIN;
+                    mTiltShiftLayout.setVisibility(View.GONE);
+                    mAdjustLayout.setVisibility(View.VISIBLE);
+
+                    mCurParamItem = mCurEffect.getParamItem(
+                            EnhanceSkin.PARAM_KEY_STRONG, EnhanceSkin.EFFECT_KEY_PORTRAINT_SKIN_FULL);
+
+                } else {
+
+                    mCurParamItem = (ParamItem) v.getTag();
+                    if (mCurParamItem.key.equals(AdvanceVignette.PARAM_KEY_CENTER_STRONG)
+                            || mCurParamItem.key.equals(AdvanceVignette.PARAM_KEY_VIGNETTE_STRONG)) {
+                        // TODO
+                        mVignetteMenu = new AdvanceVignetteMenu(mContext, mSDKManager, mSubCompositeRendererMethod);
+                        mVignetteMenu.setContainer(mContainer);
+                        mVignetteMenu.setAdjustSeekBarLayout(mSeekbarLayout);
+                        mVignetteMenu.setAutoHideTextView(mAutoHideTextView);
+                        mVignetteMenu.setProgressBar(getProgressBar());
+                        mVignetteMenu.setScreenLayout(getScreenLayout());
+                        mVignetteMenu.setParamItem((ParamFloatItem) mCurParamItem);
+                        mVignetteMenu.showSecondMenu();
+                        mSubMenu = mVignetteMenu;
+
+                        mCurEffect = EffectDataManager.getInstance().getEffect(
+                                AdvanceVignette.class.getSimpleName());
+                        mCurrentMode = ADJUST_MODE_VIGNETTE;
+                        mTiltShiftLayout.setVisibility(View.GONE);
+                        mAdjustLayout.setVisibility(View.VISIBLE);
+
+                    } else if (mCurParamItem.key.equals(Sharpen.PARAM_KEY_SHARPENESS)) {
+                        mSharpenMenu = new SharpenMenu(mContext, mSDKManager, mSubCompositeRendererMethod);
+                        mSharpenMenu.setContainer(mContainer);
+                        mSharpenMenu.setAdjustSeekBarLayout(mSeekbarLayout);
+                        mSharpenMenu.setAutoHideTextView(mAutoHideTextView);
+                        mSharpenMenu.setProgressBar(getProgressBar());
+                        mSharpenMenu.setScreenLayout(getScreenLayout());
+                        mSharpenMenu.showSecondMenu();
+                        mSubMenu = mSharpenMenu;
+
+                        mCurEffect = EffectDataManager.getInstance().getEffect(Sharpen.class.getSimpleName());
+                        mCurrentMode = ADJUST_MODE_SHARPEN;
+                        mTiltShiftLayout.setVisibility(View.GONE);
+                        mAdjustLayout.setVisibility(View.VISIBLE);
+
+                    } else if (mCurParamItem.key.equals(AdvanceHSL.PARAM_KEY_HIGHLIGHT)
+                            || mCurParamItem.key.equals(AdvanceHSL.PARAM_KEY_SHADOW)) {
+                        mHighlightShadowMenu = new AdvanceHSLHighlightShadowMenu(mContext, mSDKManager, mSubCompositeRendererMethod);
+                        mHighlightShadowMenu.setContainer(mContainer);
+                        mHighlightShadowMenu.setAdjustSeekBarLayout(mSeekbarLayout);
+                        mHighlightShadowMenu.setAutoHideTextView(mAutoHideTextView);
+                        mHighlightShadowMenu.setProgressBar(getProgressBar());
+                        mHighlightShadowMenu.setScreenLayout(getScreenLayout());
+                        mHighlightShadowMenu.setParamItem((ParamFloatItem) mCurParamItem);
+                        mHighlightShadowMenu.showSecondMenu();
+                        mSubMenu = mHighlightShadowMenu;
+
+                        mCurEffect = EffectDataManager.getInstance().getEffect(
+                                AdvanceHSL.class.getSimpleName());
+                        mCurrentMode = ADJUST_MODE_HIGHLIGHT_SHADOW;
+                        mTiltShiftLayout.setVisibility(View.GONE);
+                        mAdjustLayout.setVisibility(View.VISIBLE);
+
+                    } else {
+
+                        if (mCurParamItem instanceof ParamFloatItem) {
+                            ParamFloatItem item = (ParamFloatItem) mCurParamItem;
+                            mParamSeekBar.setSeekLength(Math.round(item.min), Math.round(item.max),
+                                    Math.round(item.defaultValue), item.step);
+                            mParamSeekBar.setValue(item.value);
+                            mParamSeekBar.setOnSeekChangeListener(mParamSeekChangeListener);
+
+                            mLastParamValue = String.valueOf(item.value);
+                            mCurrentMode = ADJUST_MODE_PARAM;
+
+                            setMakePhotoModel(mAdvanceBase);
+                            setParamsModel(item.effectKey, item.key, String.valueOf(item.value));
+                            mSDKManager.showPhoto(mSubCompositeRendererMethod);
+                        }
+
+                        mSubMenu = null;
+
+                        mTiltShiftLayout.setVisibility(View.GONE);
+                        mAdjustLayout.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                mSelectedEffectView = (MenuItemWithValueView) v;
+                DetailMenu.super.getShowScrollViewClickListener().onClick(v);
+            }
+        };
+    }
+
+    @Override
+    protected String getScrollValueNameString() {
+        if (mCurrentMode == ADJUST_MODE_PARAM
+                || mCurrentMode == ADJUST_MODE_VIGNETTE
+                || mCurrentMode == ADJUST_MODE_HIGHLIGHT_SHADOW) {
+            return mContext.getResources().getString(
+                    ResourceHelper.getIdByName(mContext, "string", mCurParamItem.name));
+        }
+
+        if (mCurrentMode == ADJUST_MODE_TILT_SHIFT
+                || mCurrentMode == ADJUST_MODE_SHARPEN
+                || mCurrentMode == ADJUST_MODE_HDR
+                || mCurrentMode == ADJUST_MODE_SKIN
+                ) {
+            return mContext.getResources().getString(
+                    ResourceHelper.getIdByName(mContext, "string", mCurEffect.name));
+
+        }
+
+        return "";
+    }
+
+    @Override
+    public void quitScrollView() {
+
+        if (mCurrentMode == ADJUST_MODE_TILT_SHIFT) {
+            mTiltShiftMenu.quitScrollView();
+            mTiltShiftMenu.finish();
+
+        } else if (mCurrentMode == ADJUST_MODE_SHARPEN) {
+            mSharpenMenu.quitScrollView();
+
+        } else if (mCurrentMode == ADJUST_MODE_VIGNETTE) {
+            mVignetteMenu.quitScrollView();
+
+        } else if (mCurrentMode == ADJUST_MODE_HIGHLIGHT_SHADOW) {
+            mHighlightShadowMenu.quitScrollView();
+
+        } else if (mCurrentMode == ADJUST_MODE_HDR) {
+            mHDRMenu.quitScrollView();
+
+        } else if (mCurrentMode == ADJUST_MODE_SKIN) {
+            mSkinMenu.quitScrollView();
+
+        } else {
+            ParamFloatItem item = (ParamFloatItem) mCurParamItem;
+            if (null != mLastParamValue) {
+                item.value = Float.parseFloat(mLastParamValue);
+                setParamsModel(item.effectKey, item.key, String.valueOf(item.value));
+                mLastParamValue = null;
+            }
+
+            super.makePhoto();
+        }
+        super.quitScrollView();
+    }
+
+    @Override
+    public void hideScrollView() {
+//        MakePhotoModel[] array = mEffectModelArray;
+
+        if (null != mSeekbarLayout) {
+            Animation slideOutToBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f);
+            slideOutToBottomAnimation.setDuration(400);
+            slideOutToBottomAnimation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    if (null != mParamSeekBar) {
+                        mParamSeekBar.reset();
+                    }
+
+                    if (mCurrentMode == ADJUST_MODE_TILT_SHIFT) {
+                        mTiltShiftMenu.hideScrollView();
+                        mTiltShiftMenu.finish();
+                    } else if (mCurrentMode == ADJUST_MODE_SHARPEN) {
+                        mSharpenMenu.hideScrollView();
+                    } else if (mCurrentMode == ADJUST_MODE_VIGNETTE) {
+                        mVignetteMenu.hideScrollView();
+
+                    } else if (mCurrentMode == ADJUST_MODE_HIGHLIGHT_SHADOW) {
+                        mHighlightShadowMenu.hideScrollView();
+
+                    } else if (mCurrentMode == ADJUST_MODE_HDR) {
+                        mHDRMenu.hideScrollView();
+
+                    } else if (mCurrentMode == ADJUST_MODE_SKIN) {
+                        mSkinMenu.hideScrollView();
+
+                    }
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            mSeekbarLayout.startAnimation(slideOutToBottomAnimation);
+            mSeekbarLayout.setVisibility(View.GONE);
+        }
+
+        if (null != mScrollValueName) {
+            Animation slideOutToTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f);
+            slideOutToTopAnimation.setDuration(400);
+            mScrollValueName.startAnimation(slideOutToTopAnimation);
+            mScrollValueName.setVisibility(View.GONE);
+        }
+
+        if (null != mContainer) {
+            mContainer.setComparePhoto(mOrgBitmap);
+        }
+
+        if (null != mSelectedEffectView) {
+            if (null != mCurParamItem && mCurParamItem instanceof ParamFloatItem) {
+                ParamFloatItem item = (ParamFloatItem) mCurParamItem;
+                if (item.value != item.defaultValue) {
+                    ((MenuItemWithValueView)mSelectedEffectView).setValue(
+                            Math.round(item.value / item.step));
+                    mSelectedEffectView.showDownLine();
+                } else {
+                    ((MenuItemWithValueView)mSelectedEffectView).hideValue();
+                    mSelectedEffectView.hideDownLine();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void makePhoto() {
+        if (mCurrentMode == ADJUST_MODE_TILT_SHIFT) {
+            mTiltShiftMenu.makePhoto();
+            return;
+        } else if (mCurrentMode == ADJUST_MODE_SHARPEN) {
+            mSharpenMenu.makePhoto();
+            return;
+        } else if (mCurrentMode == ADJUST_MODE_VIGNETTE) {
+            mVignetteMenu.makePhoto();
+            return;
+
+        } else if (mCurrentMode == ADJUST_MODE_HIGHLIGHT_SHADOW) {
+            mHighlightShadowMenu.makePhoto();
+            return;
+
+        } else if (mCurrentMode == ADJUST_MODE_HDR) {
+            mHDRMenu.makePhoto();
+            return;
+
+        } else if (mCurrentMode == ADJUST_MODE_SKIN) {
+            mSkinMenu.makePhoto();
+            return;
+
+        }
+
+        super.makePhoto();
+    }
+
+    @Override
+    protected View addSecondMenuView(String icon, String name, View.OnClickListener onCompositeClick, boolean isShowScrollView, Object tag, boolean enableClickAnimation) {
+        MenuItemWithValueView effectMenuItemView = new MenuItemWithValueView(mContext);
+        effectMenuItemView.setIcon(ResourceHelper.getIdByName(mContext, "drawable", icon));
+        effectMenuItemView.setNameText(mContext.getString(
+                ResourceHelper.getIdByName(mContext, "string", name)));
+        effectMenuItemView.enableDivider(true);
+        effectMenuItemView.setDownLineColor("#4b5258");
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        effectMenuItemView.setTag(tag);
+        if (tag instanceof ParamFloatItem) {
+            ParamFloatItem item = (ParamFloatItem) tag;
+            if (item.value != item.defaultValue) {
+                effectMenuItemView.setValue(Math.round(item.value / item.step));
+                effectMenuItemView.showDownLine();
+            }
+
+        } else if (tag instanceof EnhanceHdr) {
+            EnhanceHdr enhanceHdr = (EnhanceHdr) tag;
+            //hdr已高光的参数作为基准参数
+            ParamFloatItem item = (ParamFloatItem) enhanceHdr.getParamItem(
+                    EnhanceHdr.PARAM_KEY_HIGHLIGHT, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+            if (item.value != item.defaultValue) {
+                effectMenuItemView.setValue(Math.round(item.value / item.step));
+                effectMenuItemView.showDownLine();
+            }
+
+        } else if (tag instanceof EnhanceSkin) {
+            EnhanceSkin enhanceSkin = (EnhanceSkin) tag;
+
+            ParamFloatItem item = (ParamFloatItem) enhanceSkin.getParamItem(
+                    EnhanceSkin.PARAM_KEY_STRONG, EnhanceSkin.EFFECT_KEY_PORTRAINT_SKIN_FULL);
+            if (item.value != item.defaultValue) {
+                effectMenuItemView.setValue(Math.round(item.value / item.step));
+                effectMenuItemView.showDownLine();
+            }
+
+        }
+
+        getSecondHorizontalLayout().addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), enableClickAnimation, false);
+
+        return effectMenuItemView;
+    }
+
+    public void setImageSize(int imageWidth, int imageHeight) {
+        mImageWidth = imageWidth;
+        mImageHeight = imageHeight;
+    }
+
+    private SeekBar.OnSeekChangeListener mParamSeekChangeListener
+            = new SeekBar.OnSeekChangeListener() {
+        @Override
+        public void onSeekChanged(float currentValue, float step) {
+            if (ADJUST_MODE_PARAM == mCurrentMode) {
+                if (mCurParamItem instanceof ParamFloatItem) {
+                    ParamFloatItem item = (ParamFloatItem) mCurParamItem;
+                    item.value = currentValue;
+
+                    if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                        setParamsModel(item.effectKey, item.key, String.valueOf(currentValue));
+                        mSDKManager.showPhoto(mSubCompositeRendererMethod);
+                    }
+
+                    if (item.noEffectValue != currentValue) {
+                        setAutoHideTextViewValue(currentValue / step);
+                    } else {
+                        mAutoHideTextView.setVisibility(View.GONE);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onSeekStopped(float currentValue, float step) {
+            if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                ParamFloatItem item = (ParamFloatItem) mCurParamItem;
+                setParamsModel(item.effectKey, item.key, String.valueOf(currentValue));
+
+                mProgressBar.setVisibility(View.VISIBLE);
+                mScreenLayout.setVisibility(View.VISIBLE);
+
+                mSubCompositeRendererMethod.setRendererMethodActionListener(rendererMethodActionListener);
+                mSDKManager.showPhoto(mSubCompositeRendererMethod);
+//                makePhoto(rendererMethodActionListener);
+            }
+            mAutoHideTextView.hideForNow();
+        }
+    };
+
+    private EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener = new EffectGroupRendererMethod.RendererMethodActionListener() {
+
+
+        @Override
+        public void success(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void fail() {
+
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+
+        if (null != mSubMenu) {
+            mSubMenu.finish();
+        }
+    }
+}

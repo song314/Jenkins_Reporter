@@ -1,0 +1,69 @@
+package com.pinguo.intent;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+
+import com.pinguo.edit.sdk.camera.CcCameraFragment;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.sdk.BeautyActivity;
+
+/**
+ * Created by taoli on 14-9-2.
+ */
+public class IntentCcCameraFragment extends CcCameraFragment {
+
+    @Override
+    protected void startEdit(String path, long takenTime) {
+        Intent intent = new Intent(getActivity(), BeautyActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, path);
+        intent.putExtra(ConstantUtil.FROM_OTHER_APP, true);
+        intent.putExtra(ConstantUtil.ENTER_PHOTO_TYPE, ConstantUtil.ENTER_PHOTO_TYPE_CAMREA);
+        intent.putExtra(ConstantUtil.PHOTO_TAKEN_TIME, takenTime);
+        Bundle b = getActivity().getIntent().getExtras();
+        if (null != b) {
+            intent.putExtras(b);
+        }
+
+        getActivity().startActivity(intent);
+    }
+
+    @Override
+    public void onGalleryEnterClick() {
+        Intent intent = new Intent(getActivity(), IntentGalleryActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        Bundle b = getActivity().getIntent().getExtras();
+        if (null != b) {
+            intent.putExtras(b);
+        }
+        intent.putExtra(ConstantUtil.START_FROM_CAMERA, true);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void doCrop(final byte[] exifData, final byte[] data, final int orientationRotate) {
+        SharedPreferences sp = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean initialized = sp.getBoolean(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT.toLowerCase(), false);
+        if (!initialized) {
+            PGCompositeSDKApi.initData(getActivity(),
+                    new PGCompositeSDKApi.InitDataCallback() {
+                        @Override
+                        public void onInitStart() {
+
+                        }
+
+                        @Override
+                        public void onInitFinish() {
+                            IntentCcCameraFragment.super.doCrop(exifData, data, orientationRotate);
+                        }
+                    });
+        } else {
+            super.doCrop(exifData, data, orientationRotate);
+        }
+    }
+}

@@ -1,0 +1,57 @@
+package com.pinguo.edit.sdk.wxapi;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.tencent.mm.sdk.modelbase.BaseReq;
+import com.tencent.mm.sdk.modelbase.BaseResp;
+import com.tencent.mm.sdk.modelmsg.SendAuth;
+import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.sdk.openapi.IWXAPI;
+import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
+import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
+
+    private static final String WECHAT_APP_ID = "wx8f8c0427ab9ddd4f";
+
+    public static final int SHARE_PICTURE = 0;
+    public static final int GET_USER_INFO = 1;
+    private static final String EXTRA_CODE = "code";
+    private IWXAPI mWechatAPI;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mWechatAPI = WXAPIFactory.createWXAPI(this, WECHAT_APP_ID, true);
+        mWechatAPI.registerApp(WECHAT_APP_ID);
+        mWechatAPI.handleIntent(getIntent(), this);
+    }
+
+    @Override
+    public void onReq(BaseReq baseReq) {
+
+    }
+
+    @Override
+    public void onResp(BaseResp baseResp) {
+
+        GLogger.i("1111111", baseResp.errStr + "/" + baseResp.errCode);
+        if (baseResp instanceof SendAuth.Resp) {
+            SendAuth.Resp authResp = (SendAuth.Resp) baseResp;
+            GLogger.i("1111111", authResp.code + "/" + authResp.getType());
+            WXDataReceiver.notifyDataChange(this, WXDataReceiver.EVENT_GET_USER_INFO, authResp.code, authResp.getType(), authResp.errCode);
+        } else if (baseResp instanceof SendMessageToWX.Resp){
+            SendMessageToWX.Resp sendMessageResp = (SendMessageToWX.Resp) baseResp;
+            WXDataReceiver.notifyDataChange(this, WXDataReceiver.EVENT_SHARE_PICTURE, sendMessageResp.getType(), sendMessageResp.errCode);
+        }
+
+        finish();
+    }
+
+}

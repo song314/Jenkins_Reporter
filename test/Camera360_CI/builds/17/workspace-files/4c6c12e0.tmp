@@ -1,0 +1,80 @@
+package com.pinguo.edit.sdk.filter.square.page.list;
+
+import android.content.Context;
+import android.os.AsyncTask;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.filter.square.FilterSquareConst;
+import com.pinguo.edit.sdk.filter.square.Info.GetFilterInfoApi;
+import com.pinguo.edit.sdk.filter.square.Info.bean.FilterData;
+import com.pinguo.mix.api.ApiCallback;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by zhongzheng on 14-11-6.
+ */
+public class ListViewAdapter <T extends FilterData> extends BaseAdapter {
+    private List<T> mBeans;
+    private Context mContext;
+
+    public ListViewAdapter(Context context) {
+        mContext = context;
+    }
+
+    public void setBeans(List<T> beans) {
+        if (null != mBeans) {
+            mBeans.clear();
+        }
+        mBeans = beans;
+    }
+
+    public void addBeans(List<T> beans) {
+        if (null == mBeans) {
+            mBeans = beans;
+        } else {
+            mBeans.addAll(beans);
+        }
+    }
+
+    @Override
+    public int getCount() {
+        if(mBeans != null){
+            return mBeans.size();
+        }
+        return 0;
+    }
+
+    @Override
+    public ListItemView getItem(int position) {
+        return makeItem(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
+//        if (convertView == null){
+//            return makeItem(position);
+//        }
+//        return convertView;
+        return makeItem(position);
+    }
+
+    private ListItemView makeItem(final int position){
+        FilterData filter = mBeans.get(position);
+        ListItemView itemView = new ListItemView(mContext);
+        itemView.setIconForImageUrl(filter.getEditEtag());
+        itemView.setName(filter.getFilterName());
+        itemView.setAuthor(filter.getNickName());
+        return itemView;
+    }
+}

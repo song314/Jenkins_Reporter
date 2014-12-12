@@ -1,0 +1,73 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public class Lighting extends Effect {
+    private static final String TAG = Lighting.class.getSimpleName();
+
+    public static final String PARAM_KEY_OPACITY = "Opacity";
+    public static final String PARAM_KEY_TEXTURE_ANGLE = "textureAngle";
+
+    public Lighting() {
+        this.type = Type.Lighting.name();
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Lighting lighting = null;
+
+        try {
+            lighting = (Lighting) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != lighting )
+            return lighting;
+        else
+            return new Lighting();
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", type);
+            String packName = context.getResources().getString(
+                    ResourceHelper.getString(context, "composite_sdk_pack_name_" + packKey));
+            jsonObject.put("packName", packName);
+            jsonObject.put("name", name);
+            if (null != param) {
+                for (ParamItem item:param.getParamItemList()) {
+                    if (item.key.equals(PARAM_KEY_OPACITY)) {
+                        jsonObject.put("value", Math.round(((ParamFloatItem) item).value / ((ParamFloatItem) item).step));
+                        jsonObject.put("minValue", Math.round(((ParamFloatItem) item).min));
+                        jsonObject.put("type", 0);
+                        break;
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

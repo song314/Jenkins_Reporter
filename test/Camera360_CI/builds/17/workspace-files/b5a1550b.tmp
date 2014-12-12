@@ -1,0 +1,118 @@
+package com.pinguo.edit.sdk.filter.square.view;
+
+import android.content.Context;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.adapter.SquareItemAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by hlf on 14-11-28.
+ * 顶部可以缩放，可以支持颈部，底部是listview的view
+ */
+public class HeadZoomMultipleListView extends LinearLayout {
+
+    protected ViewGroup mHeadParentView;
+    protected ViewGroup mNeckParentView;
+    protected ViewPager mBodyViewPager;
+    protected Context mContext;
+    private BodyViewPagerAdapter mPagerAdapter;
+
+    public HeadZoomMultipleListView(Context context) {
+        super(context);
+
+        init(context);
+    }
+
+    public HeadZoomMultipleListView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        init(context);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+    }
+
+    protected void init(Context context) {
+        mContext = context;
+        LayoutInflater.from(context).inflate(R.layout.composite_sdk_head_zoom_multiple_listview, this, true);
+        mHeadParentView = (ViewGroup)findViewById(R.id.head);
+        mNeckParentView = (ViewGroup)findViewById(R.id.neck);
+        mBodyViewPager = (ViewPager)findViewById(R.id.body);
+
+    }
+
+    /**
+     * 生成底部的listview
+     * @param count 生成的个数
+     */
+    public void addListViews(int count) {
+        mPagerAdapter = new BodyViewPagerAdapter();
+        List<PullToRefreshListView> list = new ArrayList<PullToRefreshListView>();
+        for (int i=0; i<count; i++) {
+            PullToRefreshListView pullToRefreshListView = new PullToRefreshListView(mContext);
+            list.add(pullToRefreshListView);
+        }
+        mPagerAdapter.setListViews(list);
+        mBodyViewPager.setAdapter(mPagerAdapter);
+    }
+
+    public void setListViewModel(int index, List list) {
+        PullToRefreshListView listView = mPagerAdapter.getListViews().get(index);
+        SquareItemAdapter adapter = new SquareItemAdapter();
+        adapter.setList(list);
+        listView.setAdapter(adapter);
+    }
+
+    public static class BodyViewPagerAdapter extends PagerAdapter{
+
+        public List<PullToRefreshListView> mListViews;
+
+        @Override
+        public boolean isViewFromObject(View arg0, Object arg1) {
+            return arg0 == arg1;
+        }
+
+        @Override
+        public int getCount() {
+            return mListViews.size();
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position,
+                                Object object) {
+            container.removeView(mListViews.get(position));
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            container.addView(mListViews.get(position));
+
+
+            return mListViews.get(position);
+        }
+
+        public void setListViews(List<PullToRefreshListView> list) {
+            mListViews = list;
+        }
+
+        public List<PullToRefreshListView> getListViews() {
+            return mListViews;
+        }
+    }
+
+
+}

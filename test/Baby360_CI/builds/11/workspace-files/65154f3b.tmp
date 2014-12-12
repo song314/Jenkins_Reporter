@@ -1,0 +1,107 @@
+package com.pinguo.mix.api;
+
+import android.util.Log;
+
+import com.pinguo.Camera360Lib.network.HttpGsonRequest;
+import com.pinguo.Camera360Lib.network.HttpStringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-4-22.
+ */
+public class HttpRequest {
+
+    private static double serverTime;
+
+    private static final String TAG = HttpRequest.class.getName();
+
+    private HttpStringRequest mRequest;
+
+    public HttpRequest(final String url,
+                       final Map<String, String> params,
+                       final ApiCallback callback) {
+        mRequest = new HttpStringRequest(
+                HttpGsonRequest.Method.POST, url
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                return params;
+            }
+
+            @Override
+            protected void onResponse(String s) {
+                Log.i(TAG, "Get server response for url:" + url);
+                Log.i(TAG, "Get server response data:" + s);
+                try {
+                    JSONObject json = new JSONObject(s);
+                    int status = json.getInt("status");
+                    String message = "";
+                    if (json.has("message")) {
+                        message = json.getString("message");
+                    }
+
+                    if (200 != status) {
+                        if (null != callback) {
+                            Log.i(TAG, "Get server response error:" + message);
+                            callback.onError(message);
+                        }
+                        return;
+                    }
+
+                    if (json.has("serverTime")) {
+                        double serverTime = json.getDouble("serverTime");
+                        if (0 != serverTime) {
+                            setServerTime(serverTime);
+                        }
+                    }
+
+                    if (json.has("data")) {
+                        Object data = json.get("data");
+                        if (null != callback) {
+                            callback.onResponse(data.toString());
+                        }
+                    } else {
+                        if (null != callback) {
+                            callback.onResponse(message);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                if (null != callback) {
+                    callback.onError(e.getMessage());
+                }
+            }
+        };
+    }
+
+    public void execute() {
+        mRequest.execute();
+    }
+
+    public void cancel() {
+        mRequest.cancel();
+    }
+
+    public static double getServerTime() {
+        return serverTime;
+    }
+
+    public static void setServerTime(double serverTime) {
+        HttpRequest.serverTime = serverTime;
+    }
+
+    public final static String getOSVersion() {
+        return android.os.Build.MODEL + "|" + android.os.Build.DEVICE + "|"
+                + android.os.Build.DISPLAY + "|"
+                + android.os.Build.VERSION.RELEASE;
+    }
+}

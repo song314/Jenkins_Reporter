@@ -1,0 +1,185 @@
+package us.pinguo.android.effect.group.sdk.data;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
+import android.provider.Settings;
+
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.BitmapUtils;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.IEffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+
+/**
+ * Created by pinguo on 14-7-17.
+ */
+public class EffectSaveManager {
+
+    private final static int ICON_SIZE = 252;
+    private final static String TAG = EffectSaveManager.class.getSimpleName();
+
+    public static CompositeEffect saveEffect(String name, String mCompositeEffectKey, String des, MakePhotoModel[] modelArray, Bitmap glSurfaceBitmap, Context context) {
+
+        EffectModel mEffectModel = EffectModel.getInstance().init(context);
+        CompositeEffect ce = new CompositeEffect();
+        ce.description = des;
+        ce.name = name;
+        if (null != mCompositeEffectKey) {
+            ce.key = mCompositeEffectKey;
+        } else {
+            String androidID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            if (androidID != null) {
+                ce.key = androidID + ce.createTime;
+            }
+
+        }
+        ce.author = "hlf";
+        if (0 == ce.isDefault) {
+            ce.isDefault = 2;
+        }
+
+        for (MakePhotoModel makePhotoModel : modelArray) {
+            if (makePhotoModel != null) {
+                String key = makePhotoModel.getEffect().key;
+                Effect effect = EffectDataManager.getInstance().getEffect(key);
+
+                ce.addEffect(effect);
+            }
+        }
+
+        if (glSurfaceBitmap != null) {
+//            Matrix matrix = new Matrix();
+//            float matrixScale = (float) ICON_SIZE / (Math.max(glSurfaceBitmap.getWidth(), glSurfaceBitmap.getHeight()));
+//
+//            matrix.postScale(matrixScale, matrixScale);
+//
+//            Bitmap bitmap = Bitmap.createBitmap(glSurfaceBitmap, 0, 0, glSurfaceBitmap.getWidth(), glSurfaceBitmap.getHeight(), matrix, false);
+
+            Bitmap bitmap = BitmapUtils.scaleBitmap(glSurfaceBitmap, ICON_SIZE, 0);
+            ce.setIconBitmap(bitmap);
+        }
+
+        mEffectModel.save(ce, new IEffectModel.Callback() {
+
+
+            @Override
+            public void onPreExecute(Object... param) {
+
+            }
+
+            @Override
+            public void onExecute(Object... param) {
+
+            }
+
+            @Override
+            public void onPostExecute(Object... result) {
+                String toIconPath = result[0].toString();
+                ImageLoader.getInstance().getMemoryCache().clear();
+
+                boolean deleteResult = ImageLoader.getInstance().getDiscCache().get("file://" + toIconPath).delete();
+                GLogger.i(TAG, "iconPath:" + toIconPath + ",result:" + deleteResult);
+//                System.out.println("iconPath:"+toIconPath+",result:"+deleteResult);
+            }
+        });
+
+        return ce;
+    }
+
+    public static CompositeEffect saveEffect(String name, String mCompositeEffectKey, String des, CompositeEffect ce, Bitmap glSurfaceBitmap, Context context) {
+
+        EffectModel mEffectModel = EffectModel.getInstance().init(context);
+        ce.description = des;
+        ce.name = name;
+        if (null != mCompositeEffectKey) {
+            ce.key = mCompositeEffectKey;
+        } else {
+            String androidID = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            if (androidID != null) {
+                ce.key = androidID + ce.createTime;
+            }
+
+        }
+//        ce.author = "hlf";
+        if (0 == ce.isDefault) {
+            ce.isDefault = 2;
+        }
+//
+        if (glSurfaceBitmap != null) {
+//            Matrix matrix = new Matrix();
+//            float matrixScale = (float) ICON_SIZE / (Math.max(glSurfaceBitmap.getWidth(), glSurfaceBitmap.getHeight()));
+//
+//            matrix.postScale(matrixScale, matrixScale);
+//
+//            Bitmap bitmap = Bitmap.createBitmap(glSurfaceBitmap, 0, 0, glSurfaceBitmap.getWidth(), glSurfaceBitmap.getHeight(), matrix, false);
+
+            Bitmap bitmap = BitmapUtils.scaleBitmap(glSurfaceBitmap, ICON_SIZE, 0);
+            ce.setIconBitmap(bitmap);
+        }
+
+        mEffectModel.save(ce, new IEffectModel.Callback() {
+
+
+            @Override
+            public void onPreExecute(Object... param) {
+
+            }
+
+            @Override
+            public void onExecute(Object... param) {
+
+            }
+
+            @Override
+            public void onPostExecute(Object... result) {
+                String toIconPath = result[0].toString();
+                ImageLoader.getInstance().getMemoryCache().clear();
+
+                boolean deleteResult = ImageLoader.getInstance().getDiscCache().get("file://" + toIconPath).delete();
+                GLogger.i(TAG, "iconPath:" + toIconPath + ",result:" + deleteResult);
+//                System.out.println("iconPath:"+toIconPath+",result:"+deleteResult);
+            }
+        });
+
+        return ce;
+    }
+
+    public static void saveEffectWithActivityFinish(final String name, final String mCompositeEffectKey, final String des, final MakePhotoModel[] modelArray,
+                                                    final Bitmap glSurfaceBitmap, final Activity activity, final EffectSaveManager.SaveCallback callback) {
+
+        new AsyncTask<Void, Void, CompositeEffect>() {
+
+            @Override
+            protected void onPostExecute(CompositeEffect ce) {
+                String a = ce.getJsonFilterInfo(activity);
+                callback.onSaveFinished(ce.getJsonFilterInfo(activity), ce.name);
+                saveActivityFinish(activity);
+            }
+
+            @Override
+            protected CompositeEffect doInBackground(Void... params) {
+                return saveEffect(name, mCompositeEffectKey, des, modelArray, glSurfaceBitmap, activity.getApplicationContext());
+            }
+        }.execute();
+    }
+
+    public static void saveActivityFinish(Activity activity) {
+//        Intent intent = new Intent();
+//        intent.putExtra(ConstantUtil.GROUP_RESULT_TYPE, ConstantUtil.GROUP_RESULT_TYPE_SAVE);
+//        activity.setResult(ConstantUtil.COMPOISTE_ACTIVITY_CHANGE_RESULT, intent);
+//        EffectDataManager.getInstance().clear();
+//        activity.finish();
+//        Intent intent = new Intent(activity, MixShareFilterActivity.class);
+//        activity.startActivity(intent);
+    }
+
+    public interface SaveCallback {
+        void onSaveFinished(String jsonInfo, String name);
+    }
+}

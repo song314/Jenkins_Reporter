@@ -1,0 +1,122 @@
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_beauty_seekbar_layout_height"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:background="@color/composite_sdk_beauty_menu_bg">
+
+    <RelativeLayout
+        android:id="@+id/operation_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_common_confirm_height"
+        android:layout_alignParentBottom="true"
+        android:background="@color/composite_sdk_beauty_composite_bg">
+
+        <View
+           android:layout_width="2dp"
+           android:layout_height="44dp"
+           android:background="@color/composite_sdk_beauty_menu_bg"
+           android:layout_centerInParent="true"
+           android:id="@+id/center_line"/>
+
+        <!-- x图标 -->
+        <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:orientation="vertical"
+           android:background="#0b0b0b"
+           android:gravity="center"
+           android:id="@+id/quit"
+           android:layout_toLeftOf="@+id/center_line">
+
+           <ImageView
+               android:layout_width="34dp"
+               android:layout_height="34dp"
+               android:src="@drawable/composite_sdk_camera_quit"/>
+
+        </LinearLayout>
+
+        <!-- 勾图标 -->
+        <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:orientation="vertical"
+           android:background="#0b0b0b"
+           android:gravity="center"
+           android:id="@+id/done"
+           android:layout_toRightOf="@+id/center_line">
+
+           <ImageView
+               android:layout_width="34dp"
+               android:layout_height="34dp"
+               android:src="@drawable/composite_sdk_senior_adjustment_finish"/>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/tilt_shift_layout"
+            android:orientation="horizontal"
+            android:layout_above="@id/operation_view"
+            android:layout_weight="1"
+            android:gravity="center">
+
+        <!-- 关闭 -->
+        <LinearLayout
+                android:id="@+id/tilt_shift_close"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center">
+
+            <ImageView
+                    android:layout_width="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:layout_height="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:src="@drawable/composite_sdk_tilt_shift_close">
+            </ImageView>
+        </LinearLayout>
+
+        <!-- 圆形移轴 -->
+        <LinearLayout
+                android:id="@+id/tilt_shift_circle"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="1dp"
+                android:layout_weight="1"
+                android:gravity="center">
+
+            <ImageView
+                    android:layout_width="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:layout_height="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:src="@drawable/composite_sdk_tilt_shift_circle">
+            </ImageView>
+        </LinearLayout>
+
+        <!-- 线性移轴 -->
+        <LinearLayout
+                android:id="@+id/tilt_shift_line"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="1dp"
+                android:gravity="center">
+
+            <ImageView
+                    android:layout_width="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:layout_height="@dimen/composite_sdk_detail_tilt_shift_icon_size"
+                    android:src="@drawable/composite_sdk_tilt_shift_direct">
+            </ImageView>
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

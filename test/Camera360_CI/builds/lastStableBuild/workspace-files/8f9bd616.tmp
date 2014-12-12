@@ -1,0 +1,116 @@
+package com.pinguo.edit.sdk.camera.entity;
+
+import android.graphics.RectF;
+
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+/**
+ * 图片信息
+ *
+ * @author Tsmile
+ */
+public class PictureInfo {
+    // 照片的高宽比
+    private float picScale = 1.0f;
+    // 图片尺寸
+    private SizeInfo picSize;
+    // exif data
+    private byte[] exifData;
+    // 拍照时间
+    private long takenTime = 0L;
+    // 相对图片尺寸的裁剪rect
+    private RectF cutRect;
+
+    private int cropSize;
+
+    private String fileSavePath;
+    private int rotateOrientation;
+    private String orgFilePath;
+
+    private boolean isFront;
+
+    public float getPicScale() {
+        return picScale;
+    }
+
+    public void setPicScale(float picScale) {
+        this.picScale = picScale;
+    }
+
+    public SizeInfo getPicSize() {
+        return picSize;
+    }
+
+    public void setPicSize(SizeInfo picSize) {
+        this.picSize = picSize;
+    }
+
+    public byte[] getExifData() {
+        return exifData;
+    }
+
+    public void setExifData(byte[] exifData) {
+        this.exifData = exifData;
+    }
+
+    public long getTakenTime() {
+        return takenTime;
+    }
+
+    public void setTakenTime(long takenTime) {
+        this.takenTime = takenTime;
+    }
+
+    public RectF getCutRect() {
+        return cutRect;
+    }
+
+    public void setCutRect(RectF cutRect) {
+        this.cutRect = cutRect;
+    }
+
+    public String getFileSavePath() {
+        return fileSavePath;
+    }
+
+    public void setFileSavePath(String fileSavePath) {
+        this.fileSavePath = fileSavePath;
+    }
+
+    private String generateFileSavePath() {
+        String title = CameraModuleUtil.createJpegName(getTakenTime());
+        return CameraModuleUtil.generateFilepath(title);
+    }
+
+    public void generateAndSetFileSavePath() {
+        this.fileSavePath = generateFileSavePath();
+    }
+
+    public int getRotateOrientation() {
+        return rotateOrientation;
+    }
+
+    public void setRotateOrientation(int rotateOrientation) {
+        this.rotateOrientation = rotateOrientation;
+    }
+
+    public int getCropSize() {
+        return cropSize;
+    }
+
+    public void setCropSize(int cropSize) {
+        this.cropSize = cropSize;
+    }
+
+    public void setOrgFilePath(String path) {
+        this.orgFilePath = path;
+    }
+
+    public boolean isFront() {
+        return isFront;
+    }
+
+    public void setFront(boolean front) {
+        isFront = front;
+    }
+}

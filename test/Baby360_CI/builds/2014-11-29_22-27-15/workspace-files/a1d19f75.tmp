@@ -1,0 +1,213 @@
+package com.pinguo.edit.sdk.edit;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.os.AsyncTask;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.RelativeLayout;
+
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToolUtils;
+
+import java.io.File;
+
+/**
+ * Created by taoli on 14-6-26.
+ */
+public class CropImageView extends RelativeLayout implements ImageLoadingListener {
+
+    private final static String TAG = CropImageView.class.getSimpleName();
+
+    private final int mCropAreaLength;
+    private ImageViewTouch mSrcImg;
+    private CropMask mMask;
+    private LoadingListener mLoadingListener;
+
+    private DisplayMetrics mDisplayMetrics;
+
+    private int mPhotoWidth;
+    private int mPhotoHeight;
+
+    private boolean mIsCropSupport = true;
+
+    public CropImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        WindowManager windowManager = (WindowManager)
+                context.getSystemService(Context.WINDOW_SERVICE);
+        mDisplayMetrics = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(mDisplayMetrics);
+
+        mCropAreaLength = mDisplayMetrics.widthPixels;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        mSrcImg = (ImageViewTouch) findViewById(
+                ResourceHelper.getId(getContext(), "src_img"));
+        mMask = (CropMask) findViewById(
+                ResourceHelper.getId(getContext(), "crop_mask"));
+    }
+
+    public boolean isCropSupport() {
+        return mIsCropSupport;
+    }
+
+    public void setImagePath(final String path) {
+
+        mSrcImg.setImageLoadingListener(this);
+        mSrcImg.getOptionsBuilder().displayer(new FadeInBitmapDisplayer(400));
+
+        final BitmapFactory.Options ops = new BitmapFactory.Options();
+        ops.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path.replaceFirst("file:/", ""), ops);
+
+        int rotate = ToolUtils.getRotatedDegree(path.replaceFirst("file:/", ""));
+        if (rotate == 90 || rotate == 270) {
+            mPhotoHeight = ops.outWidth;
+            mPhotoWidth = ops.outHeight;
+
+        } else {
+            mPhotoWidth = ops.outWidth;
+            mPhotoHeight = ops.outHeight;
+
+        }
+
+        if ((float) mPhotoWidth / mPhotoHeight > 2.0f
+                || (float) mPhotoHeight / mPhotoWidth > 2.0f) {
+            mIsCropSupport = false;
+        }
+
+        mSrcImg.setSize(mPhotoWidth, mPhotoHeight);
+
+        new AsyncTask<Void, Void, Bitmap>() {
+
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                if (null == bitmap) {
+                    if (null != mLoadingListener) {
+                        mLoadingListener.onLoadingFinish(false);
+                    }
+                    return;
+                }
+
+                mSrcImg.setImageBitmap(bitmap);
+
+                if (null != mLoadingListener) {
+                    mLoadingListener.onLoadingFinish(true);
+                }
+            }
+
+            @Override
+            protected Bitmap doInBackground(Void... params) {
+
+                String actualPath = path.replaceFirst("file:/", "");
+                File file = new File(actualPath);
+                if (!file.exists()) {
+                    return null;
+                }
+
+                int minSize = Math.min(mDisplayMetrics.widthPixels, mDisplayMetrics.heightPixels);
+                int scaleSize = Math.round((float) minSize * Math.max(ops.outWidth, ops.outHeight) / Math.min(ops.outWidth, ops.outHeight));
+                Bitmap bitmap = ToolUtils.getBitmap(path.replaceFirst("file:/", ""), scaleSize);
+
+                return bitmap;
+            }
+        }.execute();
+
+        if (null != mLoadingListener) {
+            mLoadingListener.onLoadingStart();
+        }
+
+    }
+
+    public RectF getImageRectF() {
+
+        float[] values = new float[9];
+        mSrcImg.getImageMatrix().getValues(values);
+
+        float scale = values[Matrix.MSCALE_X];
+
+        float transformX = values[Matrix.MTRANS_X];
+        float transformY = values[Matrix.MTRANS_Y];
+
+        float curWidth = mSrcImg.getDrawable().getIntrinsicWidth() * scale;
+        float curHeight = mSrcImg.getDrawable().getIntrinsicHeight() * scale;
+
+        RectF maskRectF = mMask.getRectF();
+        float maskLength = maskRectF.right - maskRectF.left;
+        float maskTop = maskRectF.top;
+
+        float left = Math.abs(transformX / curWidth);
+        float top = (maskTop - transformY) / curHeight;
+        float right = left + maskLength / curWidth;
+        float bottom = top + maskLength / curHeight;
+        return new RectF(left, top, right, bottom);
+    }
+
+    public SizeInfo getCropPictureSize() {
+        return new SizeInfo(mPhotoWidth, mPhotoHeight);
+//        return mSrcImg.getCropPictureSize();
+    }
+
+    @Override
+    public void onLoadingStarted(String s, View view) {
+        if (null != mLoadingListener) {
+            mLoadingListener.onLoadingStart();
+        }
+    }
+
+    @Override
+    public void onLoadingFailed(String s, View view, FailReason failReason) {
+        if (null != mLoadingListener) {
+            mLoadingListener.onLoadingFinish(false);
+        }
+    }
+
+    @Override
+    public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+        mSrcImg.initSize();
+        if (null != mLoadingListener) {
+            mLoadingListener.onLoadingFinish(true);
+        }
+    }
+
+    @Override
+    public void onLoadingCancelled(String s, View view) {
+
+    }
+
+    public void setLoadingListener(LoadingListener listener) {
+        mLoadingListener = listener;
+    }
+
+    public void changeCropMode() {
+        if (mSrcImg.getMode() == mSrcImg.IMAGE_MODE_FIT_LONG_SIDE) {
+            mSrcImg.setMode(ImageViewTouch.IMAGE_MODE_MATCH_SIDE);
+        } else {
+            mSrcImg.setMode(ImageViewTouch.IMAGE_MODE_FIT_LONG_SIDE);
+        }
+    }
+
+    public int getCropMode() {
+        return mSrcImg.getMode();
+    }
+
+    public interface LoadingListener {
+        void onLoadingStart();
+        void onLoadingFinish(boolean success);
+    }
+
+}

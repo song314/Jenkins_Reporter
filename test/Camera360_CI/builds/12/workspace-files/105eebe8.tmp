@@ -1,0 +1,793 @@
+package com.pinguo.edit.sdk.camera.util;
+
+import android.location.Location;
+
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class PGExifInfo {
+    private String TAG = PGExifInfo.class.getSimpleName();
+
+    // 含有IDFEntry的标签的
+    private static final int EXIF_START_INDEX = 10;
+
+    // 第一级的目录
+    private static final int TAG_GPSINFO = 0x8825;
+    private static final int TAG_EXIF_OFFSET = 0x8769;
+    private static final int TAG_INTEROPOFFSET = 0xA005;
+    private static final int TAG_MAKERNOTE = 0x927C;
+    private static final int TAG_CASIOPREVIEWTHUMBNAIL = 0x2000;
+    private static final int TAG_MAKE = 0x010F;
+    private static final int TAG_MODEL = 0x0110;
+    private static final int TAG_ORIENTATION = 0x0112;
+    private static final int TAG_SOFTWARE = 0x0131;
+    private static final int TAG_IMAGEWIDTH = 0x0100;
+    private static final int TAG_IMAGEHEIGHT = 0x0101;
+
+    // Exif Info offset的
+    private static final int TAG1_CREATE_DATE = 0x9004;
+    private static final int TAG1_IMAGE_WIDTH = 0xA002;
+    private static final int TAG1_IMAGE_HEIGHT = 0xA003;
+
+    // GPS相关的信息
+    private static final int TAG2_GPS_VERSIONID = 0x0;
+    private static final int TAG2_GPS_LATITUDEREF = 01;
+    private static final int TAG2_GPS_LATITUDE = 0x2;
+    private static final int TAG2_GPS_LONGITUDEREF = 0x3;
+    private static final int TAG2_GPS_LONGITUDE = 0x4;
+    private static final int TAG2_GPS_ALTITUDEREF = 0x5;
+    private static final int TAG2_GPS_ALTITUDE = 0x6;
+    private static final int TAG2_GPS_TIMESTAMP = 0x7;
+    private static final int TAG2_GPS_DATESTAMP = 0x1D;
+
+    private static final int[] DATA_FORMAT_LENGTH = {0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8};
+    private byte[] exifHead = null;
+    private List<PGExifInfo.IDFEntry> list = new ArrayList<PGExifInfo.IDFEntry>();
+    private boolean littleEndian = false;
+
+    /**
+     * 使用方法  <br/>
+     * byte[] exifData = Exif.getExifNoThumbnailImage(jpegdata);  <br/>
+     * exifInfo.setSoftware("Camera360");           <br/>
+     * exifInfo.setOrientation(180);   <br/>
+     * exifInfo.setTimestamp(1);      <br/>
+     * exifInfo.setSize(2000, 1000);   <br/>
+     * byte[] newPic = Exif.exifToJpegData(jpegdata, exifInfo.getExifData()); <br/>
+     * Exif.exifToJpegFile("/home/liubo/Public/exif图片/6434927.jpg", "/home/liubo/Public/exif图片/6434927_exif.jpg", exifInfo.getExifData());<br/>
+     *
+     * @param exifData
+     */
+    public PGExifInfo(byte[] exifData) {
+        // 取得的exif需要将里面的缩略图移除
+        if (analyticalExifHeader(exifData)) {
+            analyticalExifBody(exifData);
+        }
+    }
+
+    /**
+     * 设置相机的model,一般采用android.os.Build.MODEL
+     *
+     * @param model android.os.Build.MODEL
+     */
+    public void setModel(String model) {
+        if (model == null || "".equals(model)) {
+            return;
+        }
+
+        PGExifInfo.IDFEntry entry = getIDFEntryInList(TAG_MODEL);
+        if (entry == null) {
+            return;
+        }
+        entry.dataFormat = 2;
+        byte[] b = model.getBytes();
+
+        int length = b.length + 1;
+        if (length <= 4) {
+            length = 5;
+        }
+        byte[] bytes = getInitByte(length);
+        System.arraycopy(b, 0, bytes, 0, b.length);
+        entry.nComponent = length;
+        entry.offsetValues = bytes;
+        entry.values = null;
+    }
+
+    /**
+     * 设置相机的make,一般采用android.os.Build.BRAND
+     *
+     * @param make android.os.Build.BRAND
+     */
+    public void setMake(String make) {
+        if (make == null || "".equals(make)) {
+            return;
+        }
+
+        PGExifInfo.IDFEntry entry = getIDFEntryInList(TAG_MAKE);
+        if (entry == null) {
+            return;
+        }
+        entry.dataFormat = 2;
+        byte[] b = make.getBytes();
+
+        int length = b.length + 1;
+        if (length <= 4) {
+            length = 5;
+        }
+        byte[] bytes = getInitByte(length);
+        System.arraycopy(b, 0, bytes, 0, b.length);
+        entry.nComponent = length;
+        entry.offsetValues = bytes;
+        entry.values = null;
+    }
+
+    /**
+     * 写入方向
+     *
+     * @param rotation 方向，必须0,90,180,270四个值
+     */
+    public void setOrientation(int rotation) {
+        PGExifInfo.IDFEntry entry = getIDFEntryInList(TAG_ORIENTATION);
+        if (entry == null) {
+            return;
+        }
+        entry.dataFormat = 3;
+        entry.nComponent = 1;
+        entry.values = getInitByte(4);
+        Exif.unpack(entry.values, Exif.getOrientationFlag(rotation), 2, 0, littleEndian);
+    }
+
+    public void setSoftware(String software) {
+        if (software != null && !"".equals(software)) {
+            PGExifInfo.IDFEntry entry = getIDFEntryInList(TAG_SOFTWARE);
+            if (entry == null) {
+                return;
+            }
+            entry.dataFormat = 2;
+            byte[] b = software.getBytes();
+
+            int length = b.length + 1;
+            if (length <= 4) {
+                length = 5;
+            }
+            byte[] bytes = getInitByte(length);
+            System.arraycopy(b, 0, bytes, 0, b.length);
+            entry.nComponent = length;
+            entry.offsetValues = bytes;
+            entry.values = null;
+        }
+    }
+
+    public void setTimestamp(long timestamp) {
+        PGExifInfo.IDFEntry entry = getIDFEntryInList(TAG1_CREATE_DATE);
+        if (entry == null) {
+            return;
+        }
+
+        entry.dataFormat = 2;
+        entry.nComponent = 20;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.ENGLISH);
+        Date date = new Date(timestamp);
+        String curTime = format.format(date);
+        byte[] bytes;
+        try {
+            bytes = curTime.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            bytes = curTime.getBytes();
+        }
+        byte[] newBytes = getInitByte(20);
+        int copyLen = bytes.length;
+        if (bytes.length >= 20) {
+            copyLen = 20;
+        }
+        System.arraycopy(bytes, 0, newBytes, 0, copyLen);
+        entry.offsetValues = newBytes;
+    }
+
+    public void setLocation(Location location) {
+        if (location == null) {
+            return;
+        }
+
+        PGExifInfo.IDFEntry gpsEntry = getIDFEntryInList(TAG_GPSINFO);
+        if (gpsEntry == null) {
+            return;
+        }
+
+        // 1.版本号
+        PGExifInfo.IDFEntry gpsVersion = searchIDFEntryInList(TAG2_GPS_VERSIONID, gpsEntry.list);
+        if (gpsVersion != null) {
+            gpsVersion.tagNum = TAG2_GPS_VERSIONID;
+            gpsVersion.dataFormat = 1;
+            gpsVersion.nComponent = 4;
+            gpsVersion.values = new byte[4];
+            gpsVersion.values[0] = (byte) 0x02;
+            gpsVersion.values[1] = (byte) 0x02;
+            gpsVersion.values[2] = (byte) 0x00;
+            gpsVersion.values[3] = (byte) 0x00;
+        }
+
+        // LatitudeRef
+        PGExifInfo.IDFEntry gpsLatitudeRef = searchIDFEntryInList(TAG2_GPS_LATITUDEREF, gpsEntry.list);
+        if (gpsLatitudeRef == null) {
+            gpsLatitudeRef = new PGExifInfo.IDFEntry();
+            gpsLatitudeRef.tagNum = TAG2_GPS_LATITUDEREF;
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_LATITUDEREF, gpsEntry.list), gpsLatitudeRef);
+        }
+
+        gpsLatitudeRef.dataFormat = 2;
+        gpsLatitudeRef.nComponent = 2;
+        gpsLatitudeRef.values = getInitByte(4);
+        double mLatitude = location.getLatitude();
+        if (mLatitude > 0.0) { // N
+            gpsLatitudeRef.values[0] = (byte) 0x4E;
+        } else { // S
+            gpsLatitudeRef.values[0] = (byte) 0x53;
+        }
+
+        // Latitude
+        if (mLatitude < 0.0) {
+            mLatitude = -mLatitude;
+        }
+        PGExifInfo.IDFEntry gpsLatitude = searchIDFEntryInList(TAG2_GPS_LATITUDE, gpsEntry.list);
+        if (gpsLatitude == null) {
+            gpsLatitude = new PGExifInfo.IDFEntry();
+            gpsLatitude.tagNum = TAG2_GPS_LATITUDE;
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_LATITUDE, gpsEntry.list), gpsLatitude);
+        }
+        gpsLatitude.dataFormat = 5;
+        gpsLatitude.nComponent = 3;
+        gpsLatitude.offsetValues = getInitByte(24);
+        int dd0 = (int) Math.floor(mLatitude);
+        double remainMM0 = (mLatitude - dd0) * 60;
+        int mm0 = (int) Math.floor(remainMM0);
+        double remainSS0 = (remainMM0 - mm0) * 60 * 10000;
+        int ss0 = (int) Math.floor(remainSS0);
+        Exif.unpack(gpsLatitude.offsetValues, dd0, 4, 0, littleEndian);
+        Exif.unpack(gpsLatitude.offsetValues, 1, 4, 4, littleEndian);
+        Exif.unpack(gpsLatitude.offsetValues, mm0, 4, 8, littleEndian);
+        Exif.unpack(gpsLatitude.offsetValues, 1, 4, 12, littleEndian);
+        Exif.unpack(gpsLatitude.offsetValues, ss0, 4, 16, littleEndian);
+        Exif.unpack(gpsLatitude.offsetValues, 10000, 4, 20, littleEndian);
+
+        // LongitudeRef
+        PGExifInfo.IDFEntry gpsLongitudeRef = searchIDFEntryInList(TAG2_GPS_LONGITUDEREF, gpsEntry.list);
+        if (gpsLongitudeRef == null) {
+            gpsLongitudeRef = new PGExifInfo.IDFEntry();
+            gpsLongitudeRef.tagNum = TAG2_GPS_LONGITUDEREF;
+
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_LONGITUDEREF, gpsEntry.list), gpsLongitudeRef);
+        }
+
+        gpsLongitudeRef.dataFormat = 2;
+        gpsLongitudeRef.nComponent = 2;
+        gpsLongitudeRef.values = getInitByte(4);
+        double mLongitude = location.getLongitude();
+        if (mLongitude > 0.0) { // E
+            gpsLongitudeRef.values[0] = (byte) 0x45;
+        } else { // W
+            gpsLongitudeRef.values[0] = (byte) 0x57;
+        }
+
+        // Longitude
+        if (mLongitude < 0.0) {
+            mLongitude = -mLongitude;
+        }
+        PGExifInfo.IDFEntry gpsLongitude = searchIDFEntryInList(TAG2_GPS_LONGITUDE, gpsEntry.list);
+        if (gpsLongitude == null) {
+            gpsLongitude = new PGExifInfo.IDFEntry();
+            gpsLongitude.tagNum = TAG2_GPS_LONGITUDE;
+
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_LONGITUDE, gpsEntry.list), gpsLongitude);
+        }
+        gpsLongitude.dataFormat = 5;
+        gpsLongitude.nComponent = 3;
+        gpsLongitude.offsetValues = getInitByte(24);
+        int dd1 = (int) Math.floor(mLongitude);
+        double remainMM1 = (mLongitude - dd1) * 60;
+        int mm1 = (int) Math.floor(remainMM1);
+        double remainSS1 = (remainMM1 - mm1) * 60 * 10000;
+        int ss1 = (int) Math.floor(remainSS1);
+        Exif.unpack(gpsLongitude.offsetValues, dd1, 4, 0, littleEndian);
+        Exif.unpack(gpsLongitude.offsetValues, 1, 4, 4, littleEndian);
+        Exif.unpack(gpsLongitude.offsetValues, mm1, 4, 8, littleEndian);
+        Exif.unpack(gpsLongitude.offsetValues, 1, 4, 12, littleEndian);
+        Exif.unpack(gpsLongitude.offsetValues, ss1, 4, 16, littleEndian);
+        Exif.unpack(gpsLongitude.offsetValues, 10000, 4, 20, littleEndian);
+
+        // Tag# = 0x5 (GPSAltitudeRef)
+        PGExifInfo.IDFEntry gpsAltitudeRef = searchIDFEntryInList(TAG2_GPS_ALTITUDEREF, gpsEntry.list);
+        if (gpsAltitudeRef == null) {
+            gpsAltitudeRef = new PGExifInfo.IDFEntry();
+            gpsAltitudeRef.tagNum = TAG2_GPS_ALTITUDEREF;
+
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_ALTITUDEREF, gpsEntry.list), gpsAltitudeRef);
+        }
+
+        gpsAltitudeRef.dataFormat = 1;
+        gpsAltitudeRef.nComponent = 1;
+        gpsAltitudeRef.values = getInitByte(4);
+        double mAltitude = location.getAltitude();
+        if (mAltitude < 0.0) { // 负值海拔
+            gpsAltitudeRef.values[0] = (byte) 0x1;
+        }
+
+        // Tag# = 0x6 (GPSAltitude)
+        if (mAltitude < 0.0) {
+            mAltitude = -mAltitude;
+        }
+        PGExifInfo.IDFEntry gpsAltitude = searchIDFEntryInList(TAG2_GPS_ALTITUDE, gpsEntry.list);
+        if (gpsAltitude == null) {
+            gpsAltitude = new PGExifInfo.IDFEntry();
+            gpsAltitude.tagNum = TAG2_GPS_ALTITUDE;
+
+            gpsEntry.list.add(getInsertIndex(TAG2_GPS_ALTITUDE, gpsEntry.list), gpsAltitude);
+        }
+        gpsAltitude.dataFormat = 5;
+        gpsAltitude.nComponent = 1;
+        gpsAltitude.offsetValues = getInitByte(8);
+        Exif.unpack(gpsAltitude.offsetValues, (int) (mAltitude * 1000), 4, 0, littleEndian);
+        Exif.unpack(gpsAltitude.offsetValues, 1000, 4, 4, littleEndian);
+
+        long time = location.getTime();
+        if (time > 0) {
+            // //Tag# = 0x7 (GPSTimeStamp) 小时的时间戳
+            PGExifInfo.IDFEntry gpsTimestamp = searchIDFEntryInList(TAG2_GPS_TIMESTAMP, gpsEntry.list);
+            if (gpsTimestamp == null) {
+                gpsTimestamp = new PGExifInfo.IDFEntry();
+                gpsTimestamp.tagNum = TAG2_GPS_TIMESTAMP;
+
+                gpsEntry.list.add(getInsertIndex(TAG2_GPS_TIMESTAMP, gpsEntry.list), gpsTimestamp);
+            }
+            gpsTimestamp.dataFormat = 5;
+            gpsTimestamp.nComponent = 3;
+            gpsTimestamp.offsetValues = getInitByte(24);
+            long tempS = time / 1000;
+            long tempM = tempS / 60;
+            long tempH = tempM / 60;
+            long tempD = tempH / 24;
+            int s = (int) (tempS - tempM * 60);
+            int m = (int) (tempM - tempH * 60);
+            int h = (int) (tempH - tempD * 24);
+            Exif.unpack(gpsTimestamp.offsetValues, h, 4, 0, littleEndian);
+            Exif.unpack(gpsTimestamp.offsetValues, 1, 4, 4, littleEndian);
+            Exif.unpack(gpsTimestamp.offsetValues, m, 4, 8, littleEndian);
+            Exif.unpack(gpsTimestamp.offsetValues, 1, 4, 12, littleEndian);
+            Exif.unpack(gpsTimestamp.offsetValues, s, 4, 16, littleEndian);
+            Exif.unpack(gpsTimestamp.offsetValues, 1, 4, 20, littleEndian);
+
+            // Tag# = 0x1d (GPSDateStamp)
+            PGExifInfo.IDFEntry gpsDateStamp = searchIDFEntryInList(TAG2_GPS_DATESTAMP, gpsEntry.list);
+            if (gpsDateStamp == null) {
+                gpsDateStamp = new PGExifInfo.IDFEntry();
+                gpsDateStamp.tagNum = TAG2_GPS_DATESTAMP;
+                gpsEntry.list.add(getInsertIndex(TAG2_GPS_DATESTAMP, gpsEntry.list), gpsDateStamp);
+            }
+            gpsDateStamp.dataFormat = 2;
+            gpsDateStamp.nComponent = 11;
+            gpsDateStamp.offsetValues = getInitByte(11);
+
+            SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd", Locale.ENGLISH);
+            Date date = new Date(time);
+            String curTime = format.format(date);
+            byte[] bytes;
+            try {
+                bytes = curTime.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                bytes = curTime.getBytes();
+            }
+            System.arraycopy(bytes, 0, gpsDateStamp.offsetValues, 0, 10);
+        }
+    }
+
+    /**
+     * 该参数是有才设置，如果原Exif中无此信息则不写入
+     *
+     * @param width
+     * @param height
+     */
+    public void setSize(int width, int height) {
+        PGExifInfo.IDFEntry entryWidth = searchIDFEntryInList(TAG_IMAGEWIDTH, list);
+        PGExifInfo.IDFEntry entryHeight = searchIDFEntryInList(TAG_IMAGEHEIGHT, list);
+        if (entryWidth != null && entryHeight != null) {
+            entryWidth.dataFormat = 4;
+            entryWidth.nComponent = 1;
+            entryWidth.values = Exif.unpack(width, 4, littleEndian);
+
+            entryHeight.dataFormat = 4;
+            entryHeight.nComponent = 1;
+            entryHeight.values = Exif.unpack(height, 4, littleEndian);
+        }
+
+        PGExifInfo.IDFEntry entryExif = searchIDFEntryInList(TAG_EXIF_OFFSET, list);
+        if (entryExif != null && entryExif.list != null) {
+            PGExifInfo.IDFEntry entryWidth1 = searchIDFEntryInList(TAG1_IMAGE_WIDTH, entryExif.list);
+            PGExifInfo.IDFEntry entryHeight1 = searchIDFEntryInList(TAG1_IMAGE_HEIGHT, entryExif.list);
+            if (entryWidth1 != null && entryHeight1 != null) {
+                entryWidth1.dataFormat = 4;
+                entryWidth1.nComponent = 1;
+                entryWidth1.values = Exif.unpack(width, 4, littleEndian);
+
+                entryHeight1.dataFormat = 4;
+                entryHeight1.nComponent = 1;
+                entryHeight1.values = Exif.unpack(height, 4, littleEndian);
+            }
+        }
+    }
+
+    public byte[] getExifData() {
+        int size = list.size();
+        if (size == 0) {
+            return new byte[0];
+        }
+
+        if (exifHead == null) {
+            exifHead = getInitByte(10);
+            exifHead[0] = (byte) 0xFF;
+            exifHead[1] = (byte) 0xE1;
+            // 2、3、此缺省两个长度，将在最后写
+            Exif.unpack(exifHead, 0x45786966, 4, 4, false); // 写入Exif
+            // 8、9-有两个空白符
+        }
+
+        byte[] bodyHead = getInitByte(8);
+        int endianValues = littleEndian ? 0x49492A00 : 0x4D4D002A;
+        Exif.unpack(bodyHead, endianValues, 4, 0, false); // 写入大端或小端数据
+
+        // 写入长度IDF Entry的偏移量
+        Exif.unpack(bodyHead, 8, 4, 4, littleEndian);
+
+        byte[] packIDFEntry = packIDFEntry(list, 8);
+        if (packIDFEntry.length != 0) {
+            int totalSize = 10 + 8 + packIDFEntry.length;
+            Exif.unpack(exifHead, totalSize - 2, 2, 2, false);
+            byte[] newBytes = new byte[totalSize];
+            System.arraycopy(exifHead, 0, newBytes, 0, 10);
+            System.arraycopy(bodyHead, 0, newBytes, 10, 8);
+            System.arraycopy(packIDFEntry, 0, newBytes, 18, packIDFEntry.length);
+            return newBytes;
+        }
+        return new byte[0];
+    }
+
+    private byte[] packIDFEntry(List<PGExifInfo.IDFEntry> list, int offset) {
+        if (list == null) {
+            return new byte[0];
+        }
+
+        int size = list.size();
+        if (size == 0) {
+            return new byte[0];
+        }
+
+        int length = 2 + 12 * size + 4;
+        byte[] bytes = getInitByte(length);
+        // 写入长度
+        Exif.unpack(bytes, size, 2, 0, littleEndian);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream(256);
+        int outIndex = 0;
+        for (int i = 0; i < size; i++) {
+            PGExifInfo.IDFEntry entry = list.get(i);
+            int x = i * 12 + 2;
+            Exif.unpack(bytes, entry.tagNum, 2, x, littleEndian);
+            Exif.unpack(bytes, entry.dataFormat, 2, x + 2, littleEndian);
+            Exif.unpack(bytes, entry.nComponent, 4, x + 4, littleEndian);
+            if (entry.values != null) {
+                unpack(bytes, entry.values, 4, x + 8);
+            } else if (entry.offsetValues != null) {
+                Exif.unpack(bytes, offset + length + outIndex, 4, x + 8, littleEndian);
+                out.write(entry.offsetValues, 0, entry.offsetValues.length);
+                outIndex += entry.offsetValues.length;
+            } else if (entry.list != null) {
+                byte[] entryBytes = packIDFEntry(entry.list, offset + length + outIndex);
+                if (entryBytes.length != 0) {
+                    Exif.unpack(bytes, offset + length + outIndex, 4, x + 8, littleEndian);
+                    out.write(entryBytes, 0, entryBytes.length);
+                    outIndex += entryBytes.length;
+                }
+            }
+        }
+        byte[] outBytes = out.toByteArray();
+        byte[] newBytes = new byte[length + outBytes.length];
+        System.arraycopy(bytes, 0, newBytes, 0, length);
+        System.arraycopy(outBytes, 0, newBytes, length, outBytes.length);
+        return newBytes;
+    }
+
+    private PGExifInfo.IDFEntry getIDFEntryInList(int tagNumber) {
+        if (tagNumber == TAG_ORIENTATION || tagNumber == TAG_SOFTWARE || tagNumber == TAG_MAKE || tagNumber == TAG_MODEL) {
+            PGExifInfo.IDFEntry idfEntry = searchIDFEntryInList(tagNumber, list);
+            if (idfEntry == null) {
+                idfEntry = new PGExifInfo.IDFEntry();
+                idfEntry.tagNum = tagNumber;
+                list.add(getInsertIndex(tagNumber, list), idfEntry);
+            }
+            return idfEntry;
+        }
+
+        if (tagNumber == TAG1_CREATE_DATE) {
+            PGExifInfo.IDFEntry exifEntry = searchIDFEntryInList(TAG_EXIF_OFFSET, list);
+            if (exifEntry == null) {
+                exifEntry = new PGExifInfo.IDFEntry();
+                exifEntry.tagNum = TAG_EXIF_OFFSET;
+                exifEntry.nComponent = 1;
+                exifEntry.dataFormat = 4;
+                exifEntry.list = new ArrayList<PGExifInfo.IDFEntry>();
+                list.add(getInsertIndex(TAG_EXIF_OFFSET, list), exifEntry);
+
+                // 添加Exif的版本号0220
+                PGExifInfo.IDFEntry versionEntry = new PGExifInfo.IDFEntry();
+                versionEntry.tagNum = 0x9000;
+                versionEntry.dataFormat = 7;
+                versionEntry.nComponent = 4;
+                versionEntry.values = new byte[4];
+                versionEntry.values[0] = (byte) 0x30;
+                versionEntry.values[1] = (byte) 0x32;
+                versionEntry.values[2] = (byte) 0x32;
+                versionEntry.values[3] = (byte) 0x30;
+                exifEntry.list.add(getInsertIndex(0x9000, exifEntry.list), versionEntry);
+            }
+
+            PGExifInfo.IDFEntry dateEntry = searchIDFEntryInList(TAG1_CREATE_DATE, exifEntry.list);
+            if (dateEntry == null) {
+                dateEntry = new PGExifInfo.IDFEntry();
+                dateEntry.tagNum = TAG1_CREATE_DATE;
+
+                exifEntry.list.add(getInsertIndex(TAG1_CREATE_DATE, exifEntry.list), dateEntry);
+            }
+            return dateEntry;
+        }
+
+        if (tagNumber == TAG_GPSINFO) {
+            PGExifInfo.IDFEntry gpsEntry = searchIDFEntryInList(TAG_GPSINFO, list);
+            if (gpsEntry == null) {
+                gpsEntry = new PGExifInfo.IDFEntry();
+                gpsEntry.tagNum = TAG_GPSINFO;
+                gpsEntry.nComponent = 1;
+                gpsEntry.dataFormat = 4;
+                gpsEntry.list = new ArrayList<PGExifInfo.IDFEntry>();
+                list.add(getInsertIndex(TAG_GPSINFO, list), gpsEntry);
+            }
+            return gpsEntry;
+        }
+
+        return null;
+    }
+
+    private PGExifInfo.IDFEntry searchIDFEntryInList(int tagNumber, List<PGExifInfo.IDFEntry> searchList) {
+        int size = searchList.size();
+        for (int i = 0; i < size; i++) {
+            PGExifInfo.IDFEntry entry = searchList.get(i);
+            if (entry.tagNum == tagNumber) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 在searchIDFEntryInList函数返回null的情况下，调用此函数
+     *
+     * @param tagNumber
+     * @param searchList
+     * @return
+     */
+    private int getInsertIndex(int tagNumber, List<PGExifInfo.IDFEntry> searchList) {
+        int size = searchList.size();
+        for (int i = 0; i < size; i++) {
+            PGExifInfo.IDFEntry entry = searchList.get(i);
+            if (entry.tagNum >= tagNumber) {
+                return i;
+            }
+        }
+        return size;
+    }
+
+    private boolean analyticalExifHeader(byte[] app1Data) {
+        // 取得exif的头
+        if (app1Data == null) {
+            return false;
+        }
+
+        int dataLen = app1Data.length;
+        if (dataLen < 10) {
+            return false;
+        }
+
+        exifHead = new byte[10];
+        System.arraycopy(app1Data, 0, exifHead, 0, 10);
+        return true;
+    }
+
+    private void analyticalExifBody(byte[] app1Data) {
+        int dataLen = app1Data.length;
+        // 取得具体的Exif信息
+        int offset = EXIF_START_INDEX;
+
+        // step.1 确认是否为大端或者小端数据
+        if (offset + 4 >= dataLen) {
+            return;
+        }
+        int tag = Exif.pack(app1Data, offset, 4, false);
+        if (tag != 0x49492A00 && tag != 0x4D4D002A) {
+            return;
+        }
+        littleEndian = (tag == 0x49492A00);
+        offset += 4;
+
+        // step.2 读取第一个offsetFirstIFD
+        if (offset + 4 >= dataLen) {
+            return;
+        }
+        int offsetFirstIFD = Exif.pack(app1Data, offset, 4, littleEndian);
+        if (offsetFirstIFD != 8) {
+            return;
+        }
+        offset += 4;
+
+        // step3. 对IDF Entry进行处理
+        offset = unpackIDFEntry(app1Data, dataLen, offset, littleEndian, list);
+        if (offset == -1) {
+            list = new ArrayList<IDFEntry>();
+            return;
+        }
+        // step4. 下一个偏移值,处理 TODO 暂不处理
+
+        // setp5. 下一个偏移值
+        /*
+         * if (offset + 4 > dataLen) { return; } int nextIFDoffset =
+         * Exif.pack(app1Data, offset, 4, littleEndian);
+         * printLog("对IDFEntryArray进行处理");
+         */
+    }
+
+    private int unpackIDFEntry(byte[] app1Data, int dataLen, int offset, boolean littleEndian,
+                               List<PGExifInfo.IDFEntry> idfList) {
+        // 读取第一个IFDMainImage的数量
+        if (offset + 2 >= dataLen) {
+            return -1;
+        }
+        int ifdEntryCount = Exif.pack(app1Data, offset, 2, littleEndian);
+        if (ifdEntryCount > 1024) {
+            return -1;
+        }
+
+        offset += 2;
+
+        // 遍历
+        for (int i = 0; i < ifdEntryCount; i++) {
+            // 取得tagNumber
+            if (offset + 2 >= dataLen) {
+                return -1;
+            }
+            int tagNumber = Exif.pack(app1Data, offset, 2, littleEndian);
+            if (tagNumber == TAG_MAKERNOTE || tagNumber == TAG_CASIOPREVIEWTHUMBNAIL || tagNumber == 0) {
+                offset += 12;
+                continue;
+            }
+            offset += 2;
+
+            // 取得数据类型
+            if (offset + 2 >= dataLen) {
+                return -1;
+            }
+            int dataFormat = Exif.pack(app1Data, offset, 2, littleEndian);
+            if (dataFormat < 1 || dataFormat >= 13) {
+                offset += 10;
+                continue;
+            }
+            offset += 2;
+
+            if (offset + 4 >= dataLen) {
+                return -1;
+            }
+            int nComponent = Exif.pack(app1Data, offset, 4, littleEndian);
+            offset += 4;
+
+            // 取得Tag值
+            if (offset + 4 >= dataLen) {
+                return -1;
+            }
+
+            IDFEntry idEntry = new IDFEntry();
+            idEntry.tagNum = tagNumber;
+            idEntry.dataFormat = dataFormat;
+            idEntry.nComponent = nComponent;
+            int dataFormatLength = DATA_FORMAT_LENGTH[dataFormat];
+            int entryLen = dataFormatLength * nComponent;
+            idEntry.dataLen = entryLen;
+            if (entryLen > 4 || tagNumber == TAG_GPSINFO || tagNumber == TAG_EXIF_OFFSET
+                    || tagNumber == TAG_INTEROPOFFSET) {
+                int idfOffset = Exif.pack(app1Data, offset, 4, littleEndian);
+                if (dealOffsetIDFEntry(app1Data, dataLen, idEntry, idfOffset)) {
+                    idfList.add(idEntry);
+                }
+            } else {
+                byte[] bytes = new byte[4];
+                bytes[0] = app1Data[offset];
+                bytes[1] = app1Data[offset + 1];
+                bytes[2] = app1Data[offset + 2];
+                bytes[3] = app1Data[offset + 3];
+                idEntry.values = bytes;
+                idfList.add(idEntry);
+            }
+            offset += 4;
+        }
+
+        return offset;
+    }
+
+    private boolean dealOffsetIDFEntry(byte[] app1Data, int dataLen, PGExifInfo.IDFEntry entry, int idfOffset) {
+        if (idfOffset > 0 && idfOffset < dataLen && entry.values == null) {
+            int myOffset = idfOffset + EXIF_START_INDEX;
+            switch (entry.tagNum) {
+                case TAG_GPSINFO:
+                    entry.list = new ArrayList<PGExifInfo.IDFEntry>();
+                    unpackIDFEntry(app1Data, dataLen, myOffset, littleEndian, entry.list);
+                    return entry.list.size() > 0;
+                case TAG_EXIF_OFFSET:
+                    entry.list = new ArrayList<PGExifInfo.IDFEntry>();
+                    unpackIDFEntry(app1Data, dataLen, myOffset, littleEndian, entry.list);
+                    return entry.list.size() > 0;
+                case TAG_INTEROPOFFSET:
+                    entry.list = new ArrayList<PGExifInfo.IDFEntry>();
+                    unpackIDFEntry(app1Data, dataLen, myOffset, littleEndian, entry.list);
+                    return entry.list.size() > 0;
+                default:
+                    // 字符串特殊处理
+                    byte[] bytes = null;
+                    try {
+                        if (entry.dataFormat == 2) {
+                            if (app1Data[myOffset + entry.dataLen - 1] == 0) {
+                                bytes = new byte[entry.dataLen];
+                                System.arraycopy(app1Data, myOffset, bytes, 0, entry.dataLen);
+                            } else if (app1Data[myOffset + entry.dataLen] == 0) {
+                                bytes = new byte[entry.dataLen + 1];
+                                System.arraycopy(app1Data, myOffset, bytes, 0, entry.dataLen + 1);
+                            } else {
+                                bytes = new byte[entry.dataLen];
+                                System.arraycopy(app1Data, myOffset, bytes, 0, entry.dataLen);
+                            }
+                        } else {
+                            bytes = new byte[entry.dataLen];
+                            System.arraycopy(app1Data, myOffset, bytes, 0, entry.dataLen);
+                        }
+                        entry.offsetValues = bytes;
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+            }
+        }
+
+
+        return false;
+    }
+
+    private byte[] getInitByte(int len) {
+        byte[] bytes = new byte[len];
+        for (int i = 0; i < len; i++) {
+            bytes[i] = (byte) 0;
+        }
+        return bytes;
+    }
+
+    private static void unpack(byte[] bytes, byte[] values, int len, int offset) {
+        System.arraycopy(values, 0, bytes, offset, len);
+    }
+
+    private static class IDFEntry {
+        private int tagNum = -1;
+        private int dataFormat = -1;
+        private int nComponent = -1;
+        private int dataLen = -1;
+        private byte[] values = null;
+        private byte[] offsetValues = null;
+        private List<IDFEntry> list = null;
+    }
+}

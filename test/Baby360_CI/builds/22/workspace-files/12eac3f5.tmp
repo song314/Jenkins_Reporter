@@ -1,0 +1,302 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.content.Context;
+import android.graphics.RectF;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.camera.entity.PictureInfo;
+import com.pinguo.edit.sdk.camera.util.Exif;
+import com.pinguo.edit.sdk.camera.util.PGExifInfo;
+import com.pinguo.edit.sdk.utils.ToolUtils;
+
+import java.io.File;
+import java.io.IOException;
+
+import us.pinguo.androidsdk.PGRect;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * 裁图,旋转
+ *
+ * @author Tsmile
+ */
+public class CropRendererMethodForPictureInfo extends PGRendererMethod {
+    private final static String TAG = CropRendererMethodForPictureInfo.class.getSimpleName();
+    private RendererActionListener mListener;
+    private PictureInfo mPictureInfo;
+    private PGRect mPGRect;
+    private byte[] mJpegByte;
+    private String mJpegPath;
+    private byte[] mExif;
+    private Context mContext;
+
+    public CropRendererMethodForPictureInfo(Context context) {
+        mContext = context;
+    }
+
+    public void setExif(byte[] exif) {
+        this.mExif = exif;
+    }
+
+    public void setInputPictureInfo(PictureInfo pictureInfo, String jpegPath
+            , RendererActionListener rendererActionListener) {
+        mPictureInfo = pictureInfo;
+        RectF rectF = pictureInfo.getCutRect();
+        float left = rectF.left;
+        float right = rectF.right;
+        float top = rectF.top;
+        float bottom = rectF.bottom;
+        mPGRect = new PGRect(left, top, right, bottom);
+
+        // debug
+        GLogger.d(TAG, "pictureInfo rectF:" + rectF);
+        GLogger.d(TAG, "pictureInfo size:" + pictureInfo.getPicSize());
+        float wShouldBe = pictureInfo.getPicSize().getMinLength();
+        float hShouldBe;
+        if (top == 0f) {
+            hShouldBe = Math.abs(pictureInfo.getPicSize().getWidth() * right -
+                    pictureInfo.getPicSize().getWidth() * left);
+        } else {
+            hShouldBe = Math.abs(pictureInfo.getPicSize().getWidth() * bottom -
+                    pictureInfo.getPicSize().getWidth() * top);
+        }
+        GLogger.d(TAG, "pictureInfo should be:" + wShouldBe + "x" + hShouldBe);
+
+        mJpegPath = jpegPath;
+        mListener = rendererActionListener;
+    }
+
+    public void setInputPictureInfo(PictureInfo pictureInfo, byte[] jpegByte
+            , RendererActionListener rendererActionListener) {
+        mPictureInfo = pictureInfo;
+        RectF rectF = pictureInfo.getCutRect();
+        int rotation = mPictureInfo.getRotateOrientation() % 360;
+        float left = rectF.left;
+        float right = rectF.right;
+        float top = rectF.top;
+        float bottom = rectF.bottom;
+        switch (rotation) {
+            case 0:
+                left = rectF.top;
+                right = rectF.bottom;
+                top = rectF.left;
+                bottom = rectF.right;
+                break;
+            case 90:
+                left = rectF.left;
+                right = rectF.right;
+
+                if (!mPictureInfo.isFront()) {
+                    top = rectF.top;
+                    bottom = rectF.bottom;
+                } else {
+                    top = 1 - rectF.bottom;
+                    bottom = 1 - rectF.top;
+                }
+                break;
+            case 180:
+                left = (1 - rectF.bottom);
+                right = (1 - rectF.top);
+                top = rectF.left;
+                bottom = rectF.right;
+                break;
+            case 270:
+                left = rectF.left;
+                right = rectF.right;
+
+                if (!mPictureInfo.isFront()) {
+                    top = (1 - rectF.bottom);
+                    bottom = (1 - rectF.top);
+                } else {
+                    top = rectF.top;
+                    bottom = rectF.bottom;
+                }
+                break;
+        }
+        mPGRect = new PGRect(left, top, right, bottom);
+
+        // debug
+        GLogger.d(TAG, "pictureInfo rectF:" + rectF);
+        GLogger.d(TAG, "pictureInfo size:" + pictureInfo.getPicSize());
+        float wShouldBe = pictureInfo.getPicSize().getMinLength();
+        float hShouldBe;
+        if (top == 0f) {
+            hShouldBe = Math.abs(pictureInfo.getPicSize().getWidth() * right -
+                    pictureInfo.getPicSize().getWidth() * left);
+        } else {
+            hShouldBe = Math.abs(pictureInfo.getPicSize().getWidth() * bottom -
+                    pictureInfo.getPicSize().getWidth() * top);
+        }
+        GLogger.d(TAG, "pictureInfo should be:" + wShouldBe + "x" + hShouldBe);
+
+        mJpegByte = jpegByte;
+        mListener = rendererActionListener;
+    }
+
+    @Override
+    public void rendererAction() {
+        renderType(PGRendererMethod.EM_MAKE_TYPE.RENDER_NORMAL);
+        clearImage(0);
+        boolean mIsJpgFile = true;
+        if (null == mJpegByte) {
+            if (mJpegPath.toLowerCase().endsWith(".png")) {
+                mIsJpgFile = false;
+                if (!this.setSupportImageFromPNGPath(0, mJpegPath)) {
+                    if (mListener != null) {
+                        mListener.fail();
+                    }
+                    GLogger.w(TAG, "setImageFromJPEG fail");
+                    return;
+                }
+            } else {
+                if (!this.setImageFromPath(0, mJpegPath)) {
+                    if (!this.setSupportImageFromPNGPath(0, mJpegPath)) {
+                        if (mListener != null) {
+                            mListener.fail();
+                        }
+                        GLogger.w(TAG, "setImageFromJPEG fail");
+                        return;
+                    }
+                }
+            }
+
+        } else {
+            if (!this.setImageFromJPEG(0, mJpegByte)) {
+                if (mListener != null) {
+                    mListener.fail();
+                }
+                GLogger.w(TAG, "setImageFromJPEG fail");
+                return;
+            }
+        }
+
+        if (!this.setEffect("Effect=Normal")) {
+            if (mListener != null) {
+                mListener.fail();
+            }
+            GLogger.w(TAG, "set effect fail");
+            return;
+        }
+
+        int cropSize = mPictureInfo.getCropSize();
+
+        int picWidth = mPictureInfo.getPicSize().getWidth();
+        int picHeight = mPictureInfo.getPicSize().getHeight();
+        if (picWidth < picHeight) {
+            picWidth = mPictureInfo.getPicSize().getHeight();
+            picHeight = mPictureInfo.getPicSize().getWidth();
+
+            RectF rectF = mPictureInfo.getCutRect();
+            float left = rectF.top;
+            float right = rectF.bottom;
+            float top = rectF.left;
+            float bottom = rectF.right;
+
+            mPGRect = new PGRect(top, left, bottom, right);
+        }
+
+        float ratioW = Math.abs(mPGRect.getX_2() - mPGRect.getX_1());
+        float ratioH = Math.abs(mPGRect.getY_2() - mPGRect.getY_1());
+
+        if (ratioW > ratioH) {
+            ratioW = Math.abs(mPGRect.getY_2() - mPGRect.getY_1());
+            ratioH = Math.abs(mPGRect.getX_2() - mPGRect.getX_1());
+        }
+
+        float croppedW = picWidth * ratioW;
+        float croppedH = picHeight * ratioH;
+        if (croppedW != croppedH) {
+            ratioH = croppedW / picHeight;
+            if (mPGRect.getX_2() - mPGRect.getX_1() > mPGRect.getY_2() - mPGRect.getY_1()) {
+                mPGRect.setX_2(mPGRect.getX_1() + ratioH);
+            } else {
+                mPGRect.setY_2(mPGRect.getY_1() + ratioH);
+            }
+        }
+
+        float cropLongLength = picWidth;
+
+        if (0 != cropSize) {
+            float ratio = (float) picHeight / picWidth;
+            if (picHeight < picWidth) {
+                ratio = (float) picWidth / picHeight;
+            }
+            float cropShortLength = cropSize;
+            cropLongLength = cropShortLength * ratio;
+        }
+
+        boolean canvasAngle = mPictureInfo.getRotateOrientation() % 180 != 0;
+        if (!this.adjustImage(0, canvasAngle, mPictureInfo.getRotateOrientation(),
+                mPGRect, false, false, Math.round(cropLongLength), true)) {
+            if (mListener != null) {
+                mListener.fail();
+            }
+            GLogger.w(TAG, "crop is fail");
+            return;
+        }
+
+        if (!this.make()) {
+            if (mListener != null) {
+                mListener.fail();
+            }
+            GLogger.w(TAG, "make fail");
+            return;
+        }
+
+        String tempPath = ToolUtils.getCompositeDiskCachePath(mContext, "tmp_crop");
+        File parentFile = new File(tempPath).getParentFile();
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
+        }
+
+        if (mIsJpgFile) {
+            if (!this.getMakedImage2JpegFile(tempPath, 95)) {
+                GLogger.w(TAG, "getMakedImage2JpegFile fail:" + mPictureInfo.getFileSavePath());
+            }
+        } else {
+            if (!this.getMakedImage2PngFile(mPictureInfo.getFileSavePath(), true)) {
+                GLogger.w(TAG, "getMakedImage2PngFile fail:" + mPictureInfo.getFileSavePath());
+            }
+        }
+
+        if (mIsJpgFile) {
+            try {
+                byte[] exif;
+                if (null == mJpegByte) {
+                    exif = Exif.getExifData(mJpegPath);
+
+                } else {
+                    exif = Exif.getExifData(mJpegByte);
+                }
+                PGExifInfo pgExifInfo = new PGExifInfo(exif);
+                pgExifInfo.setOrientation(0);
+                Exif.exifToJpegFile(tempPath, mPictureInfo.getFileSavePath(), pgExifInfo.getExifData());
+            } catch (IOException e) {
+                e.printStackTrace();
+
+                try {
+                    FileUtils.copySingleFile(tempPath, mPictureInfo.getFileSavePath());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+
+        File tempFile = new File(tempPath);
+        if (tempFile.exists()) {
+            tempFile.delete();
+        }
+
+        if (mListener != null) {
+            mListener.success(mPictureInfo.getFileSavePath(), mPictureInfo);
+        }
+    }
+
+    public static interface RendererActionListener {
+
+        public void success(String path, PictureInfo pictureInfo);
+
+        public void fail();
+    }
+}

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="composite_sdk_rating_msg">你的5星好评，不断鼓舞着我们去创造奇迹</string>
+    <string name="composite_sdk_complete">完成</string>
+
+    <string name="composite_sdk_app_name">MIX</string>
+
+    <!-- camera module begin-->
+    <string name="composite_sdk_is_quit">将不会保存您编辑的内容</string>
+    <string name="composite_sdk_continue_edit">继续编辑</string>
+    <string name="composite_sdk_abandon_edit">放弃</string>
+    <string name="composite_sdk_confirm">确认</string>
+    <string name="composite_sdk_cancel">取消</string>
+    <string name="composite_sdk_crop_quit">取消</string>
+    <string name="composite_sdk_cannot_connect_camera">"相机无法启动, 请稍候重试或重新启动手机"</string>
+
+    <string name="composite_sdk_quit_photo">退出后会丢失照片,是否需要退出?</string>
+
+    <string name="composite_sdk_pref_camera_flashmode_title">闪光模式</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_auto">自动</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_on">开</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_off">关</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_torch">手电筒</string>
+
+    <string name="composite_sdk_no_storage_to_take_picture">无法拍照，请插入存储卡或者更换照片存储路径</string>
+    <string name="composite_sdk_operation_too_fast">您操作太快啦</string>
+
+    <string name="composite_sdk_pref_camera_picturesize_title">照片尺寸</string>
+    <!-- camera module end-->
+
+    <!--gallery module start-->
+    <string name="composite_sdk_unit_mm">mm</string>
+    <string name="composite_sdk_loading">Loading\u2026</string>
+    <string name="composite_sdk_album_title">相册</string>
+    <string name="composite_sdk_empty_album">O images available.</string>
+    <string name="composite_sdk_sync_album_error">Couldn\'t download the photos in this album. Retry later.</string>
+    <string name="composite_sdk_details_ms">%1$02d:%2$02d</string>
+    <string name="composite_sdk_details_hms">%1$d:%2$02d:%3$02d</string>
+    <!--gallery module end-->
+
+    <string name="composite_sdk_filter">效果</string>
+    <string name="composite_sdk_light">纹理</string>
+    <string name="composite_sdk_frame">边框</string>
+    <string name="composite_sdk_base">调整</string>
+    <string name="composite_sdk_tiltshit">光圈</string>
+    <string name="composite_sdk_details">调整</string>
+    <string name="composite_sdk_colors">色彩</string>
+
+    <string name="composite_sdk_advance_adjust">高级编辑</string>
+
+    <string name="composite_sdk_adjust">高级</string>
+
+    <string name="composite_sdk_effect_photo_edit">照片编辑</string>
+    <string name="composite_sdk_quit">取消</string>
+    <string name="composite_sdk_ok">确定</string>
+    <string name="composite_sdk_save">保存</string>
+
+    <string name="composite_sdk_effect_filter_square">滤镜广场</string>
+
+    <string name="composite_sdk_exposure">曝光度</string>
+    <string name="composite_sdk_contrast">对比度</string>
+    <string name="composite_sdk_vibrance">鲜艳度</string>
+    <string name="composite_sdk_saturation">饱和度</string>
+    <string name="composite_sdk_highlight">高光</string>
+    <string name="composite_sdk_shadow">阴影</string>
+    <string name="composite_sdk_sharpness">清晰度</string>
+    <string name="composite_sdk_tilt_shift">光圈</string>
+    <string name="composite_sdk_vignette_strong">暗角</string>
+    <string name="composite_sdk_vignette_center_strong">中心亮度</string>
+
+    <!-- AdvanceBase相关参数名 -->
+    <string name="composite_sdk_advance_base_param_temperature">色温</string>
+    <string name="composite_sdk_advance_base_param_hue">色调</string>
+    <string name="composite_sdk_advance_base_param_exposure">曝光度</string>
+    <string name="composite_sdk_advance_base_param_contrast">对比度</string>
+    <string name="composite_sdk_advance_base_param_vibrance">鲜艳度</string>
+    <string name="composite_sdk_advance_base_param_saturation">饱和度</string>
+    <string name="composite_sdk_advance_base_param_curve">曲线</string>
+    <string name="composite_sdk_advance_base_param_color_balance">色彩平衡</string>
+
+    <string name="composite_sdk_mix">随机</string>
+
+    <string name="composite_sdk_hsl1">色</string>
+    <string name="composite_sdk_hsl2">相</string>
+    <string name="composite_sdk_brightness">明亮度</string>
+
+    <string name="composite_sdk_hsl_cyan1">青色</string>
+    <string name="composite_sdk_hsl_cyan2"></string>
+    <string name="composite_sdk_hsl_magenta">洋红</string>
+    <string name="composite_sdk_hsl_yellow1">黄色</string>
+    <string name="composite_sdk_hsl_yellow2"></string>
+
+    <string name="composite_sdk_hdr">层次</string>
+    <string name="composite_sdk_skin">美肤</string>
+
+    <string name="composite_sdk_hsl_color_red">红</string>
+    <string name="composite_sdk_hsl_color_orange">橙</string>
+    <string name="composite_sdk_hsl_color_yellow">黄</string>
+    <string name="composite_sdk_hsl_color_green">绿</string>
+    <string name="composite_sdk_hsl_color_cyan">浅绿</string>
+    <string name="composite_sdk_hsl_color_blue">蓝</string>
+    <string name="composite_sdk_hsl_color_purple">紫</string>
+    <string name="composite_sdk_hsl_color_magenta">洋红</string>
+
+    <string name="composite_sdk_hsl_highlight_color">高光</string>
+    <string name="composite_sdk_hsl_shadow_color">阴影</string>
+    <string name="composite_sdk_hsl_middle_color">中间调</string>
+
+    <string name="composite_sdk_is_save_composite">是否保存滤镜?</string>
+    <string name="composite_sdk_effect_name_is_cannot_null">请为您创建的滤镜命名</string>
+    <string name="composite_sdk_least_select_one_effect">至少选择一个滤镜效果</string>
+
+    <string name="composite_sdk_crop_title">照片裁剪</string>
+
+    <string name="composite_sdk_send_photo">发布照片</string>
+    <string name="composite_sdk_save_composite_effect">保存滤镜</string>
+
+    <string name="composite_sdk_save_composite_style">保存滤镜</string>
+    <string name="composite_sdk_save_before_photo">保存前</string>
+    <string name="composite_sdk_save_after_photo">保存后</string>
+    <string name="composite_sdk_composite_effect_name">滤镜命名</string>
+    <string name="composite_sdk_composite_add_des">添加描述</string>
+
+    <string name="composite_sdk_tilt_shift_close">关闭光圈</string>
+    <string name="composite_sdk_tilt_shift_circle">圆形光圈</string>
+    <string name="composite_sdk_tilt_shift_direct">线性光圈</string>
+    <string name="composite_sdk_share">分享</string>
+
+    <string name="composite_sdk_save_name_conflict">滤镜名已经存在，是否覆盖?</string>
+    <string name="composite_sdk_share_to_instagram">INSTAGRAM</string>
+    <string name="composite_sdk_jump_to_instagram">"@Mix4Ins"</string>
+
+    <string name="composite_sdk_saved_to_gallery">已保存高清照片</string>
+
+    <string name="tips_forcequit">啊～～～噢～～～程序挂掉了!我们正在鞭打程序员修改问题,对不起咯!</string>
+    <string name="menu_report">提交错误信息</string>
+    <string name="composite_sdk_guide_page_1_desc_1"></string>
+    <string name="composite_sdk_guide_page_1_desc_2">专业编辑，保存每一个创作过程</string>
+
+    <string name="composite_sdk_guide_page_2_desc">个性组合，让创作充满想像空间</string>
+    <string name="composite_sdk_guide_page_3_desc">虚化调整，堪比专业光圈效果</string>
+    <string name="composite_sdk_guide_page_4_desc">创造滤镜，你就是滤镜大师</string>
+    <string name="composite_sdk_guide_page_5_desc">高清输出，每一张作品都完美无瑕</string>
+    <string name="composite_sdk_guide_page_start">Start Mixing</string>
+    <string name="composite_sdk_at_user">"@LITTLEYIYE"</string>
+    <string name="composite_sdk_install_prefix">请先安装</string>
+    <string name="composite_sdk_discoloration">偏色</string>
+    <string name="composite_sdk_hsl_mode_absolute">绝对</string>
+    <string name="composite_sdk_hsl_mode_relative">相对</string>
+    <string name="composite_sdk_crop_not_supported">暂不支持裁剪该比例的照片</string>
+    <string name="composite_sdk_crop_failed">裁剪失败</string>
+    <string name="composite_sdk_hsl_discoloration_red">红色</string>
+    <string name="composite_sdk_hsl_discoloration_green">绿色</string>
+    <string name="composite_sdk_hsl_discoloration_blue">蓝色</string>
+    <string name="composite_sdk_hsl_discoloration_cyan">青色</string>
+    <string name="composite_sdk_hsl_discoloration_magenta">洋红</string>
+    <string name="composite_sdk_hsl_discoloration_yellow">黄色</string>
+    <string name="composite_sdk_quit_advance_dialog_title">放弃编辑?</string>
+    <string name="composite_sdk_crop_load_failed">加载失败, 试试另外一张照片吧</string>
+    <string name="composite_sdk_rating_confirm">火速好评</string>
+    <string name="composite_sdk_rating_cancel">再观望一下</string>
+    <string name="composite_sdk_filter_use">使用滤镜</string>
+    <string name="composite_sdk_filter_param_title">滤 镜 参 数</string>
+    <string name="composite_sdk_burst_mode_off">已关闭连续拍照</string>
+    <string name="composite_sdk_burst_mode_on">已开启连续拍照</string>
+    <string name="composite_sdk_share_filter_title">我自创的MIX滤镜</string>
+    <string name="composite_sdk_share_filter_content">我用MIX滤镜大师自创了滤镜"%1$s", 让我们一起来MIX吧</string>
+    <string name="composite_sdk_share_process_title">快看我创作的大片</string>
+    <string name="composite_sdk_share_process_content">我用MIX滤镜大师创作了一张精美照片, 一起来见证我的创作历程吧</string>
+    <string name="composite_sdk_version_update">立即更新</string>
+    <string name="composite_sdk_version_update_later">稍后再说</string>
+    <string name="composite_sdk_version_update_ignore">忽略此版本</string>
+    <string name="composite_sdk_share_picture_succeed">分享成功</string>
+    <string name="composite_sdk_share_picture_failed">分享失败</string>
+    <string name="composite_sdk_new_version">新版本</string>
+    <string name="composite_sdk_showup">出炉</string>
+    <string name="composite_sdk_sharing_process">创作过程制作中...</string>
+    <string name="composite_sdk_sharing_filter">滤镜分享中...</string>
+    <string name="composite_save_photo_failed">保存照片失败</string>
+    <string name="composite_sdk_save_filter_failed">保存滤镜失败</string>
+    <string name="composite_sdk_capture_mode_long">长图</string>
+    <string name="composite_sdk_capture_mode_square">方图</string>
+    <string name="composite_sdk_share_wechat_friend_content">分享到朋友圈，和朋友们一起MIX吧!</string>
+</resources>

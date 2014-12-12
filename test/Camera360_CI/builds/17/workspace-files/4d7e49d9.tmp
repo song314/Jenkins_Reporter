@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#e8e8e8"
+    android:orientation="vertical"
+    android:id="@+id/option_main_root">
+    <!-- **************顶部标题***************** -->
+    <include
+        android:id="@+id/option_head"
+        layout="@layout/composite_sdk_login_head_view" />
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#e8e8e8"
+            android:orientation="vertical">
+            <!-- **************用户信息***************** -->
+            <LinearLayout style="@style/OptionClassLayoutStyle">
+
+                <LinearLayout style="@style/OptionClassLayoutBaseStyle">
+
+                    <RelativeLayout
+                        android:id="@+id/option_personal_info"
+                        android:layout_width="match_parent"
+                        android:layout_height="80dp"
+                        android:background="@drawable/bg_transparent_yellow">
+
+                        <com.pinguo.edit.sdk.option.view.RoundImageView
+                            android:id="@+id/personal_image"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="10dp" />
+
+                        <TextView
+                            android:id="@+id/personal_nick_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="20dp"
+                            android:layout_toRightOf="@+id/personal_image"
+                            android:textColor="#7b8085"
+                            android:textSize="15sp" />
+
+                        <ImageView style="@style/OptionsItemIconMore" />
+                    </RelativeLayout>
+                </LinearLayout>
+            </LinearLayout>
+            <!-- **************功能设置***************** -->
+            <TextView
+                android:id="@+id/option_camera_title"
+                style="@style/OptionsClassTitleStyle"
+                android:text="@string/funnction_setting" />
+
+            <LinearLayout style="@style/OptionClassLayoutStyle">
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_picture_quality"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_save_path"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- **************关于***************** -->
+            <TextView
+                android:id="@+id/option_picture_title"
+                style="@style/OptionsClassTitleStyle"
+                android:text="@string/funnction_about" />
+
+            <LinearLayout style="@style/OptionClassLayoutStyle">
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_opinion_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_version_update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_care_instagram"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_care_facebook"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <com.pinguo.edit.sdk.option.view.SettingItemMore
+                    android:id="@+id/option_item_inspire"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

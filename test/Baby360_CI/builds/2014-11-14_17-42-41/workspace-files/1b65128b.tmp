@@ -1,0 +1,58 @@
+package com.pinguo.mix.api.share;
+
+import android.os.Bundle;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.EncryptUtils;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+
+import org.json.JSONException;
+
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-10-9.
+ */
+public class AddFilterInfo extends BaseRequest {
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        return null;
+    }
+
+    @Override
+    protected Object getResultData(BaseBean bean) {
+        AddFilterInfoBean addFilterInfoBean = (AddFilterInfoBean) bean;
+        return addFilterInfoBean.getUrl();
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+
+        AddFilterInfoBean addFilterInfoBean = new AddFilterInfoBean();
+        try {
+            addFilterInfoBean.parseJsonToObj(jsonString);
+            return addFilterInfoBean;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected Map<String, String> buildParam(Bundle bundle) {
+
+        Map<String, String> params = super.buildParam(bundle);
+        if (params.size() > 0) {
+            String sig = EncryptUtils.getSig(params, ApiConstants.SECRET);
+            params.put("sig", sig);
+            GLogger.i("", "11111 put param:" + "sig" + "/" + sig);
+        }
+
+        return params;
+    }
+}

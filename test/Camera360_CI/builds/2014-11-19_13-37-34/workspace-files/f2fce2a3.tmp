@@ -1,0 +1,11 @@
+package com.pinguo.mix.api;
+
+/**
+ * Created by taoli on 14-4-9.
+ */
+public interface ApiCallback<T> {
+
+    public void onResponse(T data, Object... params);
+    public void onError(String error);
+
+}

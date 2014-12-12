@@ -1,0 +1,67 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.annotations.Expose;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class ParamVecItem extends ParamItem {
+    private static final String TAG = ParamVecItem.class.getSimpleName();
+
+    @Expose
+    public String defaultValue = ""; // 默认值
+    @Expose
+    public String noEffectValue = ""; // 无特效值
+    @Expose
+    public String value = ""; // 特效值
+
+    public ParamVecItem(String key, String effectKey, String defaultValue, String noEffectValue) {
+        super(key, effectKey, Type.VecItem);
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+    }
+
+    public ParamVecItem(String key, String effectKey, String defaultValue, String noEffectValue, String name) {
+        super(key, effectKey, Type.VecItem);
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+        this.name = name;
+    }
+
+    public float[] getValues() {
+        float[] values = null;
+        if (null != value) {
+            String[] valueStrs = value.split(",");
+            values = new float[valueStrs.length];
+            for (int i = 0;
+                 i < valueStrs.length;
+                 i++) {
+                String valueStr = valueStrs[i];
+                values[i] = Float.parseFloat(valueStr);
+            }
+        }
+
+        return values;
+    }
+
+    public void setValues(float[] newValues) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (float value : newValues) {
+            stringBuilder.append(value);
+            stringBuilder.append(",");
+        }
+
+        if (stringBuilder.length() > 1) {
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
+        this.value = stringBuilder.toString();
+    }
+
+    public ParamVecItem() {
+
+    }
+}
+

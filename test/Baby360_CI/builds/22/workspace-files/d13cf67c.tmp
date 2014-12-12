@@ -1,0 +1,208 @@
+package us.pinguo.android.effect.group.sdk.androidsdk;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+import us.pinguo.androidsdk.PGColorBuffer;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class EffectGroupRendererMethod extends PGRendererMethod {
+
+    private final static String TAG = EffectGroupRendererMethod.class.getSimpleName();
+
+    protected MakePhotoModel[] mEffectModelArray;
+    protected Bitmap mBitmap;
+    protected RendererMethodActionListener mRendererMethodActionListener;
+    protected String mPath;
+
+    public void setEffectModeArray(MakePhotoModel[] effectModeArray) {
+        this.mEffectModelArray = effectModeArray;
+    }
+
+
+    public void setBitmap(Bitmap bitmap) {
+        this.mBitmap = bitmap;
+    }
+
+    public Bitmap getBitmap() {
+        return this.mBitmap;
+    }
+
+    public MakePhotoModel[] getMakePhotoModelArray() {
+        return mEffectModelArray;
+    }
+
+    public void setRendererMethodActionListener(RendererMethodActionListener actionListener) {
+        this.mRendererMethodActionListener = actionListener;
+    }
+
+    @Override
+    public void rendererAction() {
+
+        renderType(EM_MAKE_TYPE.RENDER_NORMAL);
+        if (!prepare()) {
+            return;
+        }
+
+        setAutoClearShaderCache(false);
+
+        clearAllImage();
+
+        if (!setPhotoInfo()) {
+            return;
+        }
+
+        if (!setMakeEffectInfo(mEffectModelArray)) {
+            return;
+        }
+
+
+        makePhoto();
+
+    }
+
+    protected void clearAllImage() {
+        clearImage(0);
+        //现在要缓存纹理，所以不再clear
+        if (ConstantUtil.needClearTexture) {
+            if (mEffectModelArray != null) {
+                for (MakePhotoModel effectModel : mEffectModelArray) {
+                    if (effectModel != null && effectModel.hasTexture()) {
+                        clearImage(effectModel.getTextureIndex());
+                    }
+                }
+            }
+        }
+    }
+
+    protected boolean prepare() {
+        return true;
+    }
+
+    protected boolean setPhotoInfo() {
+        if (!this.setImageFromBitmap(0, mBitmap)) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG, "setImageFromBitmap fail");
+            return false;
+        }
+
+        return true;
+    }
+
+    protected void makePhoto() {
+        PGColorBuffer pgColorBuffer = this.getMakedImage2Buffer();
+        if (pgColorBuffer == null) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG, "pgColorBuffer is null");
+            return;
+        }
+        Bitmap bitmap = Bitmap.createBitmap(pgColorBuffer.getColorBuffer(), pgColorBuffer.getImageWidth(), pgColorBuffer.getImageHeight(), Bitmap.Config.ARGB_8888);
+        if (mRendererMethodActionListener != null) {
+            mRendererMethodActionListener.success(bitmap);
+        }
+    }
+
+    public boolean setImageFromBitmap(int index, Bitmap bitmap) {
+        if (null == bitmap) {
+            return false;
+        }
+        int[] argbArray = new int[bitmap.getWidth() * bitmap.getHeight()];
+
+        bitmap.getPixels(argbArray, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return setImageFromARGB(index, argbArray, bitmap.getWidth(), bitmap.getHeight());
+    }
+
+    protected boolean setMakeEffectInfo(MakePhotoModel[] effectModelArray) {
+        boolean isNeedSetResult = true;
+        boolean hasSucceed = false;
+        boolean isMakePhoto = false;
+
+        if (null == effectModelArray || 0 == effectModelArray.length) {
+            hasSucceed = true;
+        } else {
+            int i = 0;
+            for (MakePhotoModel makePhotoModel : effectModelArray) {
+
+                if (0 == i) {
+                    isNeedSetResult = false;
+                    i++;
+                }
+
+                if (makePhotoModel != null) {
+                    isMakePhoto = true;
+
+                    if (isNeedSetResult) {
+                        if (!setResultImageToInput(0)) {
+                            if (mRendererMethodActionListener != null) {
+                                mRendererMethodActionListener.fail();
+                            }
+                            GLogger.i(TAG, "setResultImageToInput fail");
+                            return false;
+
+                        }
+                    }
+                    isNeedSetResult = makePhotoModel.make(this, null);
+                    if (isNeedSetResult) {
+                        hasSucceed = true;
+                    }
+                }
+            }
+        }
+
+        if (!isMakePhoto) {
+            if (!setEffect("Effect=Normal")) {
+                GLogger.i(TAG, "setEffect Normal fail");
+                if (null != mRendererMethodActionListener) {
+                    mRendererMethodActionListener.fail();
+                }
+                return false;
+            }
+
+            if (!make()) {
+                GLogger.i(TAG, "make fail");
+                if (null != mRendererMethodActionListener) {
+                    mRendererMethodActionListener.fail();
+                }
+                return false;
+            }
+            hasSucceed = true;
+        }
+
+        if (!hasSucceed) {
+            if (null != mRendererMethodActionListener) {
+                mRendererMethodActionListener.fail();
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    public void setPath(String path) {
+        this.mPath = path;
+    }
+
+    public String getPath() {
+        return mPath;
+    }
+
+    public static interface RendererMethodActionListener {
+
+        public void success(Bitmap bitmap);
+
+        public void fail();
+
+        public void successForGLSurfaceView();
+    }
+}

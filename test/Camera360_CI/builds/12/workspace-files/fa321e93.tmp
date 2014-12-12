@@ -1,0 +1,60 @@
+package com.pinguo.mix.api.share;
+
+import android.os.Bundle;
+
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+
+import java.util.List;
+
+/**
+ * Created by taoli on 14-4-11.
+ */
+public class ShareApi {
+
+    public static void addProcessInfo(final List<String> etags,
+                                      final String info,
+                                      final ApiCallback callback) {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_ORIGIN_ETAG, etags.get(0));
+        bundle.putString(ApiConstants.PARAM_EDIT_ETAG, etags.get(1));
+        bundle.putString(ApiConstants.PARAM_FILTER_INFO, info);
+        new AddProcessInfo().execute(
+                ApiConstants.API_URL_ADD_PROCESS_INFO, bundle, callback);
+    }
+
+
+    public static void addFilterInfo(final List<String> etags,
+                                     final String info,
+                                     final String avatar,
+                                     final String nickName,
+                                     final String filterName,
+                                     final ApiCallback callback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_ORIGIN_ETAG, etags.get(0));
+        bundle.putString(ApiConstants.PARAM_EDIT_ETAG, etags.get(1));
+        bundle.putString(ApiConstants.PARAM_FILTER_INFO, info);
+        bundle.putString(ApiConstants.PARAM_AVATAR, avatar);
+        bundle.putString(ApiConstants.PARAM_NICK_NAME, nickName);
+        bundle.putString(ApiConstants.PARAM_FILTER_NAME, filterName);
+        new AddFilterInfo().execute(
+                ApiConstants.API_URL_ADD_FILTER_INFO, bundle, callback);
+
+    }
+
+    public static void getWechatUserInfo(final String code,
+                                         final ApiCallback callback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_CODE, code);
+        new GetWechatUserInfo().execute(ApiConstants.API_URL_GET_WECHAT_USERINFO, bundle, callback);
+    }
+
+    public static void getFacebookUserInfo(final String code,
+                                           final ApiCallback callback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_ACCESS_TOKEN, code);
+        new GetFacebookUserInfo().execute(ApiConstants.API_URL_GET_FACEBOOK_USERINFO, bundle, callback);
+    }
+
+}

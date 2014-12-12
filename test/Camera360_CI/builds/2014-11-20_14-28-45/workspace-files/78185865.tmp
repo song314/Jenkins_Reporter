@@ -1,0 +1,116 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.os.Build;
+import android.os.Environment;
+import android.view.View;
+
+import java.io.File;
+
+/**
+ * Created by pinguo on 14-6-10.
+ */
+public class ToolUtils {
+
+    public static Bitmap getBitmap(String path, int size) {
+        return getBitmap(path, size, getRotatedDegree(path));
+    }
+
+    public static int getViewWidth(View view) {
+        int width = 0;
+        try { //记得以前调用这个方法会在某些手机中抛异常，所以保险为主
+            int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            view.measure(w, h);
+            width = view.getMeasuredWidth();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return width;
+    }
+
+    public static Bitmap getBitmap(String path, int size, int degree) {
+
+        Bitmap bitmap = BitmapUtils.scalePicture(path, size, false);
+
+        return getRotateBitmap(bitmap, degree);
+    }
+
+    public static int getRotatedDegree(String path) {
+        int rotate = 0;
+        try {
+            ExifInterface exifInterface = new ExifInterface(path);
+            int result = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED);
+            switch (result) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 270;
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rotate;
+    }
+
+    public static Bitmap getRotateBitmap(Bitmap oldBitmap, int degree) {
+
+        if (oldBitmap != null && degree > 0) {
+            Matrix matrix = new Matrix();
+            matrix.setRotate(degree);
+            Bitmap rotateBitmap = Bitmap.createBitmap(oldBitmap, 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight(),
+                    matrix, true);
+            if (rotateBitmap != null && rotateBitmap != oldBitmap) {
+                oldBitmap.recycle();
+                return rotateBitmap;
+            }
+        }
+        return oldBitmap;
+    }
+
+    public static String getDiskCacheDir(Context context, String uniqueName) {
+
+        String cachePath =
+                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ?
+                        getExternalCacheDir(context).getPath() :
+                        context.getCacheDir().getPath();
+
+        return cachePath + File.separator + uniqueName;
+    }
+
+    public static File getExternalCacheDir(Context context) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+            File cacheDirFile = context.getExternalCacheDir();
+            if (cacheDirFile != null) {
+                return cacheDirFile;
+            }
+        }
+
+        // Before Froyo we need to construct the external cache dir ourselves
+        final String cacheDir = "/Android/data/" + context.getPackageName() + "/cache/";
+        return new File(Environment.getExternalStorageDirectory().getPath() + cacheDir);
+    }
+
+    public static String getCompositeDiskCachePath(Context context, String uniqueName) {
+
+//        return getDiskCacheDir(context, ConstantUtil.COMPOSITE_SDK) + File.separator + System.currentTimeMillis() + ".jpg";
+        return getCompositeDiskFilePath(context, uniqueName);
+    }
+
+    public static String getCompositeDiskFilePath(Context context, String uniqueName) {
+        return context.getFilesDir().getAbsolutePath()
+                + File.separator + ConstantUtil.COMPOSITE_SDK + File.separator + uniqueName;
+    }
+}

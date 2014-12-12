@@ -1,0 +1,609 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Camera;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.media.ExifInterface;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.camera.util.Exif;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+/**
+ * Created by liubo on 7/31/13.
+ */
+public final class BitmapUtils {
+    private static final String TAG = BitmapUtils.class.getSimpleName();
+    private static final float PRECISION = 0.01f;
+    public static final int QUALITY_MAX = 100;
+
+    private BitmapUtils() {
+
+    }
+
+    public static byte[] bitmap2Bytes(Bitmap bm) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 95, baos);
+        return baos.toByteArray();
+    }
+
+    /**
+     * 高效快速的大图缩小
+     *
+     * @param jpegPath            图片路径
+     * @param maxLength           最大长度，比如800,(1600x800 -> 800x400、800x1600 -> 400x800)
+     * @param readExifOrientation 是否根据exif的角度旋转图片
+     * @return Bitmap
+     */
+    public static Bitmap scalePicture(String jpegPath, int maxLength, boolean readExifOrientation) {
+        if (maxLength < 10 && maxLength > 5000) {
+            throw new IllegalArgumentException("length must between [10,5000],but value is:" + maxLength);
+        }
+
+        Bitmap bitmap;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 1;
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(jpegPath, options);
+            if (options.mCancel || options.outWidth == -1 || options.outHeight == -1) {
+                GLogger.w(TAG, "Decode picture failed!");
+                return null;
+            }
+            options.inSampleSize = getSampleSize(options, maxLength, true);
+            options.inJustDecodeBounds = false;
+            options.inDither = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            bitmap = BitmapFactory.decodeFile(jpegPath, options);
+            if (null == bitmap) {
+                GLogger.w(TAG, "Decode picture failed by not exists!");
+                return null;
+            }
+        } catch (OutOfMemoryError oom) {
+            GLogger.e(TAG, oom);
+            GLogger.w(TAG, "Decode picture failed by OOM!");
+            return null;
+        }
+
+        int orientation = 0;
+        if (readExifOrientation) {
+            try {
+                ExifInterface exifInterface = new ExifInterface(jpegPath);
+                int oriTag = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                orientation = Exif.getOrientation(oriTag);
+            } catch (IOException e) {
+                orientation = 0;
+            }
+        }
+        return scaleBitmap(bitmap, maxLength, orientation);
+    }
+
+    /**
+     * 高效快速的大图缩小
+     *
+     * @param jpegData            图片路径
+     * @param maxLength           最大长度，比如800,(1600x800 -> 800x400、800x1600 -> 400x800)
+     * @param readExifOrientation 是否根据exif的角度旋转图片
+     * @return Bitmap
+     */
+    public static Bitmap scalePicture(byte[] jpegData, int maxLength, boolean readExifOrientation) {
+        if (jpegData == null) {
+            return null;
+        }
+
+        if (maxLength < 10 && maxLength > 5000) {
+            throw new IllegalArgumentException("length must between [10,5000],but value is:" + maxLength);
+        }
+
+        Bitmap bitmap;
+        //必须采用两个输入流，因为如果采用一个流，图像缩小时将会导致图像一直返回null
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 1;
+            options.inJustDecodeBounds = true;
+            ByteArrayInputStream in01 = new ByteArrayInputStream(jpegData);
+            BitmapFactory.decodeStream(in01, null, options);
+            if (options.mCancel || options.outWidth == -1 || options.outHeight == -1) {
+                return null;
+            }
+            int inSampleSize = getSampleSize(options, maxLength, true);
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false;
+            options.inDither = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            ByteArrayInputStream in02 = new ByteArrayInputStream(jpegData);
+            bitmap = BitmapFactory.decodeStream(in02, null, options);
+        } catch (OutOfMemoryError oom) {
+            GLogger.e(TAG, oom);
+            return null;
+        }
+        //ByteArrayInputStream 不需要关闭流
+
+        int orientation = 0;
+        if (readExifOrientation) {
+            orientation = Exif.getOrientation(jpegData);
+        }
+        return scaleBitmap(bitmap, maxLength, orientation);
+    }
+
+    /**
+     * @param
+     * @return Bitmap
+     * @Description 得到指定大小图片的路径
+     * @author hlf
+     */
+    public static Bitmap scaleJpegPath(String path, int screenWidth, int screenHeight) {
+
+        BitmapFactory.Options ops = new BitmapFactory.Options();
+        ops.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, ops);
+        int originalWidth = ops.outWidth;
+        int originalHeight = ops.outHeight;
+        int orgPix, dstPix;
+        orgPix = originalWidth * originalHeight;
+        dstPix = screenWidth * screenHeight;
+        float fScale = (float) Math.sqrt(orgPix * 1.0 / dstPix);
+        int scale = (int) (fScale + 0.8);
+
+
+        ops.inSampleSize = scale;
+        ops.inJustDecodeBounds = false;
+        ops.inDither = false;
+        ops.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(path, ops);
+
+        return bitmap;
+    }
+
+    public static Bitmap scalePreviewJpegData(byte[] jpegData, int length, int orientation) {
+        if (length < 10 && length > 5000) {
+            throw new IllegalArgumentException("length must between [10,5000],but value is:" + length);
+        }
+
+        Bitmap bitmap;
+        //必须采用两个输入流，因为如果采用一个流，图像缩小时将会导致图像一直返回null
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 1;
+            options.inJustDecodeBounds = true;
+            ByteArrayInputStream in01 = new ByteArrayInputStream(jpegData);
+            BitmapFactory.decodeStream(in01, null, options);
+            if (options.mCancel || options.outWidth == -1 || options.outHeight == -1) {
+                return null;
+            }
+            int inSampleSize = getSampleSize(options, (int) (length * 0.8f), true);
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false;
+            options.inDither = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            ByteArrayInputStream in02 = new ByteArrayInputStream(jpegData);
+            bitmap = BitmapFactory.decodeStream(in02, null, options);
+
+            return scalePreviewBitmap(bitmap, length, orientation);
+        } catch (OutOfMemoryError oom) {
+            GLogger.e(TAG, oom);
+            return null;
+        }
+    }
+
+    private static Bitmap scalePreviewBitmap(Bitmap bitmap, int maxLength, int orientation) {
+        if (maxLength < 10 && maxLength > 5000) {
+            throw new IllegalArgumentException("length must between [10,5000],but value is:" + maxLength);
+        }
+        if (bitmap == null) {
+            return null;
+        }
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        //定义预转换成的图片的宽度和高度
+        float scale;
+        if (width >= height) {
+            scale = (float) maxLength / (float) width;
+        } else {
+            scale = (float) maxLength / (float) height;
+        }
+
+        if (scale < 1.1f) {
+            if (orientation == 0) {
+                return bitmap;
+            } else {
+                return getRotateBitmap(bitmap, orientation);
+            }
+        }
+
+        return scaleBitmap(bitmap, scale, scale, orientation);
+    }
+
+    /**
+     * 缩小图片
+     *
+     * @param bitmap      Bitmap
+     * @param maxLength   最大长度，比如800,(1600x800 -> 800x400、800x1600 -> 400x800)
+     * @param orientation 0，90，180，270
+     * @return Bitmap
+     */
+    public static Bitmap scaleBitmap(Bitmap bitmap, int maxLength, int orientation) {
+        if (maxLength < 10 && maxLength > 5000) {
+            throw new IllegalArgumentException("length must between [10,5000],but value is:" + maxLength);
+        }
+        if (bitmap == null) {
+            return null;
+        }
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        //定义预转换成的图片的宽度和高度
+        float scale;
+        if (width >= height) {
+            scale = (float) maxLength / (float) width;
+        } else {
+            scale = (float) maxLength / (float) height;
+        }
+
+        if (Math.abs(scale - 1) < PRECISION) {
+            return bitmap;
+        }
+
+        return scaleBitmap(bitmap, scale, scale, orientation);
+    }
+
+    /**
+     * 图像旋转
+     *
+     * @param bitmap
+     * @param orientation
+     * @return
+     */
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+        if (bitmap == null || orientation == 0) {
+            return bitmap;
+        }
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(orientation);
+        Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        if (newBitmap != bitmap) {
+            bitmap.recycle();
+        }
+        return newBitmap;
+    }
+
+    /**
+     * 图像矫正
+     *
+     * @param bitmap
+     * @param sx
+     * @param sy
+     * @param orientation
+     * @return
+     */
+    public static Bitmap scaleBitmap(Bitmap bitmap, float sx, float sy, int orientation) {
+        if (bitmap == null) {
+            return null;
+        }
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(sx, sy);
+        if (orientation != 0) {
+            matrix.postRotate(orientation);
+        }
+        Bitmap newBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        if (newBitmap != bitmap) {
+            bitmap.recycle();
+        }
+        return newBitmap;
+    }
+
+    public static Bitmap zoomAndRotate(Bitmap org, int w, int h, int orientation) {
+        int orgW = org.getWidth();
+        int orgH = org.getHeight();
+        Matrix matrix = new Matrix(); // 创建操作图片用的Matrix对象
+        float scaleWidth = ((float) w / orgW); // 计算缩放比例
+        float scaleHeight = ((float) h / orgH);
+
+
+        matrix.reset();
+        if (orientation != 0) {
+            matrix.postRotate(orientation);
+        }
+        matrix.postScale(scaleWidth, scaleHeight); // 设置缩放比例
+
+        if (orgH <= 0 || orgW <= 0) {
+            throw new IllegalArgumentException("Width or Heigth < 0:" + orgH + "/" + orgW + "/" + matrix.toString() + "/" + w + "/" + h + "/" + orientation);
+        }
+
+        try {
+            return Bitmap.createBitmap(org, 0, 0, orgW, orgH, matrix, true); // 建立新的bitmap，其内容是对原bitmap的缩放后的图
+        } catch (Exception e) {
+            GLogger.e(TAG, e);
+            //出异常时，记录响应信息，方便定位bug
+            throw new IllegalStateException("orgSize : " + orgW + "x" + orgH + ", size : " + w + "x" + h + ", matrix : " +
+                    matrix.toShortString());
+        }
+    }
+
+    private static int getSampleSize(BitmapFactory.Options options, int size, boolean useMaxSize) {
+        int maxSize = options.outWidth;
+        if (useMaxSize && options.outWidth < options.outHeight) {
+            maxSize = options.outHeight;
+        } else if (!useMaxSize && options.outWidth > options.outHeight) {
+            maxSize = options.outHeight;
+        }
+
+        int sampleSize = 1;
+        while (maxSize / size >= 2) {
+            sampleSize <<= 1;
+            maxSize >>= 1;
+        }
+        return sampleSize;
+    }
+
+    /**
+     * 制作文字图像
+     *
+     * @param textString
+     * @param fontSize   1600 x 1200 下面为28
+     * @return
+     */
+    public static Bitmap makeTextBitmap(String textString, float fontSize) {
+        String mstrTitle;
+        mstrTitle = textString;
+        // mstrTitle= "2012-02-17 17:51:30";
+
+        // 设置字体属性
+        // int fontSize=22; //字体大小
+        int fontColor = Color.WHITE; // 色彩
+        String fontName = "黑体";
+        Rect rcText = new Rect();
+
+        Typeface font = Typeface.create(fontName, Typeface.NORMAL);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(fontColor);
+        paint.setTypeface(font);
+        paint.setTextSize(fontSize);
+        paint.setShadowLayer(0.5f, 1, 1, Color.BLACK);
+        paint.getTextBounds(mstrTitle, 0, mstrTitle.length(), rcText);
+
+        // 画图
+        int w, h;
+        w = rcText.width() + 6;
+        h = rcText.height() + 6;
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        // 图象大小要根据文字大小算下,以和文本长度对应
+        Canvas canvasTemp = new Canvas(bmp);
+        canvasTemp.drawColor(Color.TRANSPARENT);
+        canvasTemp.drawARGB(0, 255, 255, 255);
+        canvasTemp.drawText(mstrTitle, 2, h - 3, paint);
+
+        return bmp;
+    }
+
+    public static Bitmap getRotateBitmap(Bitmap oldBitmap, String path) {
+        int rotate = 0;
+        try {
+            ExifInterface exifInterface = new ExifInterface(path);
+            int result = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+            switch (result) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 270;
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (oldBitmap != null && rotate > 0) {
+            Matrix matrix = new Matrix();
+            matrix.setRotate(rotate);
+            Bitmap rotateBitmap = Bitmap.createBitmap(oldBitmap, 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight(), matrix, true);
+            if (rotateBitmap != null && rotateBitmap != oldBitmap) {
+                oldBitmap.recycle();
+                return rotateBitmap;
+            }
+        }
+        return oldBitmap;
+    }
+
+    public static Bitmap getMirrorBitmap(Bitmap bmp) {
+        Canvas canvas = new Canvas();
+        Paint paint = new Paint();
+        Bitmap bitmap = Bitmap.createBitmap(bmp.getWidth(), bmp.getHeight(), Bitmap.Config.ARGB_8888);
+
+        canvas.setBitmap(bitmap);
+        Camera camera = new Camera();
+        Matrix matrix = new Matrix();
+        camera.rotateY(180.0f);
+        camera.getMatrix(matrix);
+
+        matrix.postTranslate(bmp.getWidth(), 0);
+
+        canvas.save();
+
+        canvas.drawBitmap(bmp, matrix, paint);
+
+        canvas.restore();
+
+        return bitmap;
+    }
+
+
+    public static Bitmap getRotateBitmap(Bitmap oldBitmap, int rotate) {
+        if (oldBitmap != null && rotate > 0) {
+            Matrix matrix = new Matrix();
+            matrix.setRotate(rotate);
+            Bitmap rotateBitmap = Bitmap.createBitmap(oldBitmap, 0, 0, oldBitmap.getWidth(), oldBitmap.getHeight(),
+                    matrix, true);
+            return rotateBitmap;
+        }
+
+        return oldBitmap;
+    }
+
+    public static byte[] decodeByRGB888(String path) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+        if (null == bitmap) {
+            return null;
+        }
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        int[] pixels = new int[width * height];
+        byte[] rgb888pixels = new byte[width * height * 3];
+        int offset = 0;
+
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        int lineNum = 0;
+        for (int i = 0;
+             i < height;
+             i++) {
+            for (int j = 0;
+                 j < width;
+                 j++) {
+                int clr = pixels[i * width + j];
+                int red = (clr & 0x00ff0000) >> 16;
+                int green = (clr & 0x0000ff00) >> 8;
+                int blue = clr & 0x000000ff;
+
+                int rgb888index = lineNum * width * 3 + offset;
+                rgb888pixels[rgb888index] = (byte) blue;
+                rgb888pixels[rgb888index + 1] = (byte) green;
+                rgb888pixels[rgb888index + 2] = (byte) red;
+
+                offset += 3;
+            }
+
+            lineNum++;
+            offset = 0;
+        }
+
+        return rgb888pixels;
+    }
+
+    public static byte[] decodeByRGB888(Bitmap bitmap) {
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        int[] pixels = new int[width * height];
+        byte[] rgb888pixels = new byte[width * height * 3];
+        int offset = 0;
+
+        bitmap.getPixels(pixels, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        int lineNum = 0;
+        for (int i = 0;
+             i < height;
+             i++) {
+            for (int j = 0;
+                 j < width;
+                 j++) {
+                int clr = pixels[i * width + j];
+                int red = (clr & 0x00ff0000) >> 16;
+                int green = (clr & 0x0000ff00) >> 8;
+                int blue = clr & 0x000000ff;
+
+                int rgb888index = lineNum * width * 3 + offset;
+                rgb888pixels[rgb888index] = (byte) blue;
+                rgb888pixels[rgb888index + 1] = (byte) green;
+                rgb888pixels[rgb888index + 2] = (byte) red;
+
+                offset += 3;
+            }
+
+            lineNum++;
+            offset = 0;
+        }
+
+        return rgb888pixels;
+    }
+
+    //BMP文件头
+    public static byte[] addBMPImageHeader(int size) {
+        byte[] buffer = new byte[14];
+        buffer[0] = 0x42;
+        buffer[1] = 0x4D;
+        buffer[2] = (byte) (size >> 0);
+        buffer[3] = (byte) (size >> 8);
+        buffer[4] = (byte) (size >> 16);
+        buffer[5] = (byte) (size >> 24);
+        buffer[6] = 0x00;
+        buffer[7] = 0x00;
+        buffer[8] = 0x00;
+        buffer[9] = 0x00;
+        buffer[10] = 0x36;
+        buffer[11] = 0x00;
+        buffer[12] = 0x00;
+        buffer[13] = 0x00;
+        return buffer;
+    }
+
+
+    //BMP文件信息头
+    public static byte[] addBMPImageInfosHeader(int w, int h) {
+        byte[] buffer = new byte[40];
+        buffer[0] = 0x28;
+        buffer[1] = 0x00;
+        buffer[2] = 0x00;
+        buffer[3] = 0x00;
+        buffer[4] = (byte) (w >> 0);
+        buffer[5] = (byte) (w >> 8);
+        buffer[6] = (byte) (w >> 16);
+        buffer[7] = (byte) (w >> 24);
+        buffer[8] = (byte) (h >> 0);
+        buffer[9] = (byte) (h >> 8);
+        buffer[10] = (byte) (h >> 16);
+        buffer[11] = (byte) (h >> 24);
+        buffer[12] = 0x01;
+        buffer[13] = 0x00;
+        buffer[14] = 0x18;
+        buffer[15] = 0x00;
+        buffer[16] = 0x00;
+        buffer[17] = 0x00;
+        buffer[18] = 0x00;
+        buffer[19] = 0x00;
+        buffer[20] = 0x00;
+        buffer[21] = 0x00;
+        buffer[22] = 0x00;
+        buffer[23] = 0x00;
+        buffer[24] = (byte) 0xE0;
+        buffer[25] = 0x01;
+        buffer[26] = 0x00;
+        buffer[27] = 0x00;
+        buffer[28] = 0x02;
+        buffer[29] = 0x03;
+        buffer[30] = 0x00;
+        buffer[31] = 0x00;
+        buffer[32] = 0x00;
+        buffer[33] = 0x00;
+        buffer[34] = 0x00;
+        buffer[35] = 0x00;
+        buffer[36] = 0x00;
+        buffer[37] = 0x00;
+        buffer[38] = 0x00;
+        buffer[39] = 0x00;
+        return buffer;
+    }
+}

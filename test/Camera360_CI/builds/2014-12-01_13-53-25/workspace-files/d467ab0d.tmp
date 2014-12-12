@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:id="@+id/root_view">
+
+    <!-- 顶部  -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_beauty_main_top_height"
+        android:id="@+id/main_top"
+        android:layout_alignParentTop="true"
+        android:background="@color/composite_sdk_effect_group_menu_bg">
+
+        <ImageButton
+            android:layout_width="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_height="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="#00000000"
+            android:layout_marginLeft="@dimen/composite_sdk_common_bar_icon_margin"
+            android:id="@+id/back"
+            android:src="@drawable/composite_sdk_album_btn_back" />
+
+        <ImageButton
+            android:layout_width="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_height="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_alignParentRight="true"
+            android:background="#00000000"
+            android:layout_marginRight="@dimen/composite_sdk_common_bar_icon_margin"
+            android:layout_centerVertical="true"
+            android:id="@+id/save"
+            android:src="@drawable/composite_sdk_save" />
+]
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/composite_sdk_advance_adjust"
+            android:textColor="@drawable/composite_sdk_menu_txt"
+            android:textSize="22sp" />
+
+    </RelativeLayout>
+    <!-- 滑动条出现的时候显示的文字 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_beauty_main_top_height"
+        android:background="@color/composite_sdk_effect_group_menu_bg"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:textColor="@drawable/composite_sdk_menu_txt"
+        android:visibility="gone"
+        android:id="@+id/scroll_value_name" />
+
+    <!-- 中间部分  -->
+    <us.pinguo.android.effect.group.sdk.view.AdjustContainerViewGroup
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/main_top"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:id="@+id/main_center">
+        <!-- 中间部分  -->
+        <us.pinguo.android.effect.group.sdk.view.ComparePGGLSurfaceView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/main_top"
+            android:id="@+id/main_compare_glsurfaceview">
+
+            <us.pinguo.android.effect.group.sdk.view.AutoHideTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="78sp"
+                android:textColor="@color/composite_sdk_effect_menu_txt_bg_normal"
+                android:layout_centerInParent="true"
+                android:id="@+id/auto_hide_textview"
+                android:visibility="gone" />
+
+        </us.pinguo.android.effect.group.sdk.view.ComparePGGLSurfaceView>
+    </us.pinguo.android.effect.group.sdk.view.AdjustContainerViewGroup>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/main_center"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            android:weightSum="3">
+
+        <!-- 位于特效之上的菜单栏 -->
+        <us.pinguo.android.effect.group.sdk.view.EffectMenuHorizontalLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/composite_sdk_beauty_menu_bg"
+            android:id="@+id/main_bottom_effects_menu"
+            android:layout_weight="1"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2">
+
+            <us.pinguo.android.effect.group.sdk.view.HorizontalLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#00000000"
+                android:id="@+id/second_effects"></us.pinguo.android.effect.group.sdk.view.HorizontalLayout>
+
+            <us.pinguo.android.effect.group.sdk.view.HorizontalLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/third_effects"
+                android:background="#00000000"
+                android:visibility="invisible"></us.pinguo.android.effect.group.sdk.view.HorizontalLayout>
+
+            <RelativeLayout
+                android:id="@+id/navigate_back_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"></RelativeLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <include
+        layout="@layout/composite_sdk_beauty_seekbar_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_below="@id/main_center"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/seekbar_layout" />
+
+    <include
+        layout="@layout/composite_sdk_colors_seekbar_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_below="@id/main_center"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/colors_seekbar_layout" />
+
+    <include
+            layout="@layout/composite_sdk_discoloration_seekbar_layout"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_below="@id/main_center"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/discoloration_seekbar_layout" />
+
+    <include
+        layout="@layout/composite_sdk_details_seekbar_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_below="@id/main_center"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/details_seekbar_layout" />
+
+    <include
+        layout="@layout/composite_sdk_tilt_shift_seekbar_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_below="@id/main_center"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/tilt_shift_seekbar_layout" />
+
+    <FrameLayout
+        android:id="@+id/screen_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="gone" />
+
+    <include
+            layout="@layout/progress_dialog"
+            android:layout_centerInParent="true"
+            android:id="@+id/progress_layout" />
+
+</RelativeLayout>
+

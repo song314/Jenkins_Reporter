@@ -1,0 +1,24 @@
+package com.pinguo.edit.sdk.filter.square.Info.bean;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class FilterUrl extends BaseBean<FilterUrl> {
+
+    private String url;
+
+    @Override
+    protected boolean isValid(FilterUrl obj) {
+        return true;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+}

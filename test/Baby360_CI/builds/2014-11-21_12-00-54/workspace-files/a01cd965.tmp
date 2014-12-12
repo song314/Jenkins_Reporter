@@ -1,0 +1,15 @@
+package us.pinguo.android.effect.group.sdk.group;
+
+/**
+ * Created by taoli on 14-7-1.
+ */
+public class TiltShiftController extends BaseController {
+
+    public void onCreate() {
+
+    }
+
+    public void onDestroy() {
+
+    }
+}

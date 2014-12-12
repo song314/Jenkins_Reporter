@@ -1,0 +1,24 @@
+package com.pinguo.mix.api.share;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class AddProcessInfoBean extends BaseBean<AddProcessInfoBean> {
+
+    private String url;
+
+    @Override
+    protected boolean isValid(AddProcessInfoBean obj) {
+        return true;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+}

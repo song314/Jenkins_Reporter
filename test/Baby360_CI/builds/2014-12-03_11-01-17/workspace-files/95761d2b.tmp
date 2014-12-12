@@ -1,0 +1,385 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.MenuItemView;
+import com.pinguo.ui.widget.MenuItemWithValueView;
+import com.pinguo.ui.widget.SeekBar;
+
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceHSL;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by taoli on 14-9-10.
+ */
+public class DiscolorationMenu extends BaseMenu {
+
+    private Effect mEffect;
+    private ParamVecItem mCurHSLColorItem;
+    private float[] mLastValues;
+    private SeekBar mCyanSeekBar;
+    private SeekBar mMagentaSeekBar;
+    private SeekBar mYellowSeekBar;
+
+
+    private static final int PARAM_INDEX_CYAN = 0;
+    private static final int PARAM_INDEX_MAGENTA = 1;
+    private static final int PARAM_INDEX_YELLOW = 2;
+    private static final int PARAM_INDEX_MODE = 3;
+    private int mCurIndex;
+
+    public DiscolorationMenu(Context context, SDKManager sdkManager,
+                             GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context, sdkManager, compositeRendererMethod);
+    }
+
+    private EffectGroupRendererMethod.RendererMethodActionListener mRendererMethodActionListener = new EffectGroupRendererMethod.RendererMethodActionListener() {
+
+
+        @Override
+        public void success(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void fail() {
+
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.AdvanceHSL.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.AdvanceHSL;
+    }
+
+    @Override
+    protected boolean isOnClickShowScroll() {
+        return false;
+    }
+
+    @Override
+    protected String getScrollValueNameString() {
+        return mContext.getResources().getString(
+                ResourceHelper.getString(mContext, mCurHSLColorItem.name));
+    }
+
+    @Override
+    public void showSecondMenu() {
+        getSecondHorizontalLayout().removeAllChildViews();
+        getSecondHorizontalLayout().setVisibility(View.VISIBLE);
+
+        getSecondHorizontalLayout().setCount(3.0f);
+        mEffect = EffectDataManager.getInstance().getEffect(
+                AdvanceHSL.class.getSimpleName());
+
+        List<ParamItem> paramList = mEffect.getParam().getParamItemList();
+        for (ParamItem item : paramList) {
+            if (item instanceof ParamVecItem) {
+                ParamVecItem hslColorItem = (ParamVecItem) item;
+                if (item.key.endsWith("Color")) {
+                    MenuItemView menuItemView = addSecondMenuView(hslColorItem.icon, hslColorItem.name, getEffectClickListener(),
+                            isOnClickShowScroll(), hslColorItem, false);
+                    if (!hslColorItem.value.replaceAll(" ", "")
+                            .equals(hslColorItem.defaultValue.replaceAll(" ", ""))) {
+                        menuItemView.showDownLine();
+                    }
+                }
+            }
+        }
+
+        View view = getSeekbarLayout();
+        mCyanSeekBar = (SeekBar) view.findViewById(
+                ResourceHelper.getId(mContext, "cyan_seek_bar"));
+        mCyanSeekBar.setThumbSize(mContext.getResources().getDimension(
+                R.dimen.composite_sdk_hsl_seekbar_thumb_radius));
+
+        mMagentaSeekBar = (SeekBar) view.findViewById(
+                ResourceHelper.getId(mContext, "magenta_seek_bar"));
+        mMagentaSeekBar.setThumbSize(mContext.getResources().getDimension(
+                R.dimen.composite_sdk_hsl_seekbar_thumb_radius));
+
+        mYellowSeekBar = (SeekBar) view.findViewById(
+                ResourceHelper.getId(mContext, "yellow_seek_bar"));
+        mYellowSeekBar.setThumbSize(mContext.getResources().getDimension(
+                R.dimen.composite_sdk_hsl_seekbar_thumb_radius));
+    }
+
+    @Override
+    protected MenuItemView addSecondMenuView(String icon, String name,
+                                             View.OnClickListener onCompositeClick,
+                                             boolean isShowScrollView, Object tag,
+                                             boolean enableClickAnimation) {
+
+        MenuItemWithValueView effectMenuItemView = new MenuItemWithValueView(mContext);
+        effectMenuItemView.setIcon(ResourceHelper.getDrawable(mContext, icon));
+        effectMenuItemView.setNameText(mContext.getResources().getString(
+                ResourceHelper.getString(mContext, name)));
+        effectMenuItemView.setNameBgColor("#00000000");
+        effectMenuItemView.setDownLineColor("#4b5258");
+        effectMenuItemView.enableDivider(true);
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        effectMenuItemView.setTag(tag);
+
+        getSecondHorizontalLayout().addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), enableClickAnimation, true);
+
+        return effectMenuItemView;
+    }
+
+    @Override
+    protected View.OnClickListener getEffectClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                setMakePhotoModel(mEffect);
+
+                mCurIndex = getSecondHorizontalLayout().getContainerView().indexOfChild(v);
+
+                mCurHSLColorItem = (ParamVecItem) v.getTag();
+                mLastValues = mCurHSLColorItem.getValues();
+                mCyanSeekBar.setSeekLength(-100, 100, 0, 1);
+                mCyanSeekBar.setValue(mLastValues[0]);
+                mCyanSeekBar.setOnSeekChangeListener(mCyanChangeListener);
+
+                mMagentaSeekBar.setSeekLength(-100, 100, 0, 1);
+                mMagentaSeekBar.setValue(mLastValues[1]);
+                mMagentaSeekBar.setOnSeekChangeListener(mMagentaChangeListener);
+
+                mYellowSeekBar.setSeekLength(-100, 100, 0, 1);
+                mYellowSeekBar.setValue(mLastValues[2]);
+                mYellowSeekBar.setOnSeekChangeListener(mYellowChangeListener);
+
+                DiscolorationMenu.super.getShowScrollViewClickListener().onClick(v);
+            }
+        };
+    }
+
+
+    @Override
+    public void quitScrollView() {
+        super.quitScrollView();
+
+        mCurHSLColorItem.value = buildParamString(mLastValues);
+        setParamsModel(mCurHSLColorItem.effectKey, mCurHSLColorItem.key, mCurHSLColorItem.value);
+
+        MenuItemView menuItemView = (MenuItemView) getSecondHorizontalLayout().getContainerView().getChildAt(mCurIndex);
+        if (!mCurHSLColorItem.value.replaceAll(" ", "")
+                .equals(mCurHSLColorItem.defaultValue.replaceAll(" ", ""))) {
+            if (null != menuItemView) {
+                menuItemView.showDownLine();
+            }
+        } else {
+            if (null != menuItemView) {
+                menuItemView.hideDownLine();
+            }
+        }
+
+        super.makePhoto();
+    }
+
+    @Override
+    public void hideScrollView() {
+        super.hideScrollView();
+
+        MenuItemView menuItemView = (MenuItemView) getSecondHorizontalLayout().getContainerView().getChildAt(mCurIndex);
+        if (!mCurHSLColorItem.value.replaceAll(" ", "")
+                .equals(mCurHSLColorItem.defaultValue.replaceAll(" ", ""))) {
+            if (null != menuItemView) {
+                menuItemView.showDownLine();
+            }
+        } else {
+            if (null != menuItemView) {
+                menuItemView.hideDownLine();
+            }
+        }
+
+        if (null != mCyanSeekBar) {
+            mCyanSeekBar.setOnSeekChangeListener(null);
+        }
+
+        if (null != mMagentaSeekBar) {
+            mMagentaSeekBar.setOnSeekChangeListener(null);
+        }
+
+        if (null != mYellowSeekBar) {
+            mYellowSeekBar.setOnSeekChangeListener(null);
+        }
+
+        if (null != mPhotoChangeListener) {
+            mPhotoChangeListener.onPhotoChanged();
+        }
+    }
+
+    @Override
+    public void finish() {
+        getSecondHorizontalLayout().setCount(3.5f);
+        super.finish();
+    }
+
+//    @Override
+//    protected void showScrollViewClick() {
+//
+//        TextView switchTv = (TextView) mScrollValueName.findViewById(R.id.switch_btn);
+//        switchTv.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                TextView tv = (TextView) v;
+//                float[] values = mCurHSLColorItem.getValues();
+//                float newValue = 0;
+//                if (0 == values[3]) {
+//                    newValue = 1;
+//                    tv.setText(R.string.composite_sdk_hsl_mode_absolute);
+//                } else {
+//                    tv.setText(R.string.composite_sdk_hsl_mode_relative);
+//                }
+//
+//                updateColorItem(mCurHSLColorItem, newValue, PARAM_INDEX_MODE);
+//            }
+//        });
+//
+//        if (1 == mLastValues[3]) {
+//            switchTv.setText(R.string.composite_sdk_hsl_mode_absolute);
+//        } else {
+//            switchTv.setText(R.string.composite_sdk_hsl_mode_relative);
+//        }
+//
+//        // 屏蔽相对、绝对选项
+////        switchTv.setVisibility(View.VISIBLE);
+//        super.showScrollViewClick();
+//    }
+
+    private SeekBar.OnSeekChangeListener mCyanChangeListener
+            = new SeekBar.OnSeekChangeListener() {
+        @Override
+        public void onSeekChanged(float currentValue, float step) {
+
+            if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_CYAN);
+
+            }
+            setAutoHideTextViewValue(currentValue);
+        }
+
+        @Override
+        public void onSeekStopped(float currentValue, float step) {
+            if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                mAutoHideTextView.hideForNow();
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_CYAN, mRendererMethodActionListener);
+
+                mProgressBar.setVisibility(View.VISIBLE);
+                mScreenLayout.setVisibility(View.VISIBLE);
+            }
+        }
+    };
+
+    private SeekBar.OnSeekChangeListener mMagentaChangeListener
+            = new SeekBar.OnSeekChangeListener() {
+        @Override
+        public void onSeekChanged(float currentValue, float step) {
+
+            if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_MAGENTA);
+            }
+
+            setAutoHideTextViewValue(currentValue);
+        }
+
+        @Override
+        public void onSeekStopped(float currentValue, float step) {
+            if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                mAutoHideTextView.hideForNow();
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_MAGENTA, mRendererMethodActionListener);
+
+                mProgressBar.setVisibility(View.VISIBLE);
+                mScreenLayout.setVisibility(View.VISIBLE);
+            }
+        }
+    };
+
+    private SeekBar.OnSeekChangeListener mYellowChangeListener
+            = new SeekBar.OnSeekChangeListener() {
+        @Override
+        public void onSeekChanged(float currentValue, float step) {
+            if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_YELLOW);
+            }
+            setAutoHideTextViewValue(currentValue);
+        }
+
+        @Override
+        public void onSeekStopped(float currentValue, float step) {
+            if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                mAutoHideTextView.hideForNow();
+                updateColorItem(mCurHSLColorItem, currentValue, PARAM_INDEX_YELLOW, mRendererMethodActionListener);
+
+                mProgressBar.setVisibility(View.VISIBLE);
+                mScreenLayout.setVisibility(View.VISIBLE);
+            }
+        }
+    };
+
+    private void updateColorItem(ParamVecItem item, float value, int index, EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener) {
+
+        float[] values = item.getValues();
+        values[index] = value;
+
+        item.value = buildParamString(values);
+
+        setParamsModel(item.effectKey, item.key, item.value);
+        makePhoto(rendererMethodActionListener);
+    }
+
+    private void updateColorItem(ParamVecItem item, float value, int index) {
+        updateColorItem(item, value, index, null);
+    }
+
+    private String buildParamString(float[] values) {
+        StringBuilder paramBuilder = new StringBuilder();
+        for (float value : values) {
+            paramBuilder.append(Math.round(value));
+            paramBuilder.append(",");
+        }
+        paramBuilder.deleteCharAt(paramBuilder.length() - 1);
+        return paramBuilder.toString();
+    }
+
+    protected final static int MAKE_PHOTO_FINISH = 100;
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+}

@@ -1,0 +1,290 @@
+Started by an SCM change
+Building in workspace /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace
+ > git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/PGClient/Android-Common-Effect-SDK.git # timeout=10
+Fetching upstream changes from https://github.com/PGClient/Android-Common-Effect-SDK.git
+ > git --version # timeout=10
+using .gitcredentials to set credentials
+ > git config --local credential.helper store --file=/home/ci-android/CI-Gradle/apache-tomcat-8.0.9/temp/git527364163340525227.credentials # timeout=10
+ > git fetch --tags --progress https://github.com/PGClient/Android-Common-Effect-SDK.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config --local --remove-section credential # timeout=10
+ > git rev-parse refs/remotes/origin/develop^{commit} # timeout=10
+ > git rev-parse refs/remotes/origin/origin/develop^{commit} # timeout=10
+Checking out Revision 846e39e3ccac1abc5f11620a8edb7a7628091897 (refs/remotes/origin/develop)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 846e39e3ccac1abc5f11620a8edb7a7628091897
+ > git rev-list e6ac7a5a11893d7cca1d9b9538fc78f1f12c5435 # timeout=10
+[Gradle] - Launching build.
+[workspace] $ /home/ci-android/.jenkins/tools/hudson.plugins.gradle.GradleInstallation/Gradle_1.10/bin/gradle clean check cpd checkstyle pmd
+--------- ready copy old apk to daily dir ...
+--------- ready copy old apk to daily dir file : SDK"
+--------- delete old apks  >>>>>> 
+--------- copy new apk, set date : 2014_12_01_17-37-32
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:clean
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:clean
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:clean
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:clean
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:preBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:preGooglePlayDebugBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:checkGooglePlayDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:preGooglePlayReleaseBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileLint
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:copyReleaseLint UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:mergeReleaseProguardFiles UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:preBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:preReleaseBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:checkReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:prepareReleaseDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileReleaseAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileReleaseRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateReleaseBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateReleaseAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:mergeReleaseAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateReleaseResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:processReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:processReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateReleaseSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileReleaseJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:processReleaseJavaRes UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageReleaseJar
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileReleaseNdk
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageReleaseJniLibs UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageReleaseLocalJar
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageReleaseRenderscript UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:bundleRelease
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileLint
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:copyReleaseLint UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:mergeReleaseProguardFiles UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:preBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:preReleaseBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:checkReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:prepareReleaseDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileReleaseAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileReleaseRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateReleaseBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateReleaseAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:mergeReleaseAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateReleaseResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:processReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:processReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateReleaseSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileReleaseJava
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:processReleaseJavaRes UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageReleaseJar
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileReleaseNdk
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageReleaseJniLibs UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageReleaseLocalJar
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageReleaseRenderscript UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:bundleRelease
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileLint
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:copyReleaseLint UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:mergeReleaseProguardFiles UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:preBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:preReleaseBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:checkReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:prepareReleaseDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileReleaseAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileReleaseRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateReleaseBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateReleaseAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:mergeReleaseAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateReleaseResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:processReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:processReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateReleaseSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileReleaseJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:processReleaseJavaRes UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageReleaseJar
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileReleaseNdk
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageReleaseJniLibs UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageReleaseLocalJar UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageReleaseRenderscript UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:bundleRelease
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:prepareWorkspaceFacebookUnspecifiedLibrary
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:prepareWorkspaceLibprojectsAndroid_UI_WidgetUnspecifiedLibrary
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:prepareWorkspaceLibprojectsPullToRefreshUnspecifiedLibrary
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:prepareGooglePlayDebugDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayDebugAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayDebugRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayDebugBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayDebugAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:mergeGooglePlayDebugAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayDebugResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:mergeGooglePlayDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:processGooglePlayDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:processGooglePlayDebugResourcesaapt: warning: string 'pg_login_delete_phone_user' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'pg_login_get_verify_code' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_facebook' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_qq' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_twitter' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10002' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10536' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10537' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10538' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10539' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10540' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10541' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10542' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10543' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10544' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/debug marked untranslatable but exists in locale 'zh_CN'
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayDebugSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayDebugJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+注: 某些输入文件使用了未经检查或不安全的操作。
+注: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:checkGooglePlayReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:prepareGooglePlayReleaseDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayReleaseAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayReleaseRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayReleaseBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayReleaseAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:mergeGooglePlayReleaseAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayReleaseResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:mergeGooglePlayReleaseResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:processGooglePlayReleaseManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:processGooglePlayReleaseResourcesaapt: warning: string 'pg_login_delete_phone_user' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'pg_login_get_verify_code' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_facebook' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_qq' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'site_name_twitter' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10002' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10536' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10537' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10538' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10539' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10540' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10541' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10542' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10543' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+aapt: warning: string 'status_errorcode10544' in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/intermediates/res/GooglePlay/release marked untranslatable but exists in locale 'zh_CN'
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:generateGooglePlayReleaseSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileGooglePlayReleaseJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+注: 某些输入文件使用了未经检查或不安全的操作。
+注: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:compileLint
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:lint
+Ran lint on variant GooglePlayRelease: 966 issues found
+Ran lint on variant GooglePlayDebug: 966 issues found
+Wrote HTML report to file:/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/outputs/lint-results.html
+Wrote XML report to /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/outputs/lint-results.xml
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:check
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:preDebugBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:checkDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:prepareDebugDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileDebugAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileDebugRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateDebugBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateDebugAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:mergeDebugAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateDebugResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:packageDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:processDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:processDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:generateDebugSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:compileDebugJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:lint
+Ran lint on variant release: 79 issues found
+Ran lint on variant debug: 79 issues found
+Wrote HTML report to file:/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/facebook/build/outputs/lint-results.html
+Wrote XML report to /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/facebook/build/outputs/lint-results.xml
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:facebook:check
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:preDebugBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:checkDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:prepareDebugDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileDebugAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileDebugRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateDebugBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateDebugAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:mergeDebugAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateDebugResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:packageDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:processDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:processDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:generateDebugSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:compileDebugJava
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:lint
+Ran lint on variant release: 43 issues found
+Ran lint on variant debug: 43 issues found
+Wrote HTML report to file:/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/Android_UI_Widget/build/outputs/lint-results.html
+Wrote XML report to /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/Android_UI_Widget/build/outputs/lint-results.xml
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:Android_UI_Widget:check
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:preDebugBuild
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:checkDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:prepareDebugDependencies
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileDebugAidl
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileDebugRenderscript
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateDebugBuildConfig
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateDebugAssets UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:mergeDebugAssets
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateDebugResValues UP-TO-DATE
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:packageDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:processDebugManifest
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:processDebugResources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:generateDebugSources
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:compileDebugJava注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:lint
+Ran lint on variant debug: 30 issues found
+Ran lint on variant release: 30 issues found
+Wrote HTML report to file:/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/PullToRefresh/build/outputs/lint-results.html
+Wrote XML report to /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/PullToRefresh/build/outputs/lint-results.xml
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:libprojects:PullToRefresh:check
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:cpd
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:checkstyle
+[8mha:AAAAYB+LCAAAAAAAAP9b85aBtbiIQSWjNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUyFJBZn++WXpC7zV766aHPULSYGhooiBimoluT8vOJ8oFpnCA1SyAABjCCFBQDX67qaYgAAAA==[0m:pmd
+
+[8mha:AAAAYx+LCAAAAAAAAP9b85aBtbiIQT2jNKU4P0+vIKc0PTOvWC+9KDElJ1XPHUz5l5Yk5+em+uWXpBabBRd0uewzZWJgqChikILqSs7PK84HKneG0CCFDBDACFJYAAAMk/XNZQAAAA==[0mBUILD SUCCESSFUL
+
+Total time: 1 mins 24.689 secs
+Build step 'Invoke Gradle script' changed build result to SUCCESS
+[android-lint] Collecting Android Lint files...
+[android-lint] Finding all files that match the pattern **/lint-results.xml
+[android-lint] Parsing 4 files in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace
+[android-lint] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/outputs/lint-results.xml with 960 unique warnings and 0 duplicates.
+[android-lint] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/facebook/build/outputs/lint-results.xml with 1039 unique warnings and 0 duplicates.
+[android-lint] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/Android_UI_Widget/build/outputs/lint-results.xml with 1082 unique warnings and 0 duplicates.
+[android-lint] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/libprojects/PullToRefresh/build/outputs/lint-results.xml with 1112 unique warnings and 0 duplicates.
+[android-lint] Computing warning deltas based on reference build #19
+[CHECKSTYLE] Collecting checkstyle analysis files...
+[CHECKSTYLE] Finding all files that match the pattern **/checkstyle-result.xml
+[CHECKSTYLE] Parsing 1 file in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace
+[CHECKSTYLE] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/reports/checkstyle/checkstyle-result.xml with 1686 unique warnings and 0 duplicates.
+[CHECKSTYLE] Computing warning deltas based on reference build #19
+[FINDBUGS] Collecting findbugs analysis files...
+[FINDBUGS] Finding all files that match the pattern  **/findbugs-result.xml
+[FINDBUGS] Computing warning deltas based on reference build #19
+[PMD] Collecting PMD analysis files...
+[PMD] Finding all files that match the pattern  **/pmd-result.xml
+[PMD] Parsing 1 file in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace
+[PMD] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/reports/pmd/pmd-result.xml with 159 unique warnings and 0 duplicates.
+[PMD] Computing warning deltas based on reference build #19
+[DRY] Collecting duplicate code analysis files...
+[DRY] Finding all files that match the pattern  **/cpd-result.xml
+[DRY] Parsing 1 file in /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace
+[DRY] Successfully parsed file /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/build/reports/cpd/cpd-result.xml with 151 unique warnings and 0 duplicates.
+[DRY] Computing warning deltas based on reference build #19
+Finished: SUCCESS

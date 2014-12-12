@@ -1,0 +1,85 @@
+package com.pinguo.edit.sdk.option.message;
+
+import android.text.TextUtils;
+
+import org.json.JSONObject;
+
+/**
+ * Created by wangpeng on 14-4-29.
+ */
+public class PGMessage implements Comparable<PGMessage> {
+    public String appName;
+    public String type;
+    public String text;
+    public String desc;
+    public String showStatus;
+    public String status;
+    public String logic;
+    public String id;
+    public long expireTime;
+    public long version;
+
+    public String image_url;
+    public String content_image_urls;
+    public String link_texts;
+    public long timestamp;
+
+    public boolean hasReaded = false;
+    public long receiveTime;
+
+    @Override
+    public int compareTo(PGMessage pgMessage) {
+        if (this.timestamp > pgMessage.timestamp)
+            return -1;
+        else if (this.timestamp == pgMessage.timestamp)
+            return 0;
+        else
+            return 1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || ((Object) this).getClass() != o.getClass()) return false;
+
+        PGMessage message = (PGMessage) o;
+
+        if (id != null ? !id.equals(message.id) : message.id != null) return false;
+        if (image_url != null ? !image_url.equals(message.image_url) : message.image_url != null)
+            return false;
+        if (logic != null ? !logic.equals(message.logic) : message.logic != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = appName != null ? appName.hashCode() : 0;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (text != null ? text.hashCode() : 0);
+        result = 31 * result + (desc != null ? desc.hashCode() : 0);
+        result = 31 * result + (showStatus != null ? showStatus.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (logic != null ? logic.hashCode() : 0);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (image_url != null ? image_url.hashCode() : 0);
+        result = 31 * result + (content_image_urls != null ? content_image_urls.hashCode() : 0);
+        result = 31 * result + (link_texts != null ? link_texts.hashCode() : 0);
+        result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+        return result;
+    }
+
+    public String getInteractionUrl() {
+        String uri = logic;
+        try {
+            JSONObject jsonObject = new JSONObject(uri);
+            String url = jsonObject.get("url").toString();
+            if (!TextUtils.isEmpty(url)) {
+                uri = url;
+            }
+        } catch (Exception e) {
+        }
+
+        return uri;
+    }
+}

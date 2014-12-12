@@ -1,0 +1,98 @@
+
+package com.pinguo.edit.sdk.gallery.ui.layout;
+
+import android.graphics.Rect;
+import com.pinguo.edit.sdk.gallery.ui.SlotView;
+
+public class ContractSlotLayout extends BaseSlotLayout {
+
+    private static final String TAG = "ContractSlotLayout";
+
+    @Override
+    protected void initLayoutParameters() {
+        // Initialize mSlotWidth and mSlotHeight from mSpec
+        int colums = (mWidth > mHeight) ? mSpec.columsLand : mSpec.columsPort;
+        mSlotGap = mSpec.slotGap;
+        mSlotWidth = Math.max(1, (mWidth - (colums - 1) * mSlotGap) / colums);
+        mSlotHeight = mSlotWidth + mSpec.tagHeight;
+        mCloumCount = colums;
+        if (mSlotRenderer != null) {
+            mSlotRenderer.onSlotSizeChanged(mSlotWidth, mSlotHeight);
+        }
+        int count = ((mSlotCount + mCloumCount - 1) / mCloumCount);
+        if (SlotView.WIDE_SCROLLING) {
+            mContentLength = count * mSlotWidth + (count - 1) * mSlotGap;
+        } else {
+            mContentLength = count * mSlotHeight + (count - 1) * mSlotGap;
+        }
+        updateVisibleSlotRange();
+    }
+
+    @Override
+    protected void updateVisibleSlotRange() {
+        int position = mScrollPosition;
+        if (SlotView.WIDE_SCROLLING) {
+            int startCol = position / (mSlotWidth + mSlotGap);
+            int start = Math.max(0, mCloumCount * startCol);
+            int endCol = (position + mWidth + mSlotWidth + mSlotGap - 1) / (mSlotWidth + mSlotGap);
+            int end = Math.min(mSlotCount, mCloumCount * endCol);
+            setVisibleRange(start, end);
+        } else {
+            int startRow = position / (mSlotHeight + mSlotGap);
+            int start = Math.max(0, mCloumCount * startRow);
+            int endRow = (position + mHeight + mSlotHeight + mSlotGap - 1)
+                    / (mSlotHeight + mSlotGap);
+            int end = Math.min(mSlotCount, mCloumCount * endRow);
+            setVisibleRange(start, end);
+        }
+    }
+
+    @Override
+    public int getSlotIndexByPosition(float x, float y) {
+        int absoluteX = Math.round(x) + (SlotView.WIDE_SCROLLING ? mScrollPosition : 0);
+        int absoluteY = Math.round(y) + (SlotView.WIDE_SCROLLING ? 0 : mScrollPosition);
+        if (absoluteX < 0 || absoluteY < 0) {
+            return SlotView.INDEX_NONE;
+        }
+        int columnIdx = absoluteX / (mSlotWidth + mSlotGap);
+        int rowIdx = absoluteY / (mSlotHeight + mSlotGap);
+        if (!SlotView.WIDE_SCROLLING && columnIdx >= mCloumCount) {
+            return SlotView.INDEX_NONE;
+        }
+        if (SlotView.WIDE_SCROLLING && rowIdx >= mCloumCount) {
+            return SlotView.INDEX_NONE;
+        }
+        if (absoluteX % (mSlotWidth + mSlotGap) >= mSlotWidth) {
+            return SlotView.INDEX_NONE;
+        }
+        if (absoluteY % (mSlotHeight + mSlotGap) >= mSlotHeight) {
+            return SlotView.INDEX_NONE;
+        }
+        int index = SlotView.WIDE_SCROLLING ? (columnIdx * mCloumCount + rowIdx) : (rowIdx
+                * mCloumCount + columnIdx);
+        return index >= mSlotCount ? SlotView.INDEX_NONE : index;
+    }
+
+    @Override
+    public Rect getSlotRect(int index, Rect rect) {
+        int col, row;
+        if (SlotView.WIDE_SCROLLING) {
+            col = index / mCloumCount;
+            row = index - col * mCloumCount;
+        } else {
+            row = index / mCloumCount;
+            col = index - row * mCloumCount;
+        }
+        int x = col * (mSlotWidth + mSlotGap);
+        int y = row * (mSlotHeight + mSlotGap);
+        rect.set(x, y, x + mSlotWidth, y + mSlotHeight);
+        return rect;
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+        initLayoutParameters();
+    }
+}

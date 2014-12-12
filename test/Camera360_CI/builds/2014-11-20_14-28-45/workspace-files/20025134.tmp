@@ -1,0 +1,98 @@
+package us.pinguo.sdk;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.KeyEvent;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.intent.IntentGroupController;
+import com.pinguo.mix.StatisticManager;
+
+/**
+ * Created by pinguo on 14-5-22.
+ */
+public class GroupActivity extends Activity {
+
+    private GroupController mGroupController;
+    private boolean mIsFromOtherApp;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mIsFromOtherApp = getIntent().getBooleanExtra(ConstantUtil.FROM_OTHER_APP, false);
+
+        setContentView(getContentViewId());
+
+        mGroupController = getController(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        GLogger.i("BeautyActivity", "onSaveInstanceState");
+        if (null != mGroupController) {
+            mGroupController.onSaveInstanceState(outState);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        GLogger.i("BeautyActivity", "onRestoreInstanceState");
+        if (null != mGroupController) {
+            mGroupController.onRestoreInstanceState(savedInstanceState);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mGroupController.onDestroy();
+    }
+
+    protected int getContentViewId() {
+        if (mIsFromOtherApp) {
+            return ResourceHelper.getLayout(
+                    getApplicationContext(), "composite_sdk_intent_composite_main");
+        }
+        return ResourceHelper.getLayout(
+                getApplicationContext(), "composite_sdk_composite_main");
+    }
+
+    protected GroupController getController(Bundle savedInstanceState) {
+        if (mIsFromOtherApp) {
+            return new IntentGroupController(this, findViewById(
+                    ResourceHelper.getId(getApplicationContext(), "root_view")), savedInstanceState);
+        }
+        return new GroupController(this, findViewById(
+                ResourceHelper.getId(getApplicationContext(), "root_view")), savedInstanceState);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mGroupController.onResume();
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mGroupController.onPause();
+        StatisticManager.destroy(this);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            mGroupController.keyCodeBack();
+            return true;
+        }else{
+            return super.onKeyDown(keyCode, event);
+        }
+    }
+}

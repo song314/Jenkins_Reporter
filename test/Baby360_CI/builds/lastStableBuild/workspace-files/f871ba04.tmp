@@ -1,0 +1,179 @@
+/*
+ *                                                                                        
+ * Copyright (c)2010-2012  Pinguo Company
+ *                 品果科技                            版权所有 2010-2012
+ * 
+ * PROPRIETARY RIGHTS of Pinguo Company are involved in the
+ * subject matter of this material.  All manufacturing, reproduction, use,
+ * and sales rights pertaining to this subject matter are governed by the
+ * license agreement.  The recipient of this software implicitly accepts   
+ * the terms of the license.
+ * 本软件文档资料是品果公司的资产,任何人士阅读和使用本资料必须获得
+ * 相应的书面授权,承担保密责任和接受相应的法律约束.
+ * 
+ * FileName:FileUtils.java
+ * Author:liubo
+ * Date:Dec 18, 2012 8:55:15 AM 
+ * 
+ */
+package com.pinguo.edit.sdk.option.push.utils;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+
+
+/**
+ * 文件工具类
+ *
+ * @author liubo
+ * @version 4.0
+ * @since 4.0
+ */
+@Deprecated
+public final class FileUtils {
+    private static final String TAG = FileUtils.class.getName();
+    private static final int BUFFER_SIZE = 8 * 1024;
+
+    private FileUtils() {
+
+    }
+
+    /**
+     * 从网络上下载文件
+     *
+     * @param url            HTTP地址
+     * @param downloadFolder 下载的存储文件夹路径
+     * @return 返回下载的文件名
+     * @author liubo
+     */
+    public static String downloadFile(String url, String downloadFolder) throws IOException {
+        if (!folderCheck(downloadFolder)) {
+            throw new IOException("Create folder(" + downloadFolder + ") failed!");
+        }
+        //需对中文进行转编码，2014-11-25号修复bug添加。
+        url = encodeGB(url);
+        GLogger.v(TAG, "Res Url:" + url);
+        URL downloadUrl = new URL(url);
+        HttpURLConnection conn = (HttpURLConnection) downloadUrl.openConnection();
+        try {
+            HttpURLConnection.setFollowRedirects(true);
+            int statusCode = conn.getResponseCode();
+            if (statusCode != 200) {
+                throw new IOException("Http connect error,status code =" + statusCode);
+            }
+            GLogger.v(TAG, "File Url:" + url);
+            String fnUrl = URLDecoder.decode(conn.getURL().toString(), "UTF-8");
+            String fileName = fnUrl.substring(fnUrl.lastIndexOf("/") + 1);
+            long fileSize = conn.getContentLength();
+
+            //如果文件存在则不下载
+            File downFile = new File(downloadFolder + File.separator + fileName);
+            if (downFile.exists() && fileSize != -1) {
+                if (downFile.length() == fileSize) {
+                    return fileName;
+                }
+            }
+
+            downloadFile(downloadFolder, conn, fileName);
+            return fileName;
+        } finally {
+            conn.disconnect();
+        }
+    }
+
+    /**
+     * 将url中的最后的渠道名称，中文转编码
+     *
+     * @param url
+     * @return
+     */
+    public static String encodeGB(String url) {
+        //转换中文编码
+        String last = url.substring(url.lastIndexOf("/") + 1, url.length());
+        String channel = "";
+        try {
+            channel = URLEncoder.encode(last, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        url = url.replace(last, channel);
+        return url;
+    }
+
+    /**
+     * 文件夹检测，如果不存在则新建
+     *
+     * @param folderName 文件夹路径
+     * @return true：存在、不存在但创建成功,false，不存在
+     * @author liubo
+     */
+    public static boolean folderCheck(String folderName) {
+        if (PushUtils.isNull(folderName)) {
+            return false;
+        }
+
+        File folder = new File(folderName);
+        if (folder.isDirectory()) {
+            return true;
+        }
+
+        return folder.mkdirs();
+    }
+
+    /**
+     * 文件下载
+     *
+     * @param downloadFolder 下载文件夹
+     * @param conn           HttpURLConnection
+     * @param fileName       文件名
+     * @throws java.io.IOException
+     * @throws java.io.FileNotFoundException
+     * @author liubo
+     */
+    private static void downloadFile(String downloadFolder, HttpURLConnection conn, String fileName)
+            throws IOException {
+        BufferedInputStream in = null;
+        try {
+            in = new BufferedInputStream(conn.getInputStream());
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(downloadFolder + File.separator + fileName);
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int length = -1;
+                while ((length = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, length);
+                }
+            } finally {
+                close(out);
+            }
+        } finally {
+            close(in);
+        }
+    }
+
+    private static void close(InputStream in) throws IOException {
+        if (in != null) {
+            in.close();
+            in = null;
+        }
+    }
+
+    private static void close(OutputStream out) throws IOException {
+        if (out != null) {
+            out.close();
+            out = null;
+        }
+    }
+}

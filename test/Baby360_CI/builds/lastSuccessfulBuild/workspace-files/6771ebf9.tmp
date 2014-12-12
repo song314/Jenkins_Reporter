@@ -1,0 +1,549 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.content.Context;
+import android.graphics.Point;
+import android.hardware.Camera;
+
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.model.CameraManager;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * Created by liubo on 7/6/13.
+ */
+public class CameraSettingModel {
+    private static final String TAG = CameraSettingModel.class.getSimpleName();
+
+    private static final int DEFAULT_JPEG_QUALITY = 95;
+
+    private CameraParameters cameraParameters = null;
+    private PGCameraPreferences preferences = null;
+    private CameraManager.CameraProxy cameraProxy = null;
+    private int cameraId = -1;
+
+    private SizeInfo pictureSize = null;
+    private SizeInfo previewSize = null;
+
+    private boolean focusAreaSupported = false;
+    private List<Camera.Area> focusAreas = null;
+
+    private boolean meteringAreaSupported = false;
+    private List<Camera.Area> meteringAreas = null;
+
+    private boolean aeLockSupported = false;
+    private boolean awbLockSupported = false;
+    private boolean mAeAwbLock = false;
+
+    private boolean zoomSupported = false;
+    private int zoomMax = 0;
+    private int zoomValue = 0;
+
+    private int jpegOrientation = 0;
+
+    // 所支持的聚焦方式列表
+    private List<String> mSupportedFocus;
+
+    private static CameraSettingModel CAMERA_SETTING_MODEL = new CameraSettingModel();
+
+    private CameraSettingModel() {
+        this.preferences = PGCameraPreferences.get();
+    }
+
+    public static CameraSettingModel instance() {
+        return CAMERA_SETTING_MODEL;
+    }
+
+    /**
+     * 设置相机,此方法在相机启动后调用
+     *
+     * @param cameraProxy 相机
+     */
+    public void setCamera(CameraManager.CameraProxy cameraProxy) {
+        setCamera(cameraProxy, new CameraParameters(cameraProxy));
+    }
+
+    /**
+     * 注意仅在摄像模式时使用
+     *
+     * @param cameraProxy
+     * @param cameraParameters
+     */
+    public void setCamera(CameraManager.CameraProxy cameraProxy, CameraParameters cameraParameters) {
+        CMLogger.i(TAG, "setCamera cameraProxy + " + cameraProxy.getFacing());
+        this.cameraProxy = cameraProxy;
+        this.cameraParameters = cameraParameters;
+        CMLogger.i(TAG, "setCamera cameraProxy + " + cameraParameters.getSupportedFocusModes());
+        // 初始化数据
+        initializeData();
+        // 重新加载该相机的参数
+        initializeCapabilities();
+        PreferenceGroup.get().init(cameraParameters);
+    }
+
+    /**
+     * 设置相机ID，此方法在相机打开前调用
+     *
+     * @param cameraId 相机ID
+     * @param context  Context
+     */
+    public void setCameraId(int cameraId, Context context) {
+        if (this.cameraId != cameraId) {
+            this.preferences.setLocal(context, cameraId);
+            this.preferences.putInt(CameraPrefKeys.KEY_CAMERA_ID, cameraId);
+        }
+        this.cameraId = cameraId;
+    }
+
+    /**
+     * 获得当前相机id
+     */
+    public int getCameraId() {
+        return this.preferences.getInt(CameraPrefKeys.KEY_CAMERA_ID, 0);
+    }
+
+    /**
+     * 更新参数
+     *
+     * @param updateSet 更新设置
+     * @see CameraSettings#UPDATE_PARAM_INITIALIZE
+     * @see CameraSettings#UPDATE_PARAM_ZOOM
+     * @see CameraSettings#UPDATE_PARAM_PREFERENCE
+     */
+    public void updateParameters(int updateSet) {
+        if ((updateSet & CameraSettings.UPDATE_PARAM_INITIALIZE) != 0) {
+            updateCameraParametersInitialize();
+        }
+
+        if ((updateSet & CameraSettings.UPDATE_PARAM_ZOOM) != 0) {
+            updateCameraParametersZoom();
+        }
+
+        if ((updateSet & CameraSettings.UPDATE_PARAM_PICTURE_INFO) != 0) {
+            updateCameraParametersPictureInfo();
+        }
+
+        if ((updateSet & CameraSettings.UPDATE_PARAM_PREFERENCE) != 0) {
+            updateCameraParametersPreference();
+        }
+
+        this.cameraParameters.updateParameters(this.cameraProxy);
+    }
+
+    /**
+     * 取得图像尺寸，调用此函数必须在updateParameters之后
+     *
+     * @return 预览尺寸
+     */
+    public SizeInfo getPictureSize() {
+        return pictureSize;
+    }
+
+    /**
+     * 取得预览尺寸，调用此函数必须在updateParameters之后
+     *
+     * @return 预览尺寸
+     */
+    public SizeInfo getPreviewSize() {
+        if (previewSize == null && cameraParameters != null) {
+            return SizeInfo.parseSize(this.cameraParameters.getPreviewSize());
+        }
+        return previewSize;
+    }
+
+    /**
+     * 取得是否需要锁动自动曝光或者自动白平衡
+     *
+     * @return 取得是否需要锁动自动曝光或者自动白平衡
+     */
+    public boolean lockAeAwbNeeded() {
+        return this.aeLockSupported || this.awbLockSupported;
+    }
+
+
+    /**
+     * 设置是否开启自动曝光、或者白平衡锁定锁定
+     *
+     * @param mAeAwbLock 是否开启自动曝光、或者白平衡锁定锁定
+     */
+    public void setAeAwbLockLock(boolean mAeAwbLock) {
+        this.mAeAwbLock = mAeAwbLock;
+    }
+
+    /**
+     * 设置聚焦区域
+     *
+     * @param focusAreas 聚焦区域
+     */
+    public void setFocusAreas(List<Camera.Area> focusAreas) {
+        this.focusAreas = focusAreas;
+    }
+
+    /**
+     * 是否支持多区域聚焦
+     */
+    public boolean isFocusAreaSupported() {
+        return this.focusAreaSupported;
+    }
+
+    public List<String> getSupportedFocusModes() {
+
+        final List<String> supportedFocus = cameraParameters.getSupportedFocusModes();
+        if (GAdapter.IS_MEIZU_M9) {
+            supportedFocus.remove("macro");
+            supportedFocus.remove("infinity");
+        }
+        mSupportedFocus = supportedFocus;
+        return mSupportedFocus;
+    }
+
+    public String getFocusMode() {
+        return this.preferences.getString(CameraPrefKeys.KEY_CAMERA_FOCUS_MODE, "auto");
+    }
+
+    public void setMeteringAreas(List<Camera.Area> meteringAreas) {
+        this.meteringAreas = meteringAreas;
+    }
+
+    /**
+     * 是否支持测光
+     *
+     * @return 是否支持测光
+     */
+    public boolean isMeteringAreaSupported() {
+        return this.meteringAreaSupported;
+    }
+
+
+    public void setZoom(int index) {
+        zoomValue = index;
+    }
+
+    public boolean isZoomSupported() {
+        return this.zoomSupported;
+    }
+
+    public int getMaxZoom() {
+        return this.zoomMax;
+    }
+
+    public int getZoom() {
+        return this.zoomValue;
+    }
+
+    /**
+     * 设置照片方向
+     *
+     * @param uiOriention 照片方向
+     */
+    public int setJpegOrientation(int uiOriention) {
+        jpegOrientation = CameraUtils.getJpegRotation(uiOriention, cameraId);
+        cameraParameters.setRotation(0);
+        CMLogger.i(TAG, "take picture rotation:" + jpegOrientation);
+        updateParameters(0);
+        return jpegOrientation;
+    }
+
+    private SizeInfo getSelectedPictureSize() {
+        String strSize = preferences.getString(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE, null);
+        SizeInfo info = SizeInfo.parseSize(strSize);
+        CMLogger.i("Test", "getSelectedPictureSize:" + info);
+        if (info == null) {
+            ListPreference picSizeSupported = PreferenceGroup.get().findPreference(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE);
+            CharSequence[] sizesArray = picSizeSupported.getEntryValues();
+            LinkedList<Point> supportedSizeList = new LinkedList<Point>();
+            for (CharSequence sizeCar : sizesArray) {
+                String[] aSize = sizeCar.toString().split("x");
+                supportedSizeList.add(new Point(Integer.parseInt(aSize[0]), Integer.parseInt(aSize[1])));
+            }
+            Point defaultSize = CameraSettings.getDefaultPictureSize(supportedSizeList, this.cameraId);
+            CMLogger.i("", "set picture defalut size:" + defaultSize.x + "/" + defaultSize.y);
+            info = new SizeInfo(defaultSize.x, defaultSize.y);
+            preferences.putString(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE, info.toString());
+        }
+
+        return info;
+    }
+
+    private void updateCameraParametersInitialize() {
+        // Reset preview frame rate to the maximum because it may be lowered by
+        // video camera application.
+        List<Integer> frameRates = cameraParameters.getSupportedPreviewFrameRates();
+        if (frameRates != null) {
+            Integer max = Collections.max(frameRates);
+            cameraParameters.setPreviewFrameRate(max);
+        }
+
+        //FIXME 这个参数导致小米某些预览分辨率变形，需了解原因, 暂时设置为false
+        cameraParameters.setRecordingHint(false);
+
+        // Disable video stabilization. Convenience methods not available in API
+        // level <= 14
+        String vstabSupported = cameraParameters.get("video-stabilization-supported");
+        if ("true".equals(vstabSupported)) {
+            cameraParameters.set("video-stabilization", "false");
+        }
+        cameraParameters.setJpegQuality(DEFAULT_JPEG_QUALITY);
+    }
+
+    public void updateCameraParametersPictureInfo() {
+        //设置照片尺寸
+        SizeInfo picSize = getSelectedPictureSize();
+        if (picSize != null) {
+            CMLogger.i(TAG, "Camera Parameters Picture Size:" + picSize);
+            this.pictureSize = picSize;
+            this.cameraParameters.setPictureSize(picSize.getWidth(), picSize.getHeight());
+
+            // 获得所有支持的预览尺寸列表
+            List<Camera.Size> previewSizeList = this.cameraParameters.getSupportedPreviewSizes();
+
+            // 计算照片尺寸的比例，通过这个比例来过滤预览尺寸
+            float pictureRadio = (float) pictureSize.getWidth() / pictureSize.getHeight();
+            // 根据照片尺寸比例，获取到最合适的预览尺寸
+            this.previewSize = CameraSettings.getOptimalPreviewSize(previewSizeList, pictureRadio);
+        }
+
+        //设置预览大小
+        if (this.previewSize != null) {
+            CMLogger.i(TAG, "Camera Parameters Preview Size:" + previewSize);
+            this.cameraParameters.setPreviewSize(this.previewSize.getWidth(), this.previewSize.getHeight());
+        } else {
+            // 假如没有获取到最合适的预览尺寸，采用系统默认值
+            previewSize = SizeInfo.parseSize(this.cameraParameters.getPreviewSize());
+        }
+    }
+
+
+    private void updateCameraParametersZoom() {
+        // Set zoom.
+        CMLogger.i(TAG, "updateCameraParametersZoom zoomSupported = " + zoomSupported + " zoomValue = " + zoomValue);
+        if (this.zoomSupported) {
+            this.cameraParameters.setZoom(zoomValue);
+        }
+    }
+
+    private void updateCameraParametersPreference() {
+
+        //设置聚焦区域
+        setFocusAreasIfSupported();
+
+        //设置测光区域
+        setMeteringAreasIfSupported();
+
+        // 设置聚焦模式
+        setFocusMode();
+
+        // 设置闪光灯
+        setFlashMode();
+    }
+
+    private void initializeData() {
+        Camera.Size previewSize = this.cameraParameters.getPreviewSize();
+        this.previewSize = SizeInfo.parseSize(previewSize);
+
+        focusAreaSupported = false;
+        meteringAreaSupported = false;
+
+        aeLockSupported = false;
+        mAeAwbLock = false;
+
+        awbLockSupported = false;
+    }
+
+    public void resetZoomValue() {
+        zoomValue = 0;
+    }
+
+    private void initializeCapabilities() {
+        focusAreaSupported = isFocusAreaSupportedInner();
+        meteringAreaSupported = isMeteringAreaSupportedInner();
+        aeLockSupported = this.cameraParameters.isAutoExposureLockSupported();
+        awbLockSupported = this.cameraParameters.isAutoWhiteBalanceLockSupported();
+
+        // 暂时注释掉它 wql 就算以后要加,也需要判断是否返回的是空对象，不然会出空指针
+//        continousFocusSupported = this.cameraParameters.getSupportedFocusModes().contains(
+//                CameraSettings.PARAM_FOCUS_MODE_CONTINUOUS_PICTURE);
+        zoomSupported = this.cameraParameters.isZoomSupported();
+        CMLogger.i(TAG, "zoomSupported = " + zoomSupported + " focusAreaSupported =" + focusAreaSupported);
+        if (zoomSupported) {
+            zoomMax = this.cameraParameters.getMaxZoom();
+        } else {
+            zoomMax = 0;
+        }
+    }
+
+    /**
+     * 设置自动曝光锁定
+     */
+    private void setAutoExposureLockIfSupported() {
+        if (aeLockSupported) {
+            this.cameraParameters.setAutoExposureLock(this.mAeAwbLock);
+        }
+    }
+
+    private void setAutoWhiteBalanceLockIfSupported() {
+        if (awbLockSupported) {
+            cameraParameters.setAutoWhiteBalanceLock(this.mAeAwbLock);
+        }
+    }
+
+    public void setFocusAreasIfSupported() {
+        if (focusAreaSupported) {
+            cameraParameters.setFocusAreas(focusAreas);
+        }
+    }
+
+    public void setMeteringAreasIfSupported() {
+        if (meteringAreaSupported) {
+            cameraParameters.setMeteringAreas(meteringAreas);
+        }
+    }
+
+    private void setFocusMode() {
+        String focusMode = this.preferences.getString(CameraPrefKeys.KEY_CAMERA_FOCUS_MODE, "auto");
+        CMLogger.i(TAG, "focusMode =" + focusMode);
+        List<String> supportedFocus = this.cameraParameters.getSupportedFocusModes();
+        if (isSupported(focusMode, supportedFocus)) {
+            this.cameraParameters.setFocusMode(focusMode);
+        } else {
+            focusMode = this.cameraParameters.getFocusMode();
+            if (focusMode == null) {
+                this.cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            }
+        }
+    }
+
+    private void setFlashMode() {
+        IconListPreference prefFlash = (IconListPreference) PreferenceGroup.get()
+                .findPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+        if (prefFlash == null) {
+            return;
+        }
+        String flashMode = prefFlash.getValue();
+        if ("torch".equals(this.cameraParameters.getFlashMode())) {
+            if (!"off".equals(flashMode) || !"torch".equals(flashMode)) {
+                this.cameraParameters.setFlashMode("off");
+                updateParameters(0);
+            }
+        }
+        // Set flash mode.
+        List<String> supportedFlash = this.cameraParameters.getSupportedFlashModes();
+        if (isSupported(flashMode, supportedFlash)) {
+            this.cameraParameters.setFlashMode(flashMode);
+            prefFlash.setValue(flashMode);
+        }
+    }
+
+    public boolean isOpenFlashLight() {
+        IconListPreference prefFlash = (IconListPreference) PreferenceGroup.get()
+                .findPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+        if (prefFlash == null) {
+            return false;
+        }
+
+        // Set flash mode.
+        List<String> supportedFlash = this.cameraParameters.getSupportedFlashModes();
+        String flashMode = prefFlash.getValue();
+
+        return "torch".equals(flashMode) && isSupported(flashMode, supportedFlash);
+    }
+
+    private boolean isFocusAreaSupportedInner() {
+        if (GAdapter.IS_MEIZU_M032) {
+            return true;
+        }
+        return this.cameraParameters.getMaxNumFocusAreas() > 0
+                && isSupported(Camera.Parameters.FOCUS_MODE_AUTO,
+                this.cameraParameters.getSupportedFocusModes());
+    }
+
+    private boolean isMeteringAreaSupportedInner() {
+        return this.cameraParameters.getMaxNumMeteringAreas() > 0;
+    }
+
+    private boolean isSupported(String value, List<String> supported) {
+        return supported != null && supported.indexOf(value) >= 0;
+    }
+
+    /**
+     * 获取最大的曝光补偿指数。
+     *
+     * @return 最大曝光补偿指数（> = 0）。如果这种方法和getMinExposureCompensation（）返回0，不支持曝光补偿。
+     */
+    public int getMaxExposureCompensation() {
+        return cameraParameters.getMaxExposureCompensation();
+    }
+
+    /**
+     * 获取曝光补偿指数最低。
+     *
+     * @return 最低曝光补偿指数（<= 0）。如果这种方法和getMaxExposureCompensation（）返回0，不支持曝光补偿。
+     */
+    public int getMinExposureCompensation() {
+        return cameraParameters.getMinExposureCompensation();
+    }
+
+    /**
+     * 取得支持曝光补偿的列表
+     *
+     * @return List<Integer>
+     */
+    public List<Integer> getExposureCompensationSupported() {
+        return getArray(getMaxExposureCompensation(),
+                getMinExposureCompensation(), getExposureCompensationStep());
+    }
+
+    /**
+     * 获取曝光补偿的步长
+     *
+     * @return 曝光补偿步。应用程序可以得到EV曝光补偿指标和步骤乘以。例如：如果曝光补偿指数为-6和步骤是0.333333333，EV是-2。
+     */
+    public float getExposureCompensationStep() {
+        return cameraParameters.getExposureCompensationStep();
+    }
+
+    /**
+     * 获得预览数据格式
+     *
+     * @return
+     */
+    public int getPreviewFormat() {
+        return cameraParameters.getPreviewFormat();
+    }
+
+    /**
+     * 获得代表预览格式数据的字符串格式
+     *
+     * @return
+     */
+    public String getPreviewFormatString() {
+        return cameraParameters.getPreviewFormatString();
+    }
+
+    public List<Integer> getArray(int max, int min, float step) {
+        List<Integer> result = new LinkedList<Integer>();
+        if (0 == min && 0 == max && 0 == step) {
+            return result;
+        }
+
+        for (float i = min;
+             i <= max;
+             i += step) {
+            result.add((int) i);
+        }
+
+        return result;
+    }
+
+    public boolean getFirstOpenCamera(int cameraId) {
+        return this.preferences.getBoolean(CameraPrefKeys.KEY_FIRST_OPEN_CAMERA + cameraId, true);
+    }
+
+    public void setFirstOpenCamera(int cameraId, boolean isFirst) {
+        this.preferences.putBoolean(CameraPrefKeys.KEY_FIRST_OPEN_CAMERA + cameraId, isFirst);
+    }
+}

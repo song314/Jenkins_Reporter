@@ -1,0 +1,407 @@
+commit d9eaadb50e168109d03f4f0f4ca116fd3afee787
+tree fe60fb0f5964d9fccd52df18e92dbc88e654e745
+parent 7719566f18dfa626aa35b1775b219a5469d9fac8
+author hlffeng <helinfeng@camera360.com> 1417572937 +0800
+committer hlffeng <helinfeng@camera360.com> 1417572938 +0800
+
+    [何林峰]滤镜广场动画代码，格式化代码
+
+:100644 100644 0d1a289f86fc781b2d7ff8bbddf3e50d9c02ff39 c31c3bb87842668c35d88db67e3126cc41a9fc51 M	res/layout/composite_sdk_square_head.xml
+:100644 100644 4302cbc71a060762d8f89f88c11f164f7baa10e2 cd0a874b57f314153991c7ca97b653d8d3e24607 M	res/values/composite_sdk_dimens.xml
+:100644 100644 c62fbaf5179f8416e7dac26e38746b27eaac5809 a9cea1abb82685f2a80dc8b82135151a24b76c4f M	src/com/pinguo/edit/sdk/CompositeSDKEntryActivity.java
+:100644 100644 00af45fe73b83fae8302adc6ce449db8e64c2eb0 d0b04a671494bb46a07abd25fe339e0def2cfe51 M	src/com/pinguo/edit/sdk/MainApplication.java
+:100644 100644 207defc759d7245cec0902ce671527aca062a275 b23eef2b8c315433e45781ff793975ee4ec7610b M	src/com/pinguo/edit/sdk/camera/CameraActivity.java
+:100644 100644 d8becd772ed393aea670bb4ec81f429207919c6f ab4e008f82ea19fe61a66336baf8339127579c11 M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 8f71df5fdab343536292c74e51adb733972bb0a5 4bc667b506a19628c8d6294cbd1790e6e357361d M	src/com/pinguo/edit/sdk/camera/entity/IntArray.java
+:100644 100644 ffca67fb23770f15b2d5acbd74ae2c85c1881ddb e7265496c1e444197b25bfa5676ec0e6d074500b M	src/com/pinguo/edit/sdk/camera/entity/PictureInfo.java
+:100644 100644 26b25e5d7994ee35a114ab5b643a68c043c3e9d4 1e6be0108eb83a6ef18b70b756f7d388cfcb88d4 M	src/com/pinguo/edit/sdk/camera/entity/Rotatable.java
+:100644 100644 9a3dbe8eb27c01f6b59a6b76bbb49ea43f3186ed 7969f164bd111b1d55fa48aa2ee0ffe814b504df M	src/com/pinguo/edit/sdk/camera/focus/FocusDistanceChecker.java
+:100644 100644 375ed4509f4dadaee33848ce14ddf68f827d9c88 23e8c009f77bb270979ac6102bb16c0a60142fe8 M	src/com/pinguo/edit/sdk/camera/focus/FocusManager.java
+:100644 100644 873d00933919482ea14cbe71b42e32f4e54ecc5a fdc7d47952991581873fb06711b28f720a8f1f5b M	src/com/pinguo/edit/sdk/camera/focus/FocusStateMachine.java
+:100644 100644 a9a004c9b2f6866bae130a616cececb02e7cd18e cf39afc15fedb7ad4deb3ee1eb249c3df90c25ff M	src/com/pinguo/edit/sdk/camera/focus/IState.java
+:100644 100644 3b92344c217932a8676e6b7cb1918ec1b9629037 0939d5f68c9e70a8f5e61e4508c1ff3c6110ca85 M	src/com/pinguo/edit/sdk/camera/focus/State.java
+:100644 100644 0c9b9f1fcd6d7364ae06da8ce2761ce804d08923 ed3291bd8d44d2b3e9f26d3f5b6ca25da9e0fb14 M	src/com/pinguo/edit/sdk/camera/focus/StateMachine.java
+:100644 100644 2ea220279d969e5c72fa6f5ffdef92ea12ed4e85 61045e2988631425367dc9f306652a5ca890d48d M	src/com/pinguo/edit/sdk/camera/model/CameraManager.java
+:100644 100644 d4497cc421b10910fca0404c097f9001b31dae33 a543691252760ab4f4ecbc7ef2c8f4d59e3cb19b M	src/com/pinguo/edit/sdk/camera/model/CameraModel.java
+:100644 100644 5e4376014938d15a5317c382a240d08a6cd876d6 08db2fbffe8a583dc3b784f56f5d5e2816c1b34a M	src/com/pinguo/edit/sdk/camera/model/CameraParameters.java
+:100644 100644 85c81d78e07d1390b4b2ba45006ec4ce199b6248 f0faaf887b9c1baa81b6edd7be1d46958cbbc001 M	src/com/pinguo/edit/sdk/camera/model/ICameraModel.java
+:100644 100644 894023f0a4f41856bff81c64a72268a14c707fe1 ad133f1939a5f620aec1ed807e00abeba2a04039 M	src/com/pinguo/edit/sdk/camera/model/IPreviewModel.java
+:100644 100644 31a5f141d58b5a4c781a71b57d82f803ebb0211e 805f77bdf4452db5420d53f25da69bada4fea32d M	src/com/pinguo/edit/sdk/camera/model/PreviewModel.java
+:100644 100644 2bc464ffe62daa70cd5ec577c0df5e5f28bcf469 fcfde8db965e619d0f735d78f825651f1ae620ba M	src/com/pinguo/edit/sdk/camera/model/SoundManager.java
+:100644 100644 272c9b13fe35dfc6db04d1cbf3095c67ec781032 3bd794198be0b3b8493cf1e06dffa1682dbe7852 M	src/com/pinguo/edit/sdk/camera/save/ImageSaver.java
+:100644 100644 7e9e0226beba0c3d785933e73e19fbf659ea8a8e 86173d10f877c0c944539ec381c37345fc6d9a09 M	src/com/pinguo/edit/sdk/camera/save/Storage.java
+:100644 100644 cda624ecc214e3090916a36e95e659069221de6c aed6d48ddef29084802868905630a608ce51cbc8 M	src/com/pinguo/edit/sdk/camera/setting/CameraParameters.java
+:100644 100644 163c55285240ccc3014c69c3915589c4649cd106 49c4d3eecd520d55d820d48c42655c660853841b M	src/com/pinguo/edit/sdk/camera/setting/CameraSettingModel.java
+:100644 100644 9dc2751c15ca3b72b7109127b0d592ef9abb39af 8d80ba68ec2ca1471e202be0419815d781429896 M	src/com/pinguo/edit/sdk/camera/setting/CameraSettings.java
+:100644 100644 23d198ff6ea8772905a34b4b054822e19bdcebc1 352c82f27e9ec317b589486c8245df8a1d97d6d7 M	src/com/pinguo/edit/sdk/camera/setting/CameraUtils.java
+:100644 100644 e5e940e60d8ea631a6596a80bc68f376977f73d6 7e42b9b74a8c59c61cdd2eb0b3dbc1a9a5a67400 M	src/com/pinguo/edit/sdk/camera/setting/IconListPreference.java
+:100644 100644 b880e3e5699e8d22479e2abe220421abaed0d6ca 74c95961414ad1285a15bae66f5d1e5b0adf9357 M	src/com/pinguo/edit/sdk/camera/setting/ListPreference.java
+:100644 100644 4d2d8a42bc3bcff5ae5b2e1fb9600fd7b5d28d1a a308049dd0b3a794f0e752025d8f113e2df7172a M	src/com/pinguo/edit/sdk/camera/setting/PGCameraPreferences.java
+:100644 100644 4b3ee101b27ae0f14efbffdaebb1d024b2cd8d8a b624e5840953d54c3715e44e0db9905edad043b6 M	src/com/pinguo/edit/sdk/camera/setting/PreferenceGroup.java
+:100644 100644 1a46cd645a7b3a9e5ca9b7861abf464f094a7ca6 a97e268114a6a55d53e474f77457f73ddc9af163 M	src/com/pinguo/edit/sdk/camera/setting/PreferenceGroupMap.java
+:100644 100644 a7a84177f28b7c64fdc9e5b23b8151b68540a512 d2849a0b9d4a5f41b2ed8dc90d18e1aa10e9dbf3 M	src/com/pinguo/edit/sdk/camera/ui/CameraMenuBarListView.java
+:100644 100644 cf2a5a92cb722cd786725fc239d7d0dcae41c563 3e98e7f80d114b7f0f0f345bcd46d45a3c82d6a8 M	src/com/pinguo/edit/sdk/camera/ui/CameraMenuBarPopupView.java
+:100644 100644 a98cfe0a80a30f4d1c506f92bf7e698b058dc79d 2a425142e7b78941ff16e193ec2126bceca29375 M	src/com/pinguo/edit/sdk/camera/ui/FocusIndicatorRotateLayout.java
+:100644 100644 c981a993656a4789dab0496da72d07a86c324e2f 11be2400a1d2872a908a6b44ebea9d3dd4ef820c M	src/com/pinguo/edit/sdk/camera/ui/FocusViewUIManager.java
+:100644 100644 32612a784cc884adaf1d9ddf6fe269dbfa180076 6a3aedb359ab160c7943cdf13913cbca602351de M	src/com/pinguo/edit/sdk/camera/ui/PGOrientationEventListener.java
+:100644 100644 b3e7247fb70a874f0cce4133fbb5bc7a67ab845c 28f16f5307e3ca3dca7230589571e541d273c95d M	src/com/pinguo/edit/sdk/camera/ui/RotateImageView.java
+:100644 100644 2a0c30f36f5d4a8e2ae2308e4f6cb3e72f9a02db 0cfc16ad85f0c0a8af310c563a51c4edc538d52e M	src/com/pinguo/edit/sdk/camera/ui/RotateLayout.java
+:100644 100644 f1fc358c912bfa357879ca2d44b995456c3aa6a6 8acaeb457f9536c55b3d7fae74bb297902efca71 M	src/com/pinguo/edit/sdk/camera/ui/ThumbnailView.java
+:100644 100644 b8461a8e0e16660a987d787fff3ee7fa6406238b a195982d731841be505e75da22e70c3bcdffa8d9 M	src/com/pinguo/edit/sdk/camera/ui/TwoStateImageView.java
+:100644 100644 74e178645008a3725781a7a974605c07642a826b 7c949d3f139d9bc5a65a58c0c6a283f5df277e74 M	src/com/pinguo/edit/sdk/camera/util/ApiHelper.java
+:100644 100644 e3451dbc1885e10a3674b0af9014eee03d0b6679 4d7a715c78cdcd4707e7298fb098ca57736475d3 M	src/com/pinguo/edit/sdk/camera/util/CameraModuleUtil.java
+:100644 100644 bc7805f1d6e22ae96ad2fbe24dbde0dc4a2b1214 94e24485981054c109ca1015a2d91d2daaf10985 M	src/com/pinguo/edit/sdk/camera/util/Exif.java
+:100644 100644 b613e6dfe48e5b17d3d40cc84fb41151c8dd12f0 b0c0747cbaa8ad7514eeb6dd968dec718ee783bb M	src/com/pinguo/edit/sdk/camera/util/GAdapter.java
+:100644 100644 31e93b05a8378dabfd8886d891a2e2666dcf855e 9320a07699a67e14ff0b852ed5c62719334672f3 M	src/com/pinguo/edit/sdk/camera/util/PGExifInfo.java
+:100644 100644 3294779e9e4a369a3c7a548b3bf1ea85cf685065 d5a2898da6967bf4bf6a9d2955b4bb07f46e05d0 M	src/com/pinguo/edit/sdk/camera/util/UtilStorage.java
+:100644 100644 784bfd0b49965ff233f05dbc6b5c662040e6235c d2d2154c4544c659027190fba630978c6dc76d3e M	src/com/pinguo/edit/sdk/edit/CropImageView.java
+:100644 100644 e8a069d89c47696befd5e530d69e7f88b50679eb 93e4868d636f7f82a1739da34e094ac7e705e7f1 M	src/com/pinguo/edit/sdk/edit/ImageViewTouch.java
+:100644 100644 d90737d730e0b97ee734313a3e2925570deb2eb9 6a0e7b86b4dcdd3ec64467f9892ebf9120e3c112 M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+:100644 100644 b0bcbcb9aa4b74194031b5016741c495cbefd240 78c1cade7cb3234ed97d72104ec64fa8798fa7d5 M	src/com/pinguo/edit/sdk/filter/square/Image/ImageManager.java
+:100644 100644 8081d0ab2de875cd42edc9f865148f1f46665e84 06bfaae237f7008a0d1e34cfb16dbc9ebe46279b M	src/com/pinguo/edit/sdk/filter/square/Info/GetFilterInfoApi.java
+:100644 100644 24255b686322056af4d14f821ef8acc7b07c4569 733f930fc7931314edc791e0f4e724c46ac77a50 M	src/com/pinguo/edit/sdk/filter/square/Info/bean/FilterData.java
+:100644 100644 70bbb095265e732ce614a9f6e8429cbd407d78c7 822162a326382f2c16466f8f2c9c623aafdaa82d M	src/com/pinguo/edit/sdk/filter/square/Info/bean/FilterDataList.java
+:100644 100644 492ba20217aea638e13d16295569e5d852780ab9 aafd690205a325520b41dc12b2956c709af2d396 M	src/com/pinguo/edit/sdk/filter/square/Info/excute/GetFilterDataById.java
+:100644 100644 c2619c493add8dc8b9c28673b1123ebc25355301 5c5967301924436c53e778f5e9034853edb1890a M	src/com/pinguo/edit/sdk/filter/square/Info/excute/GetFilterDataList.java
+:100644 100644 ad08163fbac4c927e2938530955e202d6fd57f4f b60b91aa7759f4b74c48e9b872bd3f428155e928 M	src/com/pinguo/edit/sdk/filter/square/Info/excute/GetFilterInfoById.java
+:100644 100644 528a9e670104c360aa76785e84ec7856ae897003 acb4ab2750ad7dee7fd692b7af27b43735fe30d7 M	src/com/pinguo/edit/sdk/filter/square/adapter/SquareItemAdapter.java
+:100644 100644 397181c9c636e15c3a0a1c2e6a31acdf445c4985 8eebb2ea4446cb27c268d269add97008bf155f8b M	src/com/pinguo/edit/sdk/filter/square/fragment/FilterDetails.java
+:100644 100644 cb3c7dc68814207d4531329196e3449edc4b29ac edc8a6914beb9c33498cffcc2e24c2b4c1109358 M	src/com/pinguo/edit/sdk/filter/square/fragment/SquareFragment.java
+:100644 100644 ea3de7fe33907415af0f79b8017cdef996f1f482 19b9b85d6587762f77d5113ea1a5adbc1ac1a5bd M	src/com/pinguo/edit/sdk/filter/square/model/CompositeModelHelper.java
+:100644 100644 9745973753339a18ef47fd52d585a2edcfb51180 9375897cc033bc4e61d8517c30ac281eadce61aa M	src/com/pinguo/edit/sdk/filter/square/model/OnLineCompositeResourceManager.java
+:100644 100644 fb3b3090f8af3e630e9e847e8c0d3815f568b629 c6e6e3f3c97df0d8c56fd05a5399cd9d62105c89 M	src/com/pinguo/edit/sdk/filter/square/model/OnLineCompositeTypeBaseManager.java
+:100644 100644 d527004616ccfe691b94ffc93030ef28ac2f1720 83f5bad4fb5c7628c6048a313fb6eb9008f29d6b M	src/com/pinguo/edit/sdk/filter/square/model/entity/OnLineCompositeBean.java
+:100644 100644 b281ecfe9140a10ee74fe6e9f900102e4a526850 bf6c2d4219c2c8ce6d119106b0ef6c7be3a9a291 M	src/com/pinguo/edit/sdk/filter/square/page/list/FilterListController.java
+:100644 100644 92353c4ac42ac75b31dbf8a0d33da5adf299973f 7f6f9accb68fa026474040eb688383c08670eb8a M	src/com/pinguo/edit/sdk/filter/square/page/list/ListItemView.java
+:100644 100644 75e1457c63104b14ab19ffa45c5ed6035823cb2f 1e6c48f9d1506705ee24e0765b1ab80aed9cf53c M	src/com/pinguo/edit/sdk/filter/square/page/list/ListViewAdapter.java
+:100644 100644 b547b3c82dbad7c2aad6af714ccb5894137f561a f683d93b0373db9595156ff446e0cfa2186bc6c3 M	src/com/pinguo/edit/sdk/filter/square/tab/IcsLinearLayout.java
+:100644 100644 7fac4f618f70f5bfa30501d03b9b5866dceb43b4 2ae49594912f571dddc78c81dd04f68d4e6980fd M	src/com/pinguo/edit/sdk/filter/square/tab/TabPageIndicator.java
+:100644 100644 f6cc72e64cac6cf6ddfd24c78c0bdc3a04f8d47b e0896b8b18aae51cd76747835d4f3c6f86570594 M	src/com/pinguo/edit/sdk/filter/square/view/HeadZoomMultipleListView.java
+:100644 100644 3d99b8c14e73c0ee678fc72aebe98344e61c613f 56f756925942a85c3d1854467c666cee14edfda6 M	src/com/pinguo/edit/sdk/filter/square/view/SquareListView.java
+:100644 100644 424c989c8af67c69b4ae71539b56c1a451c011d4 423c00c68bf292659d4bfad84c50e3daf704bafa M	src/com/pinguo/edit/sdk/gallery/ActivityState.java
+:100644 100644 00c42e1ec79933de72da1f3e5029affb6aa099e2 2828ca0d134457787ac4f27157ffe8374a5330d5 M	src/com/pinguo/edit/sdk/gallery/AlbumActivity.java
+:100644 100644 600a851fcf71ab18e0add2274b5f1dcd043f239f 2df90a9e07e0633c36d144e5fbc97ffa7bf3d15f M	src/com/pinguo/edit/sdk/gallery/AlbumAppImpl.java
+:100644 100644 22e109abe139986d5acab6639f964105215409c6 5719c623ada6bc288bac67bf9ce09bf47742f22d M	src/com/pinguo/edit/sdk/gallery/AlbumDataLoader.java
+:100644 100644 55ba0e6430c1819e746d897e26e419e75a9d73f2 46a4b81b3bb0f1ae037371c5573e5b8eedba74ab M	src/com/pinguo/edit/sdk/gallery/AlbumPage.java
+:100644 100644 4af438ce7f2f9f9ae573eeecc8b515a26c7aceef e2de92d508891aaca442b375d23b4ccf3efb8fe4 M	src/com/pinguo/edit/sdk/gallery/AlbumSetDataLoader.java
+:100644 100644 ba839dcdece6dc6e0c5813b2fe68376c3370cfba e2d2f4f79edb8dc567c7741b1fc33f487c062eee M	src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java
+:100644 100644 3296a01e003f4cd96817e7b9721bc1065ecc6637 fbad83ca39abdacb0c88c4a00c5b154cab317946 M	src/com/pinguo/edit/sdk/gallery/EyePosition.java
+:100644 100644 f78813feb31c9494e4b3bfbd7f42ff25cf22e174 130628849387c04e575a391f071721b2926a0190 M	src/com/pinguo/edit/sdk/gallery/GalleryActivity.java
+:100644 100644 8a10837b5569cdcd391544f29aed95aadf329a49 e929b1eba4358ba89d98f6e55e9408fca7d34ecc M	src/com/pinguo/edit/sdk/gallery/LoadingListener.java
+:100644 100644 0e96ee48a8e1bfb3a47d038040e50de639f42e3d e5b108a5c6d5a685148f6cb3ee7f34e6ff20099e M	src/com/pinguo/edit/sdk/gallery/RootActivity.java
+:100644 100644 c5c7756087e1e572a2c7ecc7ec8538aa5042d630 62326106ff71ddacc9ef3790a19832807713d8f5 M	src/com/pinguo/edit/sdk/gallery/StateManager.java
+:100644 100644 372c453e4b342b0440c88c8fcefa9212e332a571 d874159b9af4ed19d159af43cf2ecff22d1028b6 M	src/com/pinguo/edit/sdk/gallery/UIConfig.java
+:100644 100644 728e17fd41d5fbee2df2edbfc2a02f9c823f5f57 1e6e7f24ca83cc7e57461b0bfbbe0fdd0e80d6de M	src/com/pinguo/edit/sdk/gallery/anim/Animation.java
+:100644 100644 3ea9307f617e7eacbff86646c9fb4798f8a4a1cc ee9aeb24bccb8e22d3461bc92688bd867fedf88e M	src/com/pinguo/edit/sdk/gallery/anim/CanvasAnimation.java
+:100644 100644 fc416e7f65b399b937f447d6e447541b48c37cd9 f92701ea619514199dd28711788d5164c83c64c4 M	src/com/pinguo/edit/sdk/gallery/data/Album.java
+:100644 100644 8f9da4b0574bda464eab3f52072f11b6d79213b4 0790daa3e5159dd0e05f3d8ef4c8121250410437 M	src/com/pinguo/edit/sdk/gallery/data/AlbumSet.java
+:100644 100644 bd21cd83700b337f9d9df6bb55b2763f8f3de247 6b3bb7d60900b14fd8956ca8043b04e082cd816e M	src/com/pinguo/edit/sdk/gallery/data/BitmapPool.java
+:100644 100644 4af447605c970c1b54d04bca1ddcb5b4f9407ea9 4a994491eb2b0f0f7e2974f391db762ace22a74e M	src/com/pinguo/edit/sdk/gallery/data/BytesBufferPool.java
+:100644 100644 c06112237d715a73699e59d9921fc3ec299353e1 aedc74b7082a33d49342c5ee311af0cb7af1b71b M	src/com/pinguo/edit/sdk/gallery/data/ChangeNotifier.java
+:100644 100644 9ac9140b3cb6c1cb2fb226003a3830e969c10849 731e2b56f9ce35bd0c93493e20d3302634784e97 M	src/com/pinguo/edit/sdk/gallery/data/DataManager.java
+:100644 100644 2b66dbc9a81d6130d1e61b07c3a2d4fb6466e815 955097a08d59841301c0979e897e285dfa9aa81b M	src/com/pinguo/edit/sdk/gallery/data/DecodeUtils.java
+:100644 100644 48f1e35e2490ff1a741d997305556794fcf3b0fc dc0f48c5b8aed4c2a60d8c3222d8024134d91997 M	src/com/pinguo/edit/sdk/gallery/data/Image.java
+:100644 100644 c987fca49ebae2ecc1deb339cfca2511b9634414 88c402bcfdb689f6bc5433f90c74285df6376a84 M	src/com/pinguo/edit/sdk/gallery/data/ImageCacheRequest.java
+:100644 100644 d400c07d83093ea112fecd6b9c23fbbb515547ee e40771265242744f056d8f7b9f04afca889bb410 M	src/com/pinguo/edit/sdk/gallery/data/ImageCacheService.java
+:100644 100644 c71ee0e94818988075bb27a1d972439257392f50 6bd7bcb2419ad0fe596ddc65ccfae0957768ded4 M	src/com/pinguo/edit/sdk/gallery/data/LocalMediaItem.java
+:100644 100644 478824f2c27ff58e0346b8190b5e278195447373 a379cce9b063bc24b6b4c4bd8e49d71e3aa51d20 M	src/com/pinguo/edit/sdk/gallery/data/MediaDetails.java
+:100644 100644 cfcfc959b0ef0db8b8cf1ca2ee1182ac35e15d76 f866168df6a5a33709527761712311e3a057fb61 M	src/com/pinguo/edit/sdk/gallery/data/MediaItem.java
+:100644 100644 e42cf11896dafbb1a8ae4f0e8b5cb86a8e043ea2 8d6f0943824af04f3c663d7168d975344623534b M	src/com/pinguo/edit/sdk/gallery/data/MediaObject.java
+:100644 100644 0ae5e580e2111ec4db015e7e35f8316167238778 dcc852a7ecf00d20248d1b53f7f386073709e68c M	src/com/pinguo/edit/sdk/gallery/data/MediaSet.java
+:100644 100644 4e6ea6668e2d90819ba1daa5bbfa58ff1e610804 cd3ab7355b94778929f2df8bd0efb16ffe5b0eef M	src/com/pinguo/edit/sdk/gallery/data/Path.java
+:100644 100644 7a97e5980eb815fe3a32f1616f5ba6c3b965f69d 0690c29824fb06e602a79fd9185c6f60c0cbafeb M	src/com/pinguo/edit/sdk/gallery/support/ArrayDeque.java
+:100644 100644 899a40bac3e4dbc97689e94fe20c95e84394f85e d9a4b719814eec40aa9074286cb283f962dfa320 M	src/com/pinguo/edit/sdk/gallery/support/Deque.java
+:100644 100644 4990628e135eeccb12f6335cbf8596670419525f 9004873baa19f114e3f1cf861b7ac769911ab689 M	src/com/pinguo/edit/sdk/gallery/support/OverScroller.java
+:100644 100644 47adbd371214a5d85a9ab0626d897955f4ee4043 1bf78f8ffdf656a48891185c22ed6ce3a5058526 M	src/com/pinguo/edit/sdk/gallery/ui/AbstractSlotRenderer.java
+:100644 100644 327c5e62c11536d63918534fa5eb2fb17e27c4a3 46d49919ed32e85be04f593a702024cb3fef88de M	src/com/pinguo/edit/sdk/gallery/ui/AlbumEGLConfigChooser.java
+:100644 100644 5ccff610ba47d336ae883703973f80c00c218abe f70254f35ac89af59da88679fe9ac187a9c32bff M	src/com/pinguo/edit/sdk/gallery/ui/AlbumLabelMaker.java
+:100644 100644 f01cb9121ef46e3defaaf15b79ec4640b34ca243 639d1b47e53726868eded5060cf7a603564990c5 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSetSlidingWindow.java
+:100644 100644 d54bf6c4dc321ab074a7cbb9089332c6fd730dbf e288e375000da5959ef95ec3a28bfc57b3e17552 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSetSlotRenderer.java
+:100644 100644 a5ec43dbf0eacbc956901123eafc24a96661d84b e56ed31f8fa05c58e4396d7a162c03d64ad84967 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSlidingWindow.java
+:100644 100644 1f7cb2931b1af8daf876c6f36987f6bbb6ddf378 a3f0ed97e1eb19d8162a1af6d00c8146a6aacc12 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSlotRenderer.java
+:100644 100644 d045eaec8e2d79079dbc6657b9ae87e08485bd0f 00281894c97b7a19a55afa7d0f7f6efd21ef35d1 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSortTagMaker.java
+:100644 100644 47dea76b4b684cbe15734d97d10373088cbe2c36 fada0ebaddadb3af2aee58d901149c397971d531 M	src/com/pinguo/edit/sdk/gallery/ui/AnimationTime.java
+:100644 100644 46269a52b44d06f447661cd2e631728c652d1dda 74bd27f67c8b68d2988a587498f49181d234d61b M	src/com/pinguo/edit/sdk/gallery/ui/BasicTexture.java
+:100644 100644 ae1a4beceef555ea60432b3e0c1548eb8c064222 4e68316421705b999a84722fa18e4bc595835921 M	src/com/pinguo/edit/sdk/gallery/ui/BitmapLoader.java
+:100644 100644 0fdee8afb308a3cb81d4899231daa2bbf370db65 320fe4cbbe86f2a533fb53c116a981c5c3feb5ff M	src/com/pinguo/edit/sdk/gallery/ui/BitmapScreenNail.java
+:100644 100644 547a36990b0e37a7f09845a6b3e8e06b806f32c1 29408cdf3ac63ecf17c4dcb9f54ee8fde5eabe96 M	src/com/pinguo/edit/sdk/gallery/ui/BitmapTexture.java
+:100644 100644 e4e45d7e1b361c72a4fb00fa1e7a44632a046412 f17f4467d0ba3c56f69e0911cf09211afc7a0a1a M	src/com/pinguo/edit/sdk/gallery/ui/DownUpDetector.java
+:100644 100644 6497de5d50f92949b71b58da9682f0d7c10c2d4c b4c6dddd0ec73ecc502c5d67d16e5dd538a5d1f3 M	src/com/pinguo/edit/sdk/gallery/ui/EdgeEffect.java
+:100644 100644 c3da48c4e3e91ec5b7884ddaefabb7d3f098547f 3395a65edda75957cf8ae5702c328ab6a7bd2fb5 M	src/com/pinguo/edit/sdk/gallery/ui/EdgeView.java
+:100644 100644 fac1a3b2a611f524d318430a276bb6545f51e5df 15a86b67fe3d1900f78665dc86db3eb34df89445 M	src/com/pinguo/edit/sdk/gallery/ui/FadeTexture.java
+:100644 100644 6a6f5120a70268237f33c260d5530bb9886d6e86 1d23bbcc9ca2e35aba036d50c0f73f8ea84b3b53 M	src/com/pinguo/edit/sdk/gallery/ui/FlingScroller.java
+:100644 100644 76040e0b998173a50257a2b30521c1a6b19f4e0b 64884af2f1cca91b91697aabe6dd04e23028f762 M	src/com/pinguo/edit/sdk/gallery/ui/GLCanvas.java
+:100644 100644 abb871701c5d0107d03fede835140f685e6d9628 437c50be0391ff58ad7b10e5c8e1e48553574ae6 M	src/com/pinguo/edit/sdk/gallery/ui/GLCanvasImpl.java
+:100644 100644 ba6a30e958f3ffb4ee4d37c84756570503d900eb 4a0eaeb93510fb9ec296c5604da5eebf1ea5ae0b M	src/com/pinguo/edit/sdk/gallery/ui/GLRoot.java
+:100644 100644 bd2fedeb6c1a8c9f22a4d58858088614c0898574 ed58104f774ebcc3f77441d06e692c43bd3a06cf M	src/com/pinguo/edit/sdk/gallery/ui/GLRootView.java
+:100644 100644 a294609ca16292352bd8af075a519e82e8a8a413 27af117fee7e4ec25ec8b5b006ee953a570d3359 M	src/com/pinguo/edit/sdk/gallery/ui/GLView.java
+:100644 100644 7b5743004f4c57a74b7fb5b6813df0785f46255c cf9f86adfc30fe738d5cc47ebc8bc01ea94e3b69 M	src/com/pinguo/edit/sdk/gallery/ui/GestureRecognizer.java
+:100644 100644 363857c979f4be6481fe90c66c7c33b1c58d547e 3379ae202f39d85c77a784a3022a61da72a30f86 M	src/com/pinguo/edit/sdk/gallery/ui/NinePatchChunk.java
+:100644 100644 393b77f5db42394e4a06f291e99e9f85204b2a12 d7ed6de0e13db4a5af1696d0f25096825b87c3a2 M	src/com/pinguo/edit/sdk/gallery/ui/NinePatchTexture.java
+:100644 100644 122ab89c901d274d059c1a17cf111b06e4d0f9ba c78508130a412a13714ffd0213f125d562a64ea3 M	src/com/pinguo/edit/sdk/gallery/ui/OrientationSource.java
+:100644 100644 642cd8b232f7083d8af195019f7dd87f5347d8cb 7b3b3f33bb22a3ca8a7e8aa1d28fb40f17b1bc5d M	src/com/pinguo/edit/sdk/gallery/ui/Paper.java
+:100644 100644 ecde62d3b29a5732166e2fd9015b15728698b98a 26463fe762e6e322d1354870631f1bd889a50417 M	src/com/pinguo/edit/sdk/gallery/ui/PhotoFallbackEffect.java
+:100644 100644 505ee349f7de0566009af8b4f7d7e1ffd1671a55 df8a384a7acd6e52ec43fc95bad3ca31ca05a87e M	src/com/pinguo/edit/sdk/gallery/ui/RawTexture.java
+:100644 100644 a0dd6f0453249f071f4e7cc3fa2403b192510958 da876ccabe8b10059e80602a675bc41c5f1c2324 M	src/com/pinguo/edit/sdk/gallery/ui/ResourceTexture.java
+:100644 100644 413bb62b5805fc62cc427c4faa0d2b731157033a 1cdebadf57a90b161b14a2568ea44221e9efe463 M	src/com/pinguo/edit/sdk/gallery/ui/ScrollerHelper.java
+:100644 100644 c2e6ad0d3d6aec459d9e4f5d7aed3154c5ea16d9 1021e1347de2a30c45e3ddbe7d62ec7959ac265e M	src/com/pinguo/edit/sdk/gallery/ui/SlotView.java
+:100644 100644 30f7b86796623360ce8fca280e2760433df0f9d4 f00113c9c642ad2250dd984deb17056b9bec034e M	src/com/pinguo/edit/sdk/gallery/ui/StringTexture.java
+:100644 100644 2b5cdffa319a52ef2941af05651a1abeb21301eb 240bd56d56362d97e4a271f5600fc272381f86db M	src/com/pinguo/edit/sdk/gallery/ui/SynchronizedHandler.java
+:100644 100644 36a7c24f95560579a4cf40cccbc2e9ffd61c2994 9ffed10ce797508ebca20aca65dbf5b5ff1499f8 M	src/com/pinguo/edit/sdk/gallery/ui/Texture.java
+:100644 100644 0c6e6318b724929f0756b5e6b3a28026ceef4f36 738e1d85a5f195302c93c4b01f996495f135b570 M	src/com/pinguo/edit/sdk/gallery/ui/TextureUploader.java
+:100644 100644 8985f0046cddeaad64025598a396b8342203ec53 b10aa7e46058300661c1c75ce6bd7b31d9543c00 M	src/com/pinguo/edit/sdk/gallery/ui/TileImageView.java
+:100644 100644 80a4cf61e662a2b1a6af1952e4a6bae7ac072ebb a539676761fcf9d43dd359cb2c489058b0ca5b1d M	src/com/pinguo/edit/sdk/gallery/ui/TileImageViewAdapter.java
+:100644 100644 0ae7b238cbddd347c3bdadbcf15196eb2f4af551 dc576b266d19727fc1e00c3d01baf7c71fdcaa7b M	src/com/pinguo/edit/sdk/gallery/ui/UploadedTexture.java
+:100644 100644 fb27efc28588bd1c6542a56de0cea77d9e2e933c cf9b4cab1289adcac2d53a84acde0c6e8c12cf11 M	src/com/pinguo/edit/sdk/gallery/ui/layout/BaseSlotLayout.java
+:100644 100644 010861c976e83aca64082ec9c0db18b008fba31a 929fd86565b1ca7008725f7cb1a528b0c55afc5f M	src/com/pinguo/edit/sdk/gallery/ui/layout/ContractSlotLayout.java
+:100644 100644 0db23ee021b2a77c5564dd7e98637ae8e07027cc c983403b9a1545f9c76e7129806b5ac33ef8b010 M	src/com/pinguo/edit/sdk/gallery/ui/layout/ExpandSlotLayout.java
+:100644 100644 053aad735e0ae369c57f1bab2bfabad074b3c18b 75dd7ec8b1ef9ce808063e77d22e97e0ab313b6b M	src/com/pinguo/edit/sdk/gallery/ui/layout/ListSlotLayout.java
+:100644 100644 332177405d5f5475cea4babe887795b321cf65c8 48b0e8c86eedeaf8d5e1aa12251c16c29c3741fa M	src/com/pinguo/edit/sdk/gallery/util/AlbumUtils.java
+:100644 100644 f5b854da534d7d39f4868947f72525d922c1fed6 e57e41e12f2c9d2da51051f1881016183f5dbb07 M	src/com/pinguo/edit/sdk/gallery/util/BitmapUtils.java
+:100644 100644 adaff12a4b8464efc455e6eebd2e3d04d1872167 771b95ef4a1d5387c2d47012d67eae73d4c220fb M	src/com/pinguo/edit/sdk/gallery/util/BlobCache.java
+:100644 100644 2d34bd6dd4b0564e739ec546fdc3b46309bb09d8 2299133bad823c98f185ea8c54a4c28875f57a68 M	src/com/pinguo/edit/sdk/gallery/util/CacheManager.java
+:100644 100644 3b51e089d2dec60192c1324850c4d711e71f67ac 7946bf2587607f3b0cd9706c273debf9a82c5f82 M	src/com/pinguo/edit/sdk/gallery/util/Future.java
+:100644 100644 9c5e1eedf377fb111523585a4261383102de2d13 e96b60a0242c43d40ffb18102fd975ec253e108a M	src/com/pinguo/edit/sdk/gallery/util/IntArray.java
+:100644 100644 c462ca33922d4799521f7ae8b1f153a863abeff9 5a50ffb8895d61c43dc523f74e3683f2f9e88a91 M	src/com/pinguo/edit/sdk/gallery/util/JobLimiter.java
+:100644 100644 252fa8b4d6d927daecb90130abd06d46c5c04a75 c0b0121aa8fc9eaaf9bb0467f129078c15d80404 M	src/com/pinguo/edit/sdk/gallery/util/Profile.java
+:100644 100644 2a2647bfcb72f8e73dcb55178208bee81e470816 256081c4d1a26ed3d0efc95ea747862d594e9e32 M	src/com/pinguo/edit/sdk/gallery/util/ProfileData.java
+:100644 100644 b8329da190ca423cd1f0cd0258065495026fcf8a 758203a56f2b291b5eb0e7bf5126b14d08a59dd2 M	src/com/pinguo/edit/sdk/gallery/util/RangeArray.java
+:100644 100644 a544b54455a180d11a78482e9ee31885d5e77900 60b7d43221bfaa030f8e7eed0542fc7ae9ec86e6 M	src/com/pinguo/edit/sdk/gallery/util/RangeBoolArray.java
+:100644 100644 4141448a298b66b2f570bfc6b86f92727358d57d 0dca96d7415a640e08a4d594eed414c64ce8dcc1 M	src/com/pinguo/edit/sdk/gallery/util/RangeIntArray.java
+:100644 100644 ccfe912572c591d58ebe958e64ac47cd1ec410df 34456c86dca0e48c5fdf6c1f6b4914cd78948a3d M	src/com/pinguo/edit/sdk/gallery/util/ThreadPool.java
+:100644 100644 9e1d95f38ab7d3e9c7ac345199bc40449f4ba25f c04d2a231dbcab7558071b0821c39813e594a968 M	src/com/pinguo/edit/sdk/gallery/util/Utils.java
+:100644 100644 54a40b59c60004457242e13c5b63899091f5cb22 d3f5110f0f82f16f73419e2ad36dc97f7f7dfa85 M	src/com/pinguo/edit/sdk/lib/MD5.java
+:100644 100644 f825a86d14f28a8ce37c206366199928e459912d 45a1698cbb4f59c8b491e3636888f803280fbcf3 M	src/com/pinguo/edit/sdk/login/activity/PGLoginHomeActivity.java
+:100644 100644 76d9ec4082eb948602ef4a324e3579ceba06ec8d 49db3515db8151cb55181ec1ac574997ef21aefa M	src/com/pinguo/edit/sdk/login/lib/Base64.java
+:100644 100644 15c77181d073f079817e0b187a50e2c3724ce99b ba835e14efc9de18c455b5d301b0581846812a78 M	src/com/pinguo/edit/sdk/login/lib/network/ApiAsyncTaskBase.java
+:100644 100644 175edff513dda05031cd8ebacf62ac027e5c20c3 0e56424889264dc49c4e7067a8f14b74286b8378 M	src/com/pinguo/edit/sdk/login/lib/util/MD5.java
+:100755 100755 03f08612a4b98aab88371271b7021442298c973b 5cdc9e9cb2e21f9ff982f202f5450d42c3880fb0 M	src/com/pinguo/edit/sdk/login/lib/util/SystemUtils.java
+:100644 100644 fcf7541e2f2711cb2574c74c56c6a2e83a4e3d41 ae48c7533e7b3e47abbac63c6c5a599fe1ac508d M	src/com/pinguo/edit/sdk/login/model/LoginConfig.java
+:100755 100755 9bc843ccf7ab8ac213d391f02bdbdff848de5527 4261c67a5bcc223fa1124fe62f87054d8f4e5c66 M	src/com/pinguo/edit/sdk/login/model/User.java
+:100644 100644 50fa7a69486a13fb6f800e0e14688a21b46c981b cb265210879c759f5fad30166f0efaf86c287fc4 M	src/com/pinguo/edit/sdk/login/view/EditTextWithFork.java
+:100644 100644 deccf41a22fc05b83b22af9ec765a7ca68f5221d da8657aa72983507272b77a6808943d03df31646 M	src/com/pinguo/edit/sdk/login/view/EditTextWithPrompt.java
+:100644 100644 72f5a5984fa7e4b83f8d1e21cd97af43fec2f9e9 d3ef074d787b83b9c356569ef5c81d52c9bb2250 M	src/com/pinguo/edit/sdk/login/view/RotateLayout.java
+:100644 100644 fd46d365bff9235a125d098527048f4143088937 b0b103076bcdf53f11f42b3ea18442de2d4243d3 M	src/com/pinguo/edit/sdk/login/view/RotateTextToast.java
+:100755 100755 9d890051a5e8bdb2d30fa70e5e1721526d20e6af 36619fef02b7bd4f17a70c3edf44a83e069d47cf M	src/com/pinguo/edit/sdk/option/feedback/Camera360FeedbackActivity.java
+:100755 100755 d7d4dd324c86fb3b80c23df27cff6648b77adca9 9552ef939943ecba3df8b5f86d5eb2c3004f222d M	src/com/pinguo/edit/sdk/option/feedback/Camera360FeedbackAdapter.java
+:100644 100644 6b59c18d93fe3e513567099c3b3be32ebddac39f 335b52b323ac778c71649e05e8afbc1d343b57ee M	src/com/pinguo/edit/sdk/option/feedback/Camera360FeedbackNetworkUtils.java
+:100644 100644 cbc4bb1139d19be622ccb7fd5b551bdcb60f14c4 0a18949bb481016edac8e7983b80f7c56b78dfe6 M	src/com/pinguo/edit/sdk/option/feedback/Camera360FeedbackProvider.java
+:100644 100644 7d2c35bcf03b221700c0fd4f928eaac61445ad6f b9ba9c6f1cbfa6c91467a2073ef3ce16e38b05f0 M	src/com/pinguo/edit/sdk/option/feedback/Constant.java
+:100644 100644 26a3a9fcfa9d633a9d970d1d569a6cb77f818dae 92334c03724baf5ed8d05a513c5564912b610ddf M	src/com/pinguo/edit/sdk/option/fragment/OptionsSavePath.java
+:100755 100755 7c4d05c043982d2097448da91dc74cd1f38f9e6b 0d7e152f164133d6f677a7b586d0b6417fe8353f M	src/com/pinguo/edit/sdk/option/message/PGMessage.java
+:100755 100755 8200bec29c70cd6100b174e0bd339fa0663f1c7a 110bc5067a8a6414e7f49b4148fe1ae4f9898b5c M	src/com/pinguo/edit/sdk/option/message/PGMessageManager.java
+:100644 100644 1e26bebda7001f384463fcc9f0e3541cb7dea4b2 b4ef6b48db31279d9befa741fe55551207e2922c M	src/com/pinguo/edit/sdk/option/view/RoundImageView.java
+:100644 100644 089c414787389a142c0d1b95a56e30e64ab7c9ee fbfb47b505fbf16a06e05131a2a8eb4d4590365b M	src/com/pinguo/edit/sdk/ui/CropImageView.java
+:100644 100644 8c70045f7ffcd7144efab4cd5bc60ff3ca0bf916 38545ae6d6e8e16374575d4b7f77bb674f2663c0 M	src/com/pinguo/edit/sdk/ui/RotateLayout.java
+:100644 100644 1e467a3ca1b8b166c7af8d50ea2e8370de9eccc9 9a427a05e67f33fffe44961b9b240c7ad2da0747 M	src/com/pinguo/edit/sdk/utils/AESEncrypt.java
+:100644 100644 a001858c1312ba325e187e81ed7bd556a54c8847 dd5b5bd17a8ca41b3d9341eacf0174c309903214 M	src/com/pinguo/edit/sdk/utils/AssetsUtils.java
+:100644 100644 becef3560945f782f87a6f73f0368181bbc2d0ce 96106cda20a91b6834b738960f8a346db4cc0083 M	src/com/pinguo/edit/sdk/utils/BitmapUtils.java
+:100644 100644 f34fc2347bca66d09480dc05f053006e3302ca4a 120b9305f7736b65c2abd5618f459293ad230304 M	src/com/pinguo/edit/sdk/utils/DownloadFileUtils.java
+:100644 100644 a6b33b5071d4d5a8a25778273b9bf656033b933b 9eaf5d1b6162b060cf6238e6db7e6ac12c7f62e3 M	src/com/pinguo/edit/sdk/utils/EncryptUtils.java
+:100644 100644 35f70f5168edee0b136a8192785949de9f77761f 85ddd4d1aac3db8907ffeaf2a805ace58493f640 M	src/com/pinguo/edit/sdk/utils/ImageClassifier.java
+:100644 100644 4aa01b155bd59ff2e24ac2db750486a1b65d6d3b 15550c51de916eb23a2fe6c156254531054334d8 M	src/com/pinguo/edit/sdk/utils/LocaleSupport.java
+:100644 100644 c99fd2991e55b14248b3235b9093424d985f1745 f89ae879b8d3c000a6879ad0a09543b45577e60e M	src/com/pinguo/edit/sdk/utils/SDCardUtils.java
+:100644 100644 5c1a1f6f31d7a43a220ee34537c8317f602ed423 eb956fb5652916596a3e89f3ad818bb3eadc4780 M	src/com/pinguo/edit/sdk/utils/SDKLog.java
+:100644 100644 2609b5e1dc6669b37f6908d8b9ce00d9a8a8147c f37feccede0274871c9c86f32c3629f259e7d339 M	src/com/pinguo/edit/sdk/utils/cropImage/CacheService.java
+:100644 100644 55ab530480f26632071dd212915a3488e4834696 d41e69e2d7e8a067d324adffaaefd434fb8e5b27 M	src/com/pinguo/edit/sdk/utils/cropImage/CropImage.java
+:100644 100644 44143174407dcdd8ee781c0507e4c4e9db70bab3 974530ffc0ca0813b7e00e43c8024507295686fb M	src/com/pinguo/edit/sdk/utils/cropImage/MonitoredActivity.java
+:100644 100644 fff77b5fd9a10b9f8deafde0926a5fcf06e12cab 1fc61bd67d606a0e16818a3a4e6e7eebfbb37ae0 M	src/com/pinguo/edit/sdk/utils/cropImage/UriTexture.java
+:100644 100644 a911f22df653b5062688ba639abc6e95f5ad062b afa618af8d0c39f2747b27f4bba94eaa3071d116 M	src/com/pinguo/edit/sdk/utils/cropImage/Util.java
+:100644 100644 e10e955dcf9c91b8a889bf52c7569e6cd302af02 8ba049fffc16b1daa18711efb03a34270a52e154 M	src/com/pinguo/edit/sdk/utils/cropImage/Utils.java
+:100644 100644 c5d686c9779be9c16f080853e86f22928e505dc6 51c0d702090908a974d41f81f8c356c056b3cab8 M	src/com/pinguo/edit/sdk/widget/CompositeSDKDialog.java
+:100644 100644 38e046a5f8b5b0a64c7989244abf882b75c4c275 9dded38dc5f4e71a9cc102ef0ddd332042be5eba M	src/com/pinguo/edit/sdk/widget/EditPtrHorizontalScrollView.java
+:100644 100644 ae47bc1fcfe06cd65b7bf2faf9b4dc4b263faf7b 01e5110ecbb94a96956c0839901f0164714290d0 M	src/com/pinguo/edit/sdk/widget/IndicatorView.java
+:100644 100644 6a5959f345270c58c50d7a1ea7fe242344ed983f d9b76f517405a30b05204acc8b5ff35f332cc37d M	src/com/pinguo/edit/sdk/widget/TiltShiftSeekBar.java
+:100644 100644 155f8afe2212d65f4a42bafc027d8b7690c7dad5 c3dbcafbe1bb4c5667559c82c2104f9d8eb4648a M	src/com/pinguo/edit/sdk/wxapi/WXDataReceiver.java
+:100644 100644 54129b97526fec93f16a54a5b6571447862e7b82 50f431ef8fa68a0655c8fa6b0f5495497f513e0d M	src/com/pinguo/edit/sdk/wxapi/WXEntryActivity.java
+:100644 100644 d350e43234df0768c7ceed952eee83324934d7df 0bfdbfa94c11ac9ec527a5180f72155f61cfddc7 M	src/com/pinguo/intent/IntentAlbumSetPage.java
+:100644 100644 7d396899e1d76492ab9c334d754d21e0ef471368 fcede2fab602014458340c8519a11ff483971e64 M	src/com/pinguo/intent/IntentCameraActivity.java
+:100644 100644 dd795075b3dc3c38b58836650e7a2a9b58240f18 43b3c7c20a2fafe081beb284762934c165a041f5 M	src/com/pinguo/intent/IntentPhotoCropActivity.java
+:100644 100644 4273af2da83689d886aaac287f9f9490b9f7d19e dab6ae65cf8373a1fdade6eb4ab28d9e2f7f0298 M	src/com/pinguo/mix/CrashReportActivity.java
+:100644 100644 699aa71f443625fbc8e68373858284f78c6070d9 b0aa8b7bd7c2114310a8a96daca553fe3b0f63f4 M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 4f88d97ae49958cd5339cf9d0789105ade641659 d50013ae3b3c6316d60a64f0fd6afbb89ce1cdb1 M	src/com/pinguo/mix/MixShareFilterActivity.java
+:100644 100644 a5f7e39b474acd7a5531132933c8cc6048544a2f 83afb28a134d4801aa70212ef712790daeeee744 M	src/com/pinguo/mix/MixTitleView.java
+:100644 100644 54bf6d2712108c1c62de916a8a935d17bd570878 28933ed0e1408f41b8fe3ebccdb298aef80664cb M	src/com/pinguo/mix/MixVersionUpdateDialog.java
+:100644 100644 ce68d7a7b1525e629a235a8a0b8d2bef4f9fa1e4 bf6d83230fbfcf411015eb4adbc01845bf9b10bb M	src/com/pinguo/mix/RatingController.java
+:100644 100644 953310a6f338d0e9a3c633b63cb9644d05a124e0 8309df296e4a7a439129ccdd807501ad6adb2ff1 M	src/com/pinguo/mix/StatisticManager.java
+:100644 100644 37d904d3533157d380d2de5a8691635316cfc33e b7033b26f357d4a008749043144e5c13e913411d M	src/com/pinguo/mix/UpdateController.java
+:100644 100644 c2c5eefc2195400f889075ab2dc53bf223615393 3080aa05640429b4d56dd924fc242c15e0bf9176 M	src/com/pinguo/mix/api/ApiCallback.java
+:100644 100644 c7d6e070a0e9379b01628639f8db61a0c221921f 286c2d1d48f52860dc64b248845c65aa294be5a9 M	src/com/pinguo/mix/api/BaseBean.java
+:100644 100644 3522188866fbc56b51fe2d4c57024e502b7f9a8f 1f7af365470b655970f63afbf798c864a6850816 M	src/com/pinguo/mix/api/BaseRequest.java
+:100644 100644 63487ac9c49ba4323570de19d766542fd81d55a4 5f3779ad9c9c02e3abb48f619b7eae47f7ea8da1 M	src/com/pinguo/mix/api/upload/PhotoUpload.java
+:100644 100644 868a52531a24d83e14eec1a376bb90e617901c7c e6e6cff9f942e6c67cd348e7789a6bf0f723c97a M	src/com/pinguo/mix/api/upload/UploadBean.java
+:100644 100644 2351c0aa720bae4ba6c871480fca3ce0fa719c68 c571d0f0b5148f3c4ca7b9a165e3b7ec577311f6 M	src/us/pinguo/android/effect/group/sdk/PGCompositeSDKApi.java
+:100644 100644 586b2aea27a1f75e0bb5b432b07a1f9b2a5edc9e 60f7b260d7b55fa18243535b72f72a7d421efe6d M	src/us/pinguo/android/effect/group/sdk/androidsdk/SeniorAdjustmentEnum.java
+:100644 100644 2117d1ae1d503d8c22241562b88be214cc978fd4 d48e3a2566c24337018d1432cf02bcb1459956ce M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/CropEffectGroupRendererMethod.java
+:100644 100644 9da89533b6a3b847b24a461c6bac8593def5ec35 4d6cec5e626a5533e40c29daff2192e10385d8b0 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/CropRendererMethodForPictureInfo.java
+:100644 100644 40c2b31dc235614bd3c962b72c472e81d817e640 9c1345322930e45ef0cdbd80908c9216fff08aa8 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/EntryCompositeCropRendererMethod.java
+:100644 100644 c3d290110aae3a80d8ba4dad155e27f8050018fb f67039d3c9d8dada6696ec3ee8952c8e6216d875 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/GLSurfaceViewAdvanceRendererMethod.java
+:100644 100644 72d8eb6c5004d2522110493e343f224aa5ebe8e8 7e7b1d9af19730a3a8530957b59d863640a48d20 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/GLSurfaceViewCompositeForPathRendererMethod.java
+:100644 100644 65dc63ea1272dcee533f9d13484eec7a038f1dbe 3ce2457228db9ff0be015f3bc2171bc4ab1f1939 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/GetGLSurfaceViewBitmapRendererMethod.java
+:100644 100644 4cd4d4bb2521db768d37a232e363c148a356d4c6 c66fc25f87e00587b59be8095bd534e3f2b0085d M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java
+:100644 100644 807b810bda9922c28019a78e2a6cec159c30dd90 4f0916aaf70762de3f8cb3ef981b8bc4eb54c4b5 M	src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java
+:100644 100644 1cf740abdcc0b16f9cf682a95cc7094a01946aae ff5092d269ebbebad530db39e18b51115a607345 M	src/us/pinguo/android/effect/group/sdk/data/EffectDataManager.java
+:100644 100644 06edc3f0bab2bbb48ab92caa6d91c7c97586556a d6e51c03cb34f1b009c0462c5b6149e9b385a896 M	src/us/pinguo/android/effect/group/sdk/effect/model/EffectDatabaseHelper.java
+:100644 100644 302839d7f3c8fe7181597904e807761255b8c272 a016d37c5ba341086ad0d4d79965e61331c4fe04 M	src/us/pinguo/android/effect/group/sdk/effect/model/EffectDict.java
+:100644 100644 881f6101d4e8f64f972b4d615645b6c372a2560f 63064d069caac01954e6b0a9afe343d30591be5e M	src/us/pinguo/android/effect/group/sdk/effect/model/EffectFactory.java
+:100644 100644 861adaaec1a67a98ea9371a93c38151987ea5bdd 3f534cd819b37ef684d27137059164356076602a M	src/us/pinguo/android/effect/group/sdk/effect/model/EffectModel.java
+:100644 100644 a53c35986a1189b6c6712e1fc464ced68a61e565 4ba5b472e766712bbb1b329f3daf0275c7da4bea M	src/us/pinguo/android/effect/group/sdk/effect/model/EffectResourceManager.java
+:100644 100644 78a6827598a0f79d42b995a64977a1e28e4e7c30 fe4211855c4cd72a952c7e4909d326c3c0866ec6 M	src/us/pinguo/android/effect/group/sdk/effect/model/IEffectModel.java
+:100644 100644 b7504aa9a38174fe389e4b0ac3d15c0047a30db8 ad5a85ea3f9418a0b6ce8422036634f8b5bfab4c M	src/us/pinguo/android/effect/group/sdk/effect/model/IEffectResourceManager.java
+:100644 100644 f5659a392a2c021586cd39afe8678e920e5caec4 4c056bf5deb270e65f2c312e154c1a367f3ef567 M	src/us/pinguo/android/effect/group/sdk/effect/model/ResourceManagerUtils.java
+:100644 100644 adee513968ab2af5b1028636ae3461bc30017e7a 4ba48611ee09de03536b418915a2f1ce3f7b1175 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/CompositeEffect.java
+:100644 100644 cb8d53ddc382c7c4d6ed3c4685cf7ade5326dbfe bcc42def988ef928e342933af1e0af01e6ddf3d1 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/Effect.java
+:100644 100644 262189ebe111e5a57760a60c782e45e02f0fb733 04f9ca2869a975076c5e6d4db6bc8c12f02db7ed M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/EffectRequirement.java
+:100644 100644 8371cd6d88331386d0c6376ade72dd06f30b8260 15d29dbec7e572bbeece1f1a6fbed95532a95e19 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/EffectType.java
+:100644 100644 f766c3c63ae3aba3cad170019bced628521a27a3 19290b0f6a4b487c5fc7d22f3edf354ab274c9c1 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/IEffect.java
+:100644 100644 70807857061382080bea37350538670fd5011489 d4e9fd27aaa8dfd76347d28a50d174d848a494c3 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/Param.java
+:100644 100644 086ce362a7b7386437fa76925ccdb204f68d9943 13bcde249338a339f9c7bad9c60be284f23c2bea M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamColorBalanceItem.java
+:100644 100644 95b3a2fb348b7285948c097f62c80470511ba07b 9a3aea4c922040d8b13cd8334e421f817ac0a8ac M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamCurveItem.java
+:100644 100644 def176b59205ecbcc034fc226a0dd2bd634bee90 aa0d359c5b8ec4a01b1a45f4ae1f9732f1518bd0 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamFloatItem.java
+:100644 100644 05326ef121cd9d3c180f9447e85ae8fe03fa0c39 711423b2612fd4cf7ca636fc8f697b20976df65d M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamItem.java
+:100644 100644 492de2f9831ffcba85fdcd1f85f7783ec16e1f27 8c9e3c234fa112f0f8b90e4580f6383d39fa82d2 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamNoEffectItem.java
+:100644 100644 612ce2d9d4c7df4fb828c4591db7b9a58616d4a7 387098a2503eac2f1c9deda0f36b4fb1a9cc81fa M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamStringItem.java
+:100644 100644 5a1439b85cfaabb2f0c5bcd04e72e1bf4c7b245f 1c5d046990f71c1d7fd9dbbc64c7f364ee92820c M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/param/ParamVecItem.java
+:100644 100644 ffeba1a6b0ceb4d4ad4a9bb13e012721da0716a8 f949bbe4b3431b342890e520dec1915d5a0fb12d M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/shop/EffectPackage.java
+:100644 100644 fb21447d1d3fa386f4753664a6993a6a1969514b a820ddd19a043a27b0854b19265a746f0fb404d6 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/shop/PackRequirement.java
+:100644 100644 5cc1619ee17806a38ef1cb10df3ec9abd5696341 652689bc98a121b8f2e47449261d5c9a8424f816 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/shop/Product.java
+:100644 100644 606da45462bc239e27db772457fc1cdebccfff29 d6883d7cc687b16226ea8c9cf2f11d56db624868 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/texture/Texture.java
+:100644 100644 59b4496a5aeb079e0196bf170dc0ddc2f060f65e 6cd49620298c017dd9ff3536ee1cfae810d997be M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/texture/TextureItem.java
+:100644 100644 bd92d2d404be17ec3bd604a6bbb4ab187a4395c1 f38a9a5c5522fdf56b423dd468cbe6f34a864763 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/AdvanceBase.java
+:100644 100644 0a46454dcbde4aa9d80811716670734b6f4d11da e9f7a477181d5b113fb191ae93743b3e6f841222 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/AdvanceHSL.java
+:100644 100644 d14917c9a58fbd84376163038e72f19fe977b04f d5b8a6c2fab896a6e7b33fde4ae8c59b7f955cf9 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/AdvanceVignette.java
+:100644 100644 8687808450568b7cd8a9c36e39e1ea103484631c 328440af572a62ee171fd3b5fcc29f3cae2b0fdb M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/EnhanceHdr.java
+:100644 100644 96429d3d663cf84d3ee1ef4a1ea6d9f38d28d9e2 bf7f5974c2b8a94a245866e4f44c9e6e27e37dd0 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/EnhanceSkin.java
+:100644 100644 434845bc0c5a99461f6554c96eaea33e2bdbe0ac 7e5251fee7765358b3baf905ab489ce7b490bf3e M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/Filter.java
+:100644 100644 1539c903d4041bf97f82d21d4903b97a86058cd0 724cc1351138a90848666ed26f8ba5bc14e66589 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/Frame.java
+:100644 100644 f7a49b5c4d58f00c135354b8774ab7adbd3fa438 78a4378fdd0f1f39663959071081ca7a9864e996 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/Lighting.java
+:100644 100644 a5ec860b3fe16400892e2c88463cc38aa1086fe2 fa2bc719701c33b1ff941bd2b1d7198d800cb67a M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/RotateStraighten.java
+:100644 100644 ed2abe279c784beba6da691ea3445c19f6c3fd99 b929f4375aa76799e6f027809e5091291d50c70e M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/Sharpen.java
+:100644 100644 e48d146ac2241552ca9eeee25ea802c2d2508f4c 96bebae30d41e43820308bf7ac6052a29df42a82 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/TiltShift.java
+:100644 100644 1ff1c91e3b238f8777b832242d41f3cf89ba6a93 0fed9cde142d20d2c379250d64b1049c05ce7ad1 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/TiltShiftCircle.java
+:100644 100644 b2b2125588d05e855c3599882a357f9688cb7da3 7911d1d3c211d7a59a67a88fffa72eef241dd069 M	src/us/pinguo/android/effect/group/sdk/effect/model/entity/type/TiltShiftLine.java
+:100644 100644 789a77444edc14c14f69ea07dba13fc554a1f794 0eada28a0c4c24320143bab559abb254135cb956 M	src/us/pinguo/android/effect/group/sdk/group/BaseMenu.java
+:100644 100644 f8e959149d13be934c1271f4253090834543ce6b d73404ace5d4b18752bb350867c8d433bfba7308 M	src/us/pinguo/android/effect/group/sdk/group/CompositeSaveDialog.java
+:100644 100644 8874695f4fb37c9c4a3a267635aa1cc6b1fc460e ea83a39afad61cb09225c76cdca39c1380569752 M	src/us/pinguo/android/effect/group/sdk/group/CompositeSaveListDialog.java
+:100644 100644 607bf5590464c88027b65ea4be46107f54e98e61 147687537727e3601de579f588fa54a61a615ad3 M	src/us/pinguo/android/effect/group/sdk/group/PhotoSaveController.java
+:100644 100644 be695f614fe79ef0f8ca08d09257d41f85cf623f 76b52123e3ae0809168da3a96d34c6ce49c2de36 M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceHSLHighlightShadowMenu.java
+:100644 100644 a0dd130bf4163ec462c5c94e9c96aae1196d4119 3e93140215f3f39500a7b8302ce27e4081d970cc M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceHSLMenu.java
+:100644 100644 643a7d1118d065d09ce807a1b807531642134ebe 1772869d0f40b9f7d8aec9eb8c8c6180bb1daddd M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceVignetteMenu.java
+:100644 100644 4c8145f78f0a1217f9590de925b457d56982ec17 9cb32077fceaba541f82a4c74aa6ec96a088dbd5 M	src/us/pinguo/android/effect/group/sdk/group/menu/DiscolorationMenu.java
+:100644 100644 9a42ff71537ff33f39b6a99096b902f866f11b3e aadf1b2e22c871c9b56b4887a30b0a1890bcd6e3 M	src/us/pinguo/android/effect/group/sdk/group/menu/FilterMenu.java
+:100644 100644 b10dca914943b30df1a104dfc58b828bd2cb8890 48d96be1b619fc309464f39ba2cecae0f5571a4e M	src/us/pinguo/android/effect/group/sdk/group/menu/FrameMenu.java
+:100644 100644 1625a255c42105944eeb656fd1707da426830d92 5b6a7bce32bc2a427d9501e25b8d32efc0297106 M	src/us/pinguo/android/effect/group/sdk/group/menu/HDRMenu.java
+:100644 100644 798a643387b60e6bfb50449e806bf1145d657e74 e0c994333fc7ea48adac936767acc7a54e2f8fc9 M	src/us/pinguo/android/effect/group/sdk/group/menu/RotateStraightenMenu.java
+:100644 100644 01600e13925f507084b7a095878d9148ff744663 6d31b4249cf51a1d5f884cc0d5334031c1fc5a80 M	src/us/pinguo/android/effect/group/sdk/group/menu/ShadowMenu.java
+:100644 100644 3186a8fbffd043c91344d0462a423055d62326ab 8e7cf1c1fa9c3b558988c6e3df8fc4802b806c95 M	src/us/pinguo/android/effect/group/sdk/group/menu/SharpenMenu.java
+:100644 100644 c571d7c2648014a471c9e0918f7513ce6ed00ffe 9c6cca67f1bf1799b2d5a0dcc5f9940660a572aa M	src/us/pinguo/android/effect/group/sdk/group/menu/SkinMenu.java
+:100644 100644 be4b9166d83340483116c8f2d3083bbb6fba02df 34e37c6bf73d114d131ea0f691a3853f5a482f0b M	src/us/pinguo/android/effect/group/sdk/group/menu/TiltShiftMenu.java
+:100644 100644 fd2f6b60075faad335aa92340f994aa80fb5056b 85c4c0627b3820e91bca66d7b1cdbe07c0663d58 M	src/us/pinguo/android/effect/group/sdk/view/AdjustContainerViewGroup.java
+:100644 100644 39a7f35dfa8653cba257135e9af1b8cf60b7160a 6311a1c8154be1a876f105d5c2df7e5937510bf1 M	src/us/pinguo/android/effect/group/sdk/view/AutoHideTextView.java
+:100644 100644 ce29fe2b51fb12594220a1216b8784d1fa82bfdf 347806aa0f14be335e56516079cb12c1d818fd7e M	src/us/pinguo/android/effect/group/sdk/view/CompareImageView.java
+:100644 100644 d000c5eeb59239d9fc272dfaeb46b77877b1ffe8 1a29a1fdf6b7f87e6664e12553476a206cbb7420 M	src/us/pinguo/android/effect/group/sdk/view/EffectMenuHorizontalLayout.java
+:100644 100644 d78b20340b25976b0c05307c2f9c5693a95a544f 87a91dc0820d6dae2d37854a1ebbb8dcb24998fa M	src/us/pinguo/android/effect/group/sdk/view/EffectTypeCompositeItemView.java
+:100644 100644 c9b9e0363993529fd95763774a9ef24e537b1b82 a53c456ef89453074a161b61bffe1565359129cb M	src/us/pinguo/android/effect/group/sdk/view/HorizontalLayout.java
+:100644 100644 f055725b14d86f079793f5243ef6701de97c36ed 9515733011d7d099538a7fd6f4a166d51a8bec76 M	src/us/pinguo/android/effect/group/sdk/view/PGEditTiltShiftView.java
+:100644 100644 e08525bc413eed1c7a582d7d08e29a36496cb8a4 0a43e5dc79abeb32da4740c3d71181e250831d76 M	src/us/pinguo/android/effect/group/sdk/view/SquareImageLoaderView.java
+:100644 100644 ba24b3b222032a3f46f6a7a40f47e58542ce433b 76ed637b7653dd8cb3f24f6c9751e8f1693eedf3 M	src/us/pinguo/android/effect/group/sdk/view/VerticalLayout.java
+:100644 100644 13f7c4e1afe2f9d602f4c23b3f9c4b16c895bc20 cab225dce7f1f061f0662671839b9299faf9dfdc M	src/us/pinguo/android/effect/group/sdk/view/VerticalScrollImageView.java
+:100644 100644 aae9056651aa3eb90dc90b46d60422ab50835b58 fc974238d7af4215b39942dd93699581abf233a7 M	src/us/pinguo/androidsdk/PGColorBuffer.java
+:100644 100644 5630b5a772d34d34f3eaa0e9c2763a9cd7ba6a31 35b94c74673be6c2910c47e839788799cc1f3402 M	src/us/pinguo/androidsdk/PGGLSurfaceView.java
+:100644 100644 cf35562e10903dda94271290948b13d6e749cedd dadfe556f02ac7f8f3bd260fb1f0d5e05667a94f M	src/us/pinguo/androidsdk/PGImageSDK.java
+:100644 100644 6abb0e7b5ecaf6db24e99b97d81f76de4045f31c d75763ea454b33850bb7e2b10aca816eb2db152c M	src/us/pinguo/androidsdk/PGNativeMethod.java
+:100644 100644 251fbed5ffc3352fa288636a58fae632f347e116 a0179af8c6d788aef75aff48f3dfb492abc015cb M	src/us/pinguo/androidsdk/PGRect.java
+:100644 100644 09db351149111249659d87e830d7304fa5787e55 f5e6b4cad00976d5860256472978675d1eb441db M	src/us/pinguo/androidsdk/PGRendererMethod.java
+:100644 100644 376c3f90e509b9fbb44ed996a514e17e4ae5ec94 77e81807a4690bf44128d1d11cd72e044089caea M	src/us/pinguo/androidsdk/PGThreadPool.java
+:100644 100644 b999c5a2f2366711ccb5c08517b6bff74326a2b9 d91828d397389936644d85687c9bfd6927faf7ac M	src/us/pinguo/sdk/BeautyActivity.java
+:100644 100644 1ed8ab960df7c309fbcaefd91827462de6d82007 b3706e65b79eebc15c8fae781a9fc5c30143d7f2 M	src/us/pinguo/sdk/BeautyController.java
+:100644 100644 65d2a624d3ba8122c2e95ec4da1cdbd7a37ed03e f33d0d038e0b778a501fb83637d093adcb31efc5 M	src/us/pinguo/sdk/GroupActivity.java
+:100644 100644 edebd8d2dcf2eb90f7aa6a610b510187edbb0665 702b0e36a1208ef108fd0305982462d1d3af865b M	src/us/pinguo/sdk/GroupController.java
+:100644 100644 271c5de7171e8e7143973fd15e85004ac58a53a6 471398554baee414d69ed8123eafe1428eb95489 M	src/vStudio/Android/GPhoto/GPhotoJNI.java
+
+commit 7719566f18dfa626aa35b1775b219a5469d9fac8
+tree b72b9dcae3065bcf5e7817feb9cf48ad1d49b101
+parent 33e0931abdb03d6e928076f8bc8bcc0a9b773319
+author hlffeng <helinfeng@camera360.com> 1417516317 +0800
+committer hlffeng <helinfeng@camera360.com> 1417516317 +0800
+
+    [何林峰]解决编译不过的问题
+
+:100644 100644 fb3501cf8e4560c5f907a305c644715466291ccb cb3c7dc68814207d4531329196e3449edc4b29ac M	src/com/pinguo/edit/sdk/filter/square/fragment/SquareFragment.java
+
+commit 33e0931abdb03d6e928076f8bc8bcc0a9b773319
+tree 9f150f34025c6fe4bb706ffab2771280f0b25fcd
+parent 1f9eaf322f70b363696625ff002eba4a6179bcdc
+author hlffeng <helinfeng@camera360.com> 1417513649 +0800
+committer hlffeng <helinfeng@camera360.com> 1417513649 +0800
+
+    [何林峰]滤镜广场UI动画
+
+:100644 100644 1fdeab07d6ab9660dbc794908f48bea9d6cbe68d f6cc72e64cac6cf6ddfd24c78c0bdc3a04f8d47b M	src/com/pinguo/edit/sdk/filter/square/view/HeadZoomMultipleListView.java
+
+commit 1f9eaf322f70b363696625ff002eba4a6179bcdc
+tree 2c259f95af8fd4ae6aad7a840eb204eb1aac1a57
+parent 01ad8ded6ab1d912c9a5392348ac7f0e26ae55b1
+author pinguo-zhongzheng <zhongzheng@camera360.com> 1417506853 +0800
+committer pinguo-zhongzheng <zhongzheng@camera360.com> 1417506853 +0800
+
+    [钟铮]增加设置入口API
+
+:100644 100644 a7e55342740f91c55a18755694093f7318c99304 699aa71f443625fbc8e68373858284f78c6070d9 M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 e01692d90ed12b7a7a3e5e105e3e6cae42d29763 2351c0aa720bae4ba6c871480fca3ce0fa719c68 M	src/us/pinguo/android/effect/group/sdk/PGCompositeSDKApi.java
+
+commit 01ad8ded6ab1d912c9a5392348ac7f0e26ae55b1
+tree ff3da9dd355d027e9389e9ea012d91fa4e22b5a2
+parent 2202b3b38bfe344533f2a661ed2c9093fdeb4187
+author pinguo-zhongzheng <zhongzheng@camera360.com> 1417506673 +0800
+committer pinguo-zhongzheng <zhongzheng@camera360.com> 1417506673 +0800
+
+    [钟铮]调整设置的用户反馈
+
+:100644 100644 480f9211f9fdb95efa15902e956984393022ebe1 be49a87ea5a23cfd3bb64aa46bd2c7f8a22b7bf7 M	res/layout/layout_option_feedback_ad.xml
+:100644 100644 bd4a5fb49d13d7e746f84a39fd901155274cd561 780d9c2d3a70227b79177724a110da62f19ffbbc M	res/layout/umeng_fb_list_item_left.xml
+:100644 100644 a6deffda5a969064b387f78f803fae8527c3d05a d40e258ae62fc2a60c14bea348b99e7bfdaf449d M	res/layout/umeng_fb_list_item_right.xml
+:100755 100755 eff986bead0f4b9a99a44e69727099fe2d5812fc 9d890051a5e8bdb2d30fa70e5e1721526d20e6af M	src/com/pinguo/edit/sdk/option/feedback/Camera360FeedbackActivity.java
+
+commit 2202b3b38bfe344533f2a661ed2c9093fdeb4187
+tree 07d090aa3fb61d3e9b50850ee45cd28b569b85b1
+parent acd8cdead59eb102afdcf6d750389647ddef095f
+author hlffeng <helinfeng@camera360.com> 1417488566 +0800
+committer hlffeng <helinfeng@camera360.com> 1417488566 +0800
+
+    [何林峰]滤镜广场UI动画
+
+:100644 100644 0c96cd90251328103a824e81ce04e15e9090f42b 0c212576cd29f2e916e8c07be39478829ec4db76 M	res/layout/composite_sdk_square.xml
+
+commit acd8cdead59eb102afdcf6d750389647ddef095f
+tree 9c6cc3b953c200468f3f0a4175a318f1ae53d990
+parent 2a732ea80390ad3d3ee2aff21a85c6d246ce030d
+author hlffeng <helinfeng@camera360.com> 1417488216 +0800
+committer hlffeng <helinfeng@camera360.com> 1417488216 +0800
+
+    [何林峰]滤镜广场UI动画
+
+:100644 100644 61f67309280714788c05c5effbbaba443a9047ab fb3501cf8e4560c5f907a305c644715466291ccb M	src/com/pinguo/edit/sdk/filter/square/fragment/SquareFragment.java
+:100644 100644 2c91d8098e61d4c7baf50e819124bf0f9de2dbf3 1fdeab07d6ab9660dbc794908f48bea9d6cbe68d M	src/com/pinguo/edit/sdk/filter/square/view/HeadZoomMultipleListView.java
+
+commit 2b7ab96430b8534ff01f5c5ae8b79835913ebe90
+tree 439f1538500add390c3113788b075dee77ee4f8a
+parent 07d827367e6d2f190d0f6c5f04da1f2762781859
+author hlffeng <helinfeng@camera360.com> 1417434596 +0800
+committer hlffeng <helinfeng@camera360.com> 1417434596 +0800
+
+    [何林峰]滤镜广场UI中加入数据
+
+:000000 100644 0000000000000000000000000000000000000000 35761c996a07eba9f9efe585e979aec035c61151 A	res/drawable/composite_sdk_square_neck_line.xml
+:100644 100644 307366ffd275c4e4da15d1a92bf0bebb5f274d9d 0c96cd90251328103a824e81ce04e15e9090f42b M	res/layout/composite_sdk_square.xml
+:100644 100644 7eafe92c27fdfd1feb4e2bec9e5b4b60286ffdd0 e37570206b3b183bd8ca16676c8f7ae5700933dd M	res/layout/composite_sdk_square_listview_item.xml
+:100644 100644 65043daaf2f3da4a840e7d88a4109ec28be75b0e b2b1a68768e0da17ce079428f84e6c220415cfa2 M	res/layout/composite_sdk_square_neck.xml
+:100644 100644 8021b02f217f0e9f133dbbfe2339e6d6592aa46b a4f57b337c91f897939cc937b64f41da4abc031f M	res/values/composite_sdk_dimens.xml
+:100644 100644 ea3c054d72dc0d0726321f5445ffecfaa410b9cc 528a9e670104c360aa76785e84ec7856ae897003 M	src/com/pinguo/edit/sdk/filter/square/adapter/SquareItemAdapter.java
+:100644 100644 e1c3858a17e5029e0f3604c65f50e550d493821c 61f67309280714788c05c5effbbaba443a9047ab M	src/com/pinguo/edit/sdk/filter/square/fragment/SquareFragment.java
+:100644 100644 0d2879cabea08bd3059465390510f85eb4cf643e 9745973753339a18ef47fd52d585a2edcfb51180 M	src/com/pinguo/edit/sdk/filter/square/model/OnLineCompositeResourceManager.java
+:100644 100644 fec533007fd9e432a24b319207eb8498b2296d14 fb3b3090f8af3e630e9e847e8c0d3815f568b629 M	src/com/pinguo/edit/sdk/filter/square/model/OnLineCompositeTypeBaseManager.java
+:100644 100644 d12166e8846dcf9603df6431ecde4cb0a9693ec5 2c91d8098e61d4c7baf50e819124bf0f9de2dbf3 M	src/com/pinguo/edit/sdk/filter/square/view/HeadZoomMultipleListView.java
+:100644 100644 d500a751e2c90c5a90e5c049358e5af5e0a00e95 3d99b8c14e73c0ee678fc72aebe98344e61c613f M	src/com/pinguo/edit/sdk/filter/square/view/SquareListView.java
+:100644 100644 acb1480fedb2b416ea7cd21c3d7659204de5632f a7e55342740f91c55a18755694093f7318c99304 M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 eed9b9f63ea51aa357463478c893af093c001b7a 8f1f76236e837ce1fd2f0b0d03c1559f37234819 M	src/com/pinguo/mix/api/ApiConstants.java

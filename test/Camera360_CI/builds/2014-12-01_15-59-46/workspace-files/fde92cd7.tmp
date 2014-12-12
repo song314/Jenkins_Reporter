@@ -1,0 +1,75 @@
+package com.pinguo.edit.sdk.login.user;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.pinguo.Camera360Lib.network.HttpStringRequest;
+import com.pinguo.Camera360Lib.utils.HttpUtils;
+import com.pinguo.edit.sdk.login.lib.network.ApiAsyncTaskBase;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.util.MD5;
+import com.pinguo.edit.sdk.login.model.LoginConfig;
+
+import org.json.JSONException;
+
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by yinyu on 2014/6/12.
+ */
+public class ApiEmailLogin extends ApiAsyncTaskBase<UserInfoResponse> {
+    private String mEmail;
+    private String mPassword;
+
+    public ApiEmailLogin(String email, String password, Context context) {
+        super(context);
+        mEmail = email;
+        mPassword = password;
+    }
+
+    @Override
+    public void get(final AsyncResult<UserInfoResponse> result) {
+        //两次md5加密
+        final String md5_password = MD5.password_md5(mPassword);
+        final String url = LoginConfig.HOST + LoginConfig.EMAIL_LOGIN_ADDR;
+        execute(new HttpStringRequest(Request.Method.POST, url) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                LoginConfig.prepareCommonParams(mContext, params);
+                //邮箱跟密码参数
+                params.put("email", mEmail);
+                params.put("password", md5_password);
+                //获取签名
+                String sig = com.pinguo.Camera360Lib.utils.NetworkUtils.getSigByParamMap(params);
+                params.put("sig", sig);
+
+                try {
+                    Log.i("test", "request url:" + HttpUtils.getUrl(url, params));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                return params;
+            }
+
+            @Override
+            protected void onResponse(String s) {
+                try {
+                    Log.i("test", "response:" + s);
+                    postResponse(result, new UserInfoResponse(s, "email"));
+                } catch (JSONException e) {
+                    postError(result, e);
+                }
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                postError(result, e);
+            }
+        });
+    }
+}

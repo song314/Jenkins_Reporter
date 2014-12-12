@@ -1,0 +1,404 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.text.TextUtils;
+import android.text.util.Linkify;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.gallery.util.IntArray;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class Camera360FeedbackAdapter extends BaseAdapter {
+    private static final int TYPE_SEND = 0;
+    private static final int TYPE_RECEIVE = 1;
+    private static final int TYPE_RECEIVE_C = 2;
+    private static final String TAG = "test";
+    private List<CMessage> mData;
+    private Context mContext;
+    private int[] dateArraryPosition = null;
+    private float scale = 1.0f;
+    private String mUserAvatar = null;
+    private String mUserName = null;
+    private MessageClickListener mMsgClickLisenter;
+
+    public Camera360FeedbackAdapter(Context context, ArrayList<Camera360FeedbackData> datas) {
+        scale = context.getResources().getDisplayMetrics().density;
+        if (datas != null) {
+            IntArray intArray = new IntArray();
+            int size = datas.size();
+            long firstTime = -1;
+            long lastTime = -1;
+            for (int i = 0; i < size; i++) {
+                long time = datas.get(i).getTime();
+                if (Math.abs(time - firstTime) > 30 * 60 * 1000 && Math.abs(time - lastTime) > 5 * 60 * 1000) {
+                    intArray.add(i);
+                    firstTime = time;
+                }
+                lastTime = time;
+            }
+            dateArraryPosition = intArray.toArray(new int[intArray.size()]);
+        }
+        mContext = context;
+    }
+
+    public Camera360FeedbackAdapter(Context context, List<CMessage> datas) {
+        scale = context.getResources().getDisplayMetrics().density;
+        int type = 0;
+        if (datas != null) {
+            IntArray intArray = new IntArray();
+            int size = datas.size();
+            long firstTime = -1;
+            long lastTime = -1;
+            for (int i = 0; i < size; i++) {
+                long time;
+                if (datas.get(i).type == CMessage.TYPE_FEEDBACK
+                        || datas.get(i).type == CMessage.TYPE_FEEDBACK_SEND) {
+                    time = datas.get(i).feedbackData.getTime();
+                } else {
+                    time = datas.get(i).messageData.timestamp;
+                }
+                if (Math.abs(time - firstTime) > 30 * 60 * 1000 && Math.abs(time - lastTime) > 5 * 60 * 1000) {
+                    intArray.add(i);
+                    firstTime = time;
+                }
+                lastTime = time;
+            }
+            dateArraryPosition = intArray.toArray(new int[intArray.size()]);
+        }
+        mContext = context;
+    }
+
+    public void setOnItemCClickListener(MessageClickListener msgClickListener) {
+        mMsgClickLisenter = msgClickListener;
+    }
+
+    public void setUserInfo(String avatar, String name) {
+        mUserAvatar = avatar;
+        mUserName = name;
+    }
+
+    public void clearUserInfo() {
+        mUserAvatar = null;
+        mUserName = null;
+    }
+
+    public void setFeedbackDatas(ArrayList<Camera360FeedbackData> datas) {
+        if (datas != null) {
+            IntArray intArray = new IntArray();
+            int size = datas.size();
+            long firstTime = -1;
+            long lastTime = -1;
+            for (int i = 0; i < size; i++) {
+                long time = datas.get(i).getTime();
+                if (Math.abs(time - firstTime) > 30 * 60 * 1000 && Math.abs(time - lastTime) > 5 * 60 * 1000) {
+                    intArray.add(i);
+                    firstTime = time;
+                }
+                lastTime = time;
+            }
+            dateArraryPosition = intArray.toArray(new int[intArray.size()]);
+        }
+    }
+
+    public void setFeedbackDatas(List<CMessage> datas) {
+        mData = datas;
+        if (datas != null) {
+            IntArray intArray = new IntArray();
+            int size = datas.size();
+            long firstTime = -1;
+            long lastTime = -1;
+            for (int i = 0; i < size; i++) {
+                long time;
+                if (datas.get(i).type == CMessage.TYPE_FEEDBACK
+                        || datas.get(i).type == CMessage.TYPE_FEEDBACK_SEND) {
+                    time = datas.get(i).feedbackData.getTime();
+                } else {
+                    time = datas.get(i).messageData.timestamp;
+                }
+                if (Math.abs(time - firstTime) > 30 * 60 * 1000 && Math.abs(time - lastTime) > 5 * 60 * 1000) {
+                    intArray.add(i);
+                    firstTime = time;
+                }
+                lastTime = time;
+            }
+            dateArraryPosition = intArray.toArray(new int[intArray.size()]);
+        }
+    }
+
+    @Override
+    public int getCount() {
+        if (mData != null) {
+            return mData.size();
+        }
+        return 0;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        if (mData != null && mData.size() != 0) {
+            return mData.get(position);
+        }
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        int type = mData.get(position).type;
+        if (type == CMessage.TYPE_FEEDBACK_SEND) {
+            return TYPE_SEND;
+        } else if (type == CMessage.TYPE_CAMERA360_MESSAGE) {
+            return TYPE_RECEIVE_C;
+        }
+
+        return TYPE_RECEIVE;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 3;
+    }
+
+    @Override
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        GLogger.v(TAG, "position: " + position);
+        final CMessage itemData = mData.get(position);
+        int type = itemData.type;
+        switch (type) {
+            case CMessage.TYPE_CAMERA360_MESSAGE:
+                type = TYPE_RECEIVE_C;
+                break;
+            case CMessage.TYPE_FEEDBACK:
+                type = TYPE_RECEIVE;
+                break;
+            case CMessage.TYPE_FEEDBACK_SEND:
+                type = TYPE_SEND;
+                break;
+            default:
+                type = TYPE_SEND;
+                break;
+        }
+
+        final HoldView holdView;
+        if (convertView == null) {
+
+            switch (type) {
+                case TYPE_RECEIVE:
+                    convertView = LayoutInflater.from(mContext).inflate(R.layout.umeng_fb_list_item_left, null);
+                    break;
+                case TYPE_SEND:
+                    convertView = LayoutInflater.from(mContext).inflate(R.layout.umeng_fb_list_item_right, null);
+                    break;
+                case TYPE_RECEIVE_C:
+                    convertView = LayoutInflater.from(mContext).inflate(R.layout.layout_option_feedback_ad, null);
+                    break;
+                default:
+                    convertView = LayoutInflater.from(mContext).inflate(R.layout.umeng_fb_list_item_left, null);
+                    break;
+            }
+
+            holdView = new HoldView();
+            holdView.dateText = (TextView) convertView.findViewById(R.id.umeng_fb_reply_date);
+            holdView.contentText = (TextView) convertView.findViewById(R.id.umeng_fb_reply_content);
+            holdView.nameText = (TextView) convertView.findViewById(R.id.name_tv);
+            holdView.avatarImg = (ImageLoaderView) convertView.findViewById(R.id.avatar_img);
+            if (type == TYPE_RECEIVE_C) {
+                holdView.cDate = (TextView) convertView.findViewById(R.id.feedback_ad_date);
+                holdView.cTitle = (TextView) convertView.findViewById(R.id.feedback_ad_title);
+                holdView.cImage = (ImageLoaderView) convertView.findViewById(R.id.feedback_ad_image);
+
+                holdView.cContent = (TextView) convertView.findViewById(R.id.feedback_ad_content);
+                //设置URL点击效果
+                holdView.cContent.setAutoLinkMask(Linkify.WEB_URLS);
+                holdView.cContent.setLinksClickable(true);
+//                ColorStateList colorStateList = mContext.getResources().getDrawable(R.drawable.link_text_color);
+//                holdView.cContent.setLinkTextColor(colorStateList);
+
+                holdView.cLink = (TextView) convertView.findViewById(R.id.feedback_ad_link);
+            }
+            convertView.setTag(holdView);
+        } else {
+            holdView = (HoldView) convertView.getTag();
+        }
+
+        TextView dateText = null;
+        TextView contentText = null;
+        TextView nameText = null;
+        ImageLoaderView avatarImg = null;
+        //富文本
+        TextView title = null;
+        TextView link = null;
+        if (type == TYPE_RECEIVE_C) {
+            dateText = holdView.cDate;
+            title = holdView.cTitle;
+            avatarImg = holdView.cImage;
+            contentText = holdView.cContent;
+            link = holdView.cLink;
+        } else {
+            dateText = holdView.dateText;
+            contentText = holdView.contentText;
+            nameText = holdView.nameText;
+            avatarImg = holdView.avatarImg;
+        }
+
+        if (itemData != null) {
+            if (displayDate(position)) {
+                long time;
+                if (type == TYPE_RECEIVE_C) {
+                    time = itemData.messageData.timestamp * 1000;
+                } else {
+                    time = itemData.feedbackData.getTime();
+
+                }
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ENGLISH);
+                dateText.setText(sdf.format(new Date(time)));
+                dateText.setVisibility(View.VISIBLE);
+            } else {
+                dateText.setVisibility(View.GONE);
+            }
+            if (type == TYPE_RECEIVE_C) {
+                contentText.setText(itemData.messageData.desc);
+            } else {
+                contentText.setText(itemData.feedbackData.getMessage());
+            }
+
+            if (type == TYPE_RECEIVE) {
+                contentText.setBackgroundResource(R.drawable.bg_chatbox_left);
+                contentText.setPadding(dip2px(20), dip2px(5), dip2px(10), dip2px(5));
+                nameText.setText(R.string.feedback_customer_service_name);
+                //对话小C
+            } else if (type == TYPE_RECEIVE_C) {
+                if (itemData.messageData.text != null) {
+                    title.setText(itemData.messageData.text);
+                } else {
+                    title.setVisibility(View.GONE);
+                    holdView.cTitle.setVisibility(View.GONE);
+                }
+                if (itemData.messageData.content_image_urls != null
+                        && itemData.messageData.content_image_urls.length() > 2) {
+                    avatarImg.setImageUrl(itemData.messageData.content_image_urls);
+                    final ImageLoaderView finalAvatarImg = avatarImg;
+                    avatarImg.setImageLoadingListener(new ImageLoadingListener() {
+                        @Override
+                        public void onLoadingStarted(String s, View view) {
+
+                        }
+
+                        @Override
+                        public void onLoadingFailed(String s, View view, FailReason failReason) {
+
+                        }
+
+                        @Override
+                        public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+//                            int h = bitmap.getHeight();
+//                            int w = bitmap.getWidth();
+//                            GLogger.v(TAG, "bitmap: h " + h + " w: " + w);
+//                            int wView = view.getWidth();
+//                            int hView = view.getHeight();
+//
+//                            GLogger.v(TAG, "hView:  " + hView + " wView: " + wView);
+//                            int pw = finalAvatarImg.getWidth();
+//                            int ph = finalAvatarImg.getHeight();
+//                            GLogger.v(TAG, "ph:  " + ph + " pw: " + pw);
+                        }
+
+                        @Override
+                        public void onLoadingCancelled(String s, View view) {
+
+                        }
+                    });
+
+
+                } else {
+                    holdView.cImage.setVisibility(View.GONE);
+                    avatarImg.setVisibility(View.GONE);
+                    avatarImg.setDefaultImage(0);
+                }
+                if (itemData.messageData.link_texts != null &&
+                        itemData.messageData.link_texts.length() > 2) {
+                    link.setText(itemData.messageData.link_texts);
+                    if (itemData.messageData.getInteractionUrl() != null) {
+                        link.setTag(position);
+                    } else {
+                        link.setTag(-1);
+                    }
+
+                } else {
+                    link.setVisibility(View.GONE);
+                    holdView.cLink.setVisibility(View.GONE);
+                }
+
+            } else {
+                contentText.setBackgroundResource(R.drawable.bg_chatbox_right);
+                contentText.setPadding(dip2px(10), dip2px(5), dip2px(20), dip2px(5));
+
+                if (null != mUserName) {
+                    nameText.setText(mUserName);
+                } else {
+                    nameText.setText(R.string.feedback_customer_name);
+                }
+
+                if (!TextUtils.isEmpty(mUserAvatar)) {
+                    avatarImg.setImageUrl(mUserAvatar);
+                }
+            }
+        }
+
+        return convertView;
+    }
+
+    private boolean displayDate(int pos) {
+        if (dateArraryPosition == null) {
+            return true;
+        }
+
+        for (int p : dateArraryPosition) {
+            if (p == pos) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int dip2px(float dpValue) {
+        return (int) (dpValue * scale + 0.5f);
+    }
+
+    public interface MessageClickListener {
+        void OnTextClick(int postion);
+    }
+
+    public static class HoldView {
+        public TextView dateText;
+        public TextView contentText;
+        public TextView nameText;
+        public ImageLoaderView avatarImg;
+        //富文本部分
+        public TextView cDate;
+        public TextView cTitle;
+        public ImageLoaderView cImage;
+        public TextView cContent;
+        public TextView cLink;
+
+    }
+}

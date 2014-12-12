@@ -1,0 +1,70 @@
+package com.pinguo.edit.sdk.filter.square;
+
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.view.Window;
+import android.view.WindowManager;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.Info.bean.FilterData;
+import com.pinguo.edit.sdk.filter.square.fragment.SquareFragment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by zhongzheng on 14-10-27.
+ */
+public class FilterSquareActivity extends FragmentActivity implements BaseTitleFragment.OnFrgmentChangeListener {
+
+    private List<FilterData> mGetNewFilterList;
+    private List<FilterData> mGetHotFilterList;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.composite_sdk_filter_square_layout);
+        mGetNewFilterList = new ArrayList<FilterData>();
+        mGetHotFilterList = new ArrayList<FilterData>();
+        addFragment();
+    }
+
+    private void addFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.view, new SquareFragment());
+        fragmentTransaction.commit();
+    }
+
+    public List<FilterData> getNewFilterDataList() {
+        return mGetNewFilterList;
+    }
+
+    public List<FilterData> getHotFilterDataList() {
+        return mGetHotFilterList;
+    }
+
+    @Override
+    public void onCurrentFragmentFinish() {
+        FragmentManager fm = getSupportFragmentManager();
+        fm.popBackStack();
+    }
+
+    @Override
+    public void changeFragment(Fragment fragment) {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.fragment_container, fragment);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    @Override
+    public void onActivityFinish() {
+        finish();
+    }
+}

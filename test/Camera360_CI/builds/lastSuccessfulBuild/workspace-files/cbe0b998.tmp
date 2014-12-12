@@ -1,0 +1,182 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+/**
+ * Created by huowaa on 13-11-19.
+ */
+public class EffectDatabaseHelper extends SQLiteOpenHelper {
+    private final static String TAG = EffectDatabaseHelper.class.getSimpleName();
+
+    public final static String DB_NAME = "effect.db";
+    //public final static int VERSION = 2; // edit from 1 to 2 on 20140825, by chenjie
+    public final static int VERSION = 3; // edit from 2 to 3 on 20140916, by chenjie
+
+    private final static String CREATE_EFFECT_TYPE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS effect_type(\n" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "    key TEXT,\n" +
+            "    type TEXT,\n" +
+            "    locale TEXT,\n" +
+            "    name TEXT,\n" +
+            "    tag TEXT,\n" +
+            "    description TEXT,\n" +
+            "    icon TEXT,\n" +
+            "    opTime TEXT,\n" +
+            "    isNew INTEGER,\n" +
+            "    color TEXT,\n" +
+            "    resInt1 INTEGER,\n" +
+            "    resInt2 INTEGER,\n" +
+            "    resText1 TEXT,\n" +
+            "    resText2 TEXT\n" +
+            ")";
+
+    private final static String CREATE_EFFECT_TABLE_SQL = "CREATE TABLE IF NOT EXISTS effect(\n" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "    key TEXT,\n" +
+            "    type TEXT,\n" +
+            "    locale TEXT,\n" +
+            "    name TEXT,\n" +
+            "    description TEXT,\n" +
+            "    version INTEGER,\n" +
+            "    requirementStr TEXT,\n" +
+            "    icon TEXT,\n" +
+            "    realRender INTEGER,\n" +
+            "    preCmdStr TEXT,\n" +
+            "    gpuCmdStr TEXT,\n" +
+            "    cpuCmd TEXT,\n" +
+            "    textureStr TEXT,\n" +
+            "    typeKey TEXT,\n" +
+            "    idxInType INTEGER,\n" +
+            "    packKey TEXT,\n" +
+            "    idxInPack INTEGER,\n" +
+            "    installation INTEGER,\n" +
+            "    installTime Text,\n" +
+            "    isNew INTEGER,\n" +
+            "    paramStr TEXT,\n" +
+            "    timeLevel INTEGER,\n" +
+            "    color TEXT,\n" +
+            "    resInt1 INTEGER,\n" +
+            "    resInt2 INTEGER,\n" +
+            "    resText1 TEXT,\n" +
+            "    resText2 TEXT\n" +
+            ")";
+
+    private final static String CREATE_COMPOSITE_EFFECT_TABLE_SQL = "CREATE TABLE IF NOT EXISTS composite_effect(\n" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "    key TEXT,\n" +
+            "    name TEXT,\n" +
+            "    author TEXT,\n" +
+            "    description TEXT,\n" +
+            "    locale TEXT,\n" +
+            "    version INTEGER,\n" +
+            "    icon TEXT,\n" +
+            "    typeKey TEXT,\n" +
+            "    createTime Text,\n" +
+            "    lastmodifyTime Text,\n" +
+            "    jsonStr Text,\n" +
+            "    installation INTEGER,\n" +
+            "    isDefault INTEGER,\n" +
+            "    color TEXT,\n" +
+            "    resInt1 INTEGER,\n" +
+            "    resInt2 INTEGER,\n" +
+            "    resText1 TEXT,\n" +
+            "    resText2 TEXT\n" +
+            ")";
+
+
+    public final static String CREATE_COMPOSITE_EFFECT_LIB_TABLE_SQL = "CREATE TABLE IF NOT EXISTS composite_effect_lib(\n" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "    key TEXT,\n" +                    // need index
+            "    name TEXT,\n" +
+            "    author TEXT,\n" +
+            "    description TEXT,\n" +
+            "    locale TEXT,\n" +
+            "    version INTEGER,\n" +
+            "    icon TEXT,\n" +
+            "    typeKey TEXT,\n" +
+            "    createTime Text,\n" +
+            "    lastmodifyTime Text,\n" +
+            "    jsonStr Text,\n" +
+            "    installation INTEGER,\n" +
+            "    isDefault INTEGER,\n" +
+            "    color TEXT,\n" +
+            "    tags TEXT,\n" +                  // tag1,tag2,tag3
+            "    resInt1 INTEGER,\n" +
+            "    resInt2 INTEGER,\n" +
+            "    resText1 TEXT,\n" +
+            "    resText2 TEXT\n" +
+            ")";
+
+    // index
+    public final static String CREATE_COMPOSITE_EFFECT_LIB_UNIQUE_INDEX_SQL = "CREATE UNIQUE INDEX key_locale_unique_index ON composite_effect_lib (key, locale)";
+
+    // 组合滤镜库元数据表
+    public final static String CREATE_COMPOSITE_EFFECT_LIB_META_TABLE_SQL = "CREATE TABLE IF NOT EXISTS composite_effect_lib_meta(\n" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
+            "    tag TEXT,\n" +         // need index, attention: no locale! All locale share one tag-key record!
+            "    key TEXT,\n" +
+            "    resInt1 INTEGER,\n" +
+            "    resInt2 INTEGER,\n" +
+            "    resText1 TEXT,\n" +
+            "    resText2 TEXT\n" +
+            ")";
+
+    // index
+    public final static String CREATE_COMPOSITE_EFFECT_LIB_META_INDEX_SQL = "CREATE INDEX tag_index ON composite_effect_lib_meta (tag)";
+    public final static String CREATE_COMPOSITE_EFFECT_LIB_META_UNIQE_INDEX_SQL = "CREATE UNIQUE INDEX tag_key_unique_index ON composite_effect_lib_meta (tag, key)";
+
+    public EffectDatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        GLogger.i(TAG, "Create database effect with tables: effect_type, effect");
+        db.execSQL(CREATE_EFFECT_TYPE_TABLE_SQL);
+        db.execSQL(CREATE_EFFECT_TABLE_SQL);
+        db.execSQL(CREATE_COMPOSITE_EFFECT_TABLE_SQL);
+
+        // composite lib
+        db.execSQL(CREATE_COMPOSITE_EFFECT_LIB_TABLE_SQL);
+        db.execSQL(CREATE_COMPOSITE_EFFECT_LIB_UNIQUE_INDEX_SQL);
+
+        db.execSQL(CREATE_COMPOSITE_EFFECT_LIB_META_TABLE_SQL);
+        db.execSQL(CREATE_COMPOSITE_EFFECT_LIB_META_INDEX_SQL);
+        db.execSQL(CREATE_COMPOSITE_EFFECT_LIB_META_UNIQE_INDEX_SQL);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        GLogger.i(TAG, "Upgrade database from " + oldVersion + " to " + newVersion);
+
+        if (1 == oldVersion && 2 == newVersion) {
+            upgradeFrom1To2(db);
+        } else if (1 == oldVersion && 3 == newVersion) {
+            updateFrom1To3(db);
+        } else if (2 == oldVersion && 3 == newVersion) {
+            upgradeFrom2To3(db);
+        }
+    }
+
+    private void upgradeFrom1To2(SQLiteDatabase db) {
+        db.execSQL("UPDATE effect_type SET color = '0x5695b6' WHERE key = 'C360_Sky'");
+        db.execSQL("UPDATE effect SET color = '0x5695b6' WHERE typeKey = 'C360_Sky'");
+        db.execSQL("UPDATE effect SET color = '0x616b72' WHERE key = 'C360_Sky_None'");
+        db.execSQL("UPDATE composite_effect SET color = '0x5a9fcb'");
+    }
+
+    private void upgradeFrom2To3(SQLiteDatabase db) {
+        // 修改lightColor F8，F9的特效效果
+        db.execSQL("UPDATE effect SET preCmdStr = 'LightColor_Nature;ColorBalance0=0,0,0,0,0,0,0,0,0,0', gpuCmdStr = 'LightColor_Nature;ColorBalance0=0,0,0,0,0,0,0,0,0,0' WHERE key = 'C360_LightColor_NatureFresh'");
+        db.execSQL("UPDATE effect SET preCmdStr = 'LightColor_Nature;ColorBalance0=0,0,0,0,0,-30,0,0,0,0', gpuCmdStr = 'LightColor_Nature;ColorBalance0=0,0,0,0,0,-30,0,0,0,0' WHERE key = 'C360_LightColor_NatureWarm'");
+    }
+
+    private void updateFrom1To3(SQLiteDatabase db) {
+        upgradeFrom1To2(db);
+        upgradeFrom2To3(db);
+    }
+}

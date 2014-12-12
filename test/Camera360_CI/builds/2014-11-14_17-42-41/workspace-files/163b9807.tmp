@@ -1,0 +1,842 @@
+package us.pinguo.sdk;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.DisplayMetrics;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.util.Exif;
+import com.pinguo.edit.sdk.camera.util.PGExifInfo;
+import com.pinguo.edit.sdk.edit.CompositeDataReceiver;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToolUtils;
+import com.pinguo.edit.sdk.widget.CompositeSDKDialog;
+import com.pinguo.mix.MixShareActivity;
+import com.pinguo.mix.MixShareFilterActivity;
+import com.pinguo.mix.StatisticManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.microedition.khronos.opengles.GL10;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.EffectGroupSavePathRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeForPathRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GetGLSurfaceViewBitmapRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.data.EffectSaveManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+import us.pinguo.android.effect.group.sdk.group.CompositeSaveDialog;
+import us.pinguo.android.effect.group.sdk.group.CompositeSaveListDialog;
+import us.pinguo.android.effect.group.sdk.group.PhotoSaveController;
+import us.pinguo.android.effect.group.sdk.group.menu.AdvanceHSLMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.DetailMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.DiscolorationMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.FilterMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.FrameMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.HDRMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.ShadowMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.SkinMenu;
+import us.pinguo.android.effect.group.sdk.group.menu.TiltShiftMenu;
+import us.pinguo.android.effect.group.sdk.view.AutoHideTextView;
+import us.pinguo.android.effect.group.sdk.view.ComparePGGLSurfaceView;
+import us.pinguo.android.effect.group.sdk.view.EffectMenuHorizontalLayout;
+import us.pinguo.android.effect.group.sdk.view.HorizontalLayout;
+import us.pinguo.androidsdk.PGGLSurfaceView;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class GroupController implements View.OnClickListener {
+
+    private int mPicWidth;
+    private int mPicHeight;
+    private BaseMenu mCurrentMenu;
+    private Context mContext;
+    protected Activity mActivity;
+    private View mRootView;
+
+    private EffectMenuHorizontalLayout mEffectMenuHorizontalLayout;
+    private HorizontalLayout mSecondEffectsLayout;
+    private HorizontalLayout mThirdEffectsLayout;
+
+    private ComparePGGLSurfaceView mComparePGGLSurfaceView;
+    private PGGLSurfaceView mGlSurfaceView;
+    protected View mProgressView;
+
+    private MakePhotoModel[] mMakePhotoModelArray;
+    protected SDKManager mSDKManager;
+    private DisplayMetrics mDisplayMetrics;
+    private boolean hasInit = true;
+    private int mShowHeight;
+    private int mShowWidth;
+    private int mBitmapHeight;
+
+    protected GLSurfaceViewCompositeForPathRendererMethod mCompositeForPathRendererMethod;
+    protected String mPath;
+    private String mComparePath;
+    private String mCompositeKey;
+    private String mCompositeName;
+    private CompositeEffect mCompositeEffect;
+    private View mSeekbarLayout;
+    private View mColorSeekbarLayout;
+    private View mDiscolorationSeekbarLayout;
+    private View mDetailsSeekbarLayout;
+    private View mTiltShiftSeekbarLayout;
+    private TextView mScrollValueName;
+    private View mMainTop;
+    private View mScreenLayout;
+
+    private View mSaveView;
+    private View mBackView;
+
+    private AutoHideTextView mAutoHideTextView;
+    private float mMainTopHeight;
+
+    private boolean mIsSaved = false;
+    private boolean mIsFilterSaved = false;
+    private boolean mIsPhotoChanged = false;
+    private String mLastSavePath;
+    private String mBeforeEffectPath;
+
+    private PGGLSurfaceView.PGGLListener mPGGLListener = new PGGLSurfaceView.PGGLListener() {
+        @Override
+        public void glCreated(GL10 gl) {
+            if (hasInit) {
+                hasInit = false;
+                mHandler.sendEmptyMessage(SHOW_EFFECT_PHOTO);
+            } else {
+                mHandler.sendEmptyMessage(RELOAD_EFFECT_PHOTO);
+            }
+        }
+
+        @Override
+        public void glDestroyed() {
+
+        }
+    };
+    private CompositeSaveListDialog mSaveListDialog;
+
+    public GroupController(Activity activity, View rootView, Bundle savedInstanceState) {
+
+        EffectDataManager.getInstance().clear();
+        EffectDataManager.getInstance().init(activity);
+
+        this.mActivity = activity;
+        this.mContext = activity.getApplicationContext();
+        this.mRootView = rootView;
+        this.mPath = activity.getIntent().getStringExtra(ConstantUtil.PHOTO_PATH);
+        this.mBeforeEffectPath = activity.getIntent().getStringExtra(ConstantUtil.EFFECT_PHOTO_PATH);
+        this.mComparePath = mPath;
+        this.mCompositeName = activity.getIntent().getStringExtra(ConstantUtil.COMPOSITE_NAME);
+
+        if (null != savedInstanceState) {
+            mPath = savedInstanceState.getString(INSTANCE_STATE_PATH);
+        }
+
+        mCompositeDataReceiver.registerCallback(mActivity,
+                CompositeDataReceiver.EVENT_USE_COMPOSITE_EFFECT, mCompositeDataObserver);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mPath, options);
+        if (options.outWidth <= 0 || options.outHeight <= 0) {
+            StatisticManager.onEvent(mContext,
+                    StatisticManager.KEY_ERROR_FORCE_CLOSE, "Advance_Decode_Failed");
+            final CompositeSDKDialog dialog = new CompositeSDKDialog(mActivity);
+            dialog.setCancelable(false);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.setMessage(R.string.composite_sdk_crop_load_failed);
+            dialog.setNegativeBtn(0, R.string.composite_sdk_ok,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialog.dismiss();
+                            mActivity.finish();
+                        }
+                    });
+            dialog.show();
+            return;
+        }
+
+        EffectModel effectModel = EffectModel.getInstance().init(mContext);
+        String compositeJson = activity.getIntent().getStringExtra(ConstantUtil.COMPOSITE_JSON);
+        if (null != compositeJson) {
+            mCompositeEffect = CompositeEffect.loadFromJsonStr(compositeJson);
+            mCompositeKey = activity.getIntent().getStringExtra(ConstantUtil.COMPOSITE_KEY);
+            if (null != mCompositeEffect.effectList) {
+                mapEffect(mCompositeEffect.effectList);
+                mMakePhotoModelArray = MakePhotoModel.getMakePhotoModelArray(mCompositeEffect, effectModel);
+            } else {
+                mMakePhotoModelArray = MakePhotoModel.getMakePhotoModelArray(null, effectModel);
+            }
+        } else {
+            mMakePhotoModelArray = MakePhotoModel.getMakePhotoModelArray(null, effectModel);
+        }
+
+        mEffectMenuHorizontalLayout = (EffectMenuHorizontalLayout) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "main_bottom_effects_menu"));
+        mEffectMenuHorizontalLayout.setTextClickListener(this);
+
+        mSecondEffectsLayout = (HorizontalLayout) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "second_effects"));
+        mThirdEffectsLayout = (HorizontalLayout) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "third_effects"));
+
+        mSeekbarLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "seekbar_layout"));
+        mColorSeekbarLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "colors_seekbar_layout"));
+        mDiscolorationSeekbarLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "discoloration_seekbar_layout"));
+        mDetailsSeekbarLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "details_seekbar_layout"));
+        mTiltShiftSeekbarLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "tilt_shift_seekbar_layout"));
+
+        mMainTop = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "main_top"));
+        mScrollValueName = (TextView) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "scroll_value_name"));
+        mScrollValueName.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                return true;
+            }
+        });
+
+        mAutoHideTextView = (AutoHideTextView) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "auto_hide_textview"));
+        mProgressView = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "progress_layout"));
+        mScreenLayout = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "screen_layout"));
+        mScreenLayout.setVisibility(View.VISIBLE);  //一进入界面的时候会去做上个界面选中的组合滤镜效果图，这个过程会花费一定的时间，所以先屏蔽屏幕的点击事件
+
+        mSaveView = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "save"));
+        mSaveView.setOnClickListener(this);
+        mBackView = mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "back"));
+        mBackView.setOnClickListener(this);
+
+        mComparePGGLSurfaceView = (ComparePGGLSurfaceView) mRootView.findViewById(
+                ResourceHelper.getIdByName(mActivity, "id", "main_compare_glsurfaceview"));
+
+        mGlSurfaceView = mComparePGGLSurfaceView.getPGGLSurfaceView();
+        mGlSurfaceView.setListener(mPGGLListener);
+
+        mDisplayMetrics = new DisplayMetrics();
+        mActivity.getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
+
+        mMainTopHeight = mContext.getResources().getDimension(
+                ResourceHelper.getIdByName(mActivity, "dimen", "composite_sdk_beauty_main_top_height"));
+        float bottomHeight = mContext.getResources().getDimension(
+                ResourceHelper.getIdByName(mActivity, "dimen", "composite_sdk_beauty_main_bottom_composite_height"));
+        float menuHeight = mContext.getResources().getDimension(
+                ResourceHelper.getIdByName(mActivity, "dimen", "composite_sdk_beauty_main_bottom_menu_height"));
+
+        int rotate = ToolUtils.getRotatedDegree(mPath);
+        mPicWidth = options.outWidth;
+        mPicHeight = options.outHeight;
+        if (rotate == 90 || rotate == 270) {
+            mPicHeight = options.outWidth;
+            mPicWidth = options.outHeight;
+        }
+
+        int centerHeight = Math.round(mDisplayMetrics.heightPixels - mMainTopHeight - bottomHeight - menuHeight);
+        int height = Math.min(centerHeight, mDisplayMetrics.widthPixels);
+        int width = mDisplayMetrics.widthPixels;
+        if ((float) width / mPicWidth < (float) height / mPicHeight) {
+            mShowWidth = width;
+            mShowHeight = mShowWidth * mPicHeight / mPicWidth;
+        } else {
+            mShowHeight = height;
+            mShowWidth = mShowHeight * mPicWidth / mPicHeight;
+        }
+
+        mComparePGGLSurfaceView.setLayoutParamSize(mShowWidth, mShowHeight);
+        mBitmapHeight = Math.round(mShowHeight * ConstantUtil.ZOOM_RATE);
+
+        mSDKManager = new SDKManager(mContext, mGlSurfaceView);
+        mCompositeForPathRendererMethod = new GLSurfaceViewCompositeForPathRendererMethod();
+        mCompositeForPathRendererMethod.setPath(mPath);
+        mCompositeForPathRendererMethod.setEffectModeArray(mMakePhotoModelArray);
+        mCompositeForPathRendererMethod.setBitmapHeight(mBitmapHeight);
+        mCompositeForPathRendererMethod.setShowBitmapHeight(mShowHeight);
+        mCompositeForPathRendererMethod.setShowBitmapWidth(mShowWidth);
+
+        mCompositeForPathRendererMethod.setOnRendererActionListener(new GLSurfaceViewCompositeForPathRendererMethod.OnRendererActionListener() {
+            @Override
+            public void loadBitmap(Bitmap bitmap) {
+                mHandler.obtainMessage(SET_COMPARE_BITMAP, bitmap).sendToTarget();
+                mHandler.sendEmptyMessage(SHOW_MENU_FIRST);
+            }
+        });
+    }
+
+    public void onDestroy() {
+        if (null != mCompositeDataReceiver) {
+            mCompositeDataReceiver.unregisterCallback(mActivity);
+        }
+    }
+
+
+    @Override
+    public void onClick(View view) {
+
+        if (mSaveView == view) {
+            save();
+
+        } else if (mBackView == view) {
+            quit();
+
+        } else {
+
+            String tag = view.getTag().toString();
+            if (null != mCurrentMenu) {
+                mCurrentMenu.finish();
+            }
+
+            if (tag.equals("tiltshift")) {
+                TiltShiftMenu tiltShiftMenu = new TiltShiftMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                tiltShiftMenu.setImageSize(mShowWidth, mShowHeight);
+                tiltShiftMenu.setSeekbarLayout(mTiltShiftSeekbarLayout);
+
+                tiltShiftMenu.setSecondHorizontalLayout(mSecondEffectsLayout);
+                tiltShiftMenu.setThirdHorizontalLayout(mThirdEffectsLayout);
+
+                tiltShiftMenu.setScrollValueName(mScrollValueName);
+                tiltShiftMenu.setAutoHideTextView(mAutoHideTextView);
+                tiltShiftMenu.setMainTop(mMainTop);
+                tiltShiftMenu.setContainer(mComparePGGLSurfaceView);
+                tiltShiftMenu.setProgressBar(mProgressView);
+                tiltShiftMenu.setScreenLayout(mScreenLayout);
+                tiltShiftMenu.setDisplayMetrics(mDisplayMetrics);
+                tiltShiftMenu.entrySecondMenu();
+                mCurrentMenu = tiltShiftMenu;
+                mCurrentMenu.setPhotoChangeListener(mPhotoChangeListener);
+                return;
+
+            } else if (tag.equals("colors")) {
+                mCurrentMenu = new AdvanceHSLMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                mCurrentMenu.setSeekbarLayout(mColorSeekbarLayout);
+
+            } else if (tag.equals("filter")) {
+                mCurrentMenu = new FilterMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                mCurrentMenu.setSeekbarLayout(mSeekbarLayout);
+
+            } else if (tag.equals("shadow")) {
+                mCurrentMenu = new ShadowMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                mCurrentMenu.setSeekbarLayout(mSeekbarLayout);
+
+            } else if (tag.equals("details")) {
+                DetailMenu detailMenu = new DetailMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                detailMenu.setImageSize(mShowWidth, mShowHeight);
+                mCurrentMenu = detailMenu;
+
+                mCurrentMenu.setSeekbarLayout(mDetailsSeekbarLayout);
+
+            } else if (tag.equals("frame")) {
+                mCurrentMenu = new FrameMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                mCurrentMenu.setSeekbarLayout(mSeekbarLayout);
+
+            } else if (tag.equals("discoloration")) {
+                mCurrentMenu = new DiscolorationMenu(mContext, mSDKManager, mCompositeForPathRendererMethod);
+                mCurrentMenu.setSeekbarLayout(mDiscolorationSeekbarLayout);
+            }
+
+            mCurrentMenu.setPhotoChangeListener(mPhotoChangeListener);
+
+            mCurrentMenu.setSecondHorizontalLayout(mSecondEffectsLayout);
+            mCurrentMenu.setThirdHorizontalLayout(mThirdEffectsLayout);
+
+            mCurrentMenu.setScrollValueName(mScrollValueName);
+            mCurrentMenu.setAutoHideTextView(mAutoHideTextView);
+            mCurrentMenu.setMainTop(mMainTop);
+            mCurrentMenu.setContainer(mComparePGGLSurfaceView);
+            mCurrentMenu.setProgressBar(mProgressView);
+            mCurrentMenu.setScreenLayout(mScreenLayout);
+            mCurrentMenu.setDisplayMetrics(mDisplayMetrics);
+            mCurrentMenu.entrySecondMenu();
+        }
+    }
+
+    public void keyCodeBack() {
+        if (mCurrentMenu == null) {
+            quit();
+
+        } else {
+
+            if (mCurrentMenu instanceof HDRMenu
+                    || mCurrentMenu instanceof SkinMenu) {
+                if (!mCurrentMenu.keyCodeBack()) {
+                    mCurrentMenu.backMainMenu();
+                }
+
+            } else {
+                if (!mCurrentMenu.keyCodeBack()) {
+                    quit();
+                }
+            }
+
+        }
+    }
+
+    public void onResume() {
+        if (null != mSDKManager) {
+            mSDKManager.onResume();
+        }
+    }
+
+    public void onPause() {
+        if (null != mSDKManager) {
+            mSDKManager.onPause();
+        }
+    }
+
+    private void makePhoto(PGRendererMethod pgRendererMethod) {
+        if (pgRendererMethod == null) {
+            mSDKManager.showPhoto(mCompositeForPathRendererMethod);
+
+        } else {
+            mSDKManager.showPhoto(pgRendererMethod);
+
+        }
+    }
+
+    private void makePhoto() {
+        makePhoto(mCompositeForPathRendererMethod);
+    }
+
+
+    private final static int SHOW_EFFECT_PHOTO = 1;
+    private final static int RELOAD_EFFECT_PHOTO = 2;
+    private final static int SHOW_MENU_FIRST = 3;
+    private final static int SET_COMPARE_BITMAP = 4;
+    private final static int SAVE_ACTIVITY_FINISH = 5;
+    private final static int SAVE_COMPOSITE = 6;
+    private final static int SHOW_SAVE_VIEW = 7;
+
+    private Handler mHandler = new Handler() {
+
+        @Override
+        public void dispatchMessage(Message msg) {
+
+            if (msg.what == SHOW_EFFECT_PHOTO) {
+                makePhoto();
+
+            } else if (msg.what == RELOAD_EFFECT_PHOTO) {
+                GLSurfaceViewCompositeRendererMethod glSurfaceViewCompositeRendererMethod = new GLSurfaceViewCompositeRendererMethod();
+                glSurfaceViewCompositeRendererMethod.setBitmap(mCompositeForPathRendererMethod.getBitmap());
+                glSurfaceViewCompositeRendererMethod.setShowBitmapHeight(mCompositeForPathRendererMethod.getShowBitmapHeight());
+                glSurfaceViewCompositeRendererMethod.setShowBitmapWidth(mCompositeForPathRendererMethod.getShowBitmapWidth());
+                MakePhotoModel[] newMakePhotoModelArray = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(mMakePhotoModelArray, new HashSet<Integer>());
+                if (newMakePhotoModelArray == null) {
+                    glSurfaceViewCompositeRendererMethod.setEffectModeArray(mMakePhotoModelArray);
+
+                } else {
+                    glSurfaceViewCompositeRendererMethod.setEffectModeArray(newMakePhotoModelArray);
+
+                }
+
+                makePhoto(glSurfaceViewCompositeRendererMethod);
+
+            } else if (msg.what == SHOW_MENU_FIRST) {
+                mScreenLayout.setVisibility(View.GONE);
+                if (null == mCompositeKey || mCompositeKey.endsWith("None")) {
+                    mEffectMenuHorizontalLayout.clickFirst(0); //如果是原图的话则默认显示特效
+
+                } else {
+                    mEffectMenuHorizontalLayout.clickFirst(1); //如果是原图的话则默认显示调整
+
+                }
+
+
+            } else if (msg.what == SET_COMPARE_BITMAP) {
+                mComparePGGLSurfaceView.setComparePhoto((Bitmap) msg.obj);
+
+            } else if (msg.what == SAVE_ACTIVITY_FINISH) {
+                mComparePGGLSurfaceView.hidePGGLSurfaceView();
+                EffectSaveManager.saveActivityFinish(mActivity);
+//                Intent intent = new Intent();
+//                intent.putExtra(ConstantUtil.GROUP_RESULT_TYPE, ConstantUtil.GROUP_RESULT_TYPE_SAVE);
+//                mActivity.setResult(ConstantUtil.COMPOISTE_ACTIVITY_CHANGE_RESULT, intent);
+//                EffectDataManager.getInstance().clear();
+//                mActivity.finish();
+            }
+        }
+    };
+
+    private void quit() {
+        if (mIsPhotoChanged && !mIsSaved) {
+            final CompositeSDKDialog dialog = new CompositeSDKDialog(mActivity);
+            dialog.setTitle(ResourceHelper.getString(mContext, "composite_sdk_quit_advance_dialog_title"));
+            dialog.setMessage(ResourceHelper.getString(mContext, "composite_sdk_is_quit"));
+            dialog.setNegativeBtn(0, ResourceHelper.getString(mContext, "composite_sdk_continue_edit"),
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            StatisticManager.onEvent(v.getContext(),
+                                    StatisticManager.KEY_ACTION_GIVE_UP_FUNCTION, "继续编辑");
+
+                            dialog.dismiss();
+                        }
+                    });
+            dialog.setPositiveBtn(0, ResourceHelper.getString(mContext, "composite_sdk_abandon_edit"),
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            StatisticManager.onEvent(v.getContext(),
+                                    StatisticManager.KEY_ACTION_GIVE_UP_FUNCTION, "放弃");
+                            if (null != mCurrentMenu) {
+                                mCurrentMenu.backMainMenu();
+                            }
+                            dialog.dismiss();
+                            mActivity.finish();
+                        }
+                    });
+            dialog.setCancelable(false);
+            dialog.show();
+        } else {
+            if (null != mCurrentMenu) {
+                mCurrentMenu.backMainMenu();
+            }
+            mActivity.finish();
+        }
+    }
+
+    private void mapEffect(List<Effect> compositeEffects) {
+        for (Effect mapEffect : compositeEffects) {
+            EffectDataManager.getInstance().setEffect(mapEffect);
+        }
+    }
+
+    protected void save() {
+
+        mSaveListDialog = new CompositeSaveListDialog(mActivity);
+        if (mIsPhotoChanged && !mIsFilterSaved) {
+            mSaveListDialog.toggleSaveView(true);
+        } else {
+            mSaveListDialog.toggleSaveView(false);
+        }
+
+        mSaveListDialog.setOnItemClickListener(
+                new CompositeSaveListDialog.OnItemClickListener() {
+            @Override
+            public void onSavePhotoClick() {
+
+                String path = mPath;
+                if (mIsSaved && null != mLastSavePath) {
+                    path = mLastSavePath;
+                    mSaveCallback.onSaveFinished(path);
+                }
+
+                StatisticManager.onEvent(mActivity,
+                        StatisticManager.KEY_ACTION_SAVE_PICTURE_MIX);
+
+                mProgressView.setVisibility(View.VISIBLE);
+                PhotoSaveController.saveBigPhoto(mActivity, path, mSDKManager,
+                        mCompositeForPathRendererMethod.getMakePhotoModelArray(), mSaveCallback);
+            }
+
+            @Override
+            public void onSaveEffectClick() {
+                GetGLSurfaceViewBitmapRendererMethod getRendererMethod = new GetGLSurfaceViewBitmapRendererMethod();
+                getRendererMethod.setWidthHeight(mCompositeForPathRendererMethod.getShowBitmapWidth(),
+                        mCompositeForPathRendererMethod.getShowBitmapHeight());
+                getRendererMethod.setRendererMethodActionListener(
+                        new EffectGroupRendererMethod.RendererMethodActionListener() {
+                    @Override
+                    public void success(Bitmap bitmap) {
+                        final Bitmap nowBitmap = bitmap;
+                        final Bitmap oldBitmap = ToolUtils.getBitmap(
+                                mBeforeEffectPath, nowBitmap.getWidth());
+
+                        mActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!mActivity.isFinishing()) {
+
+                                    String effectName = mCompositeName;
+                                    if (null != mCompositeEffect
+                                            && mCompositeEffect.isDefault == 1) {
+                                        effectName = null;
+                                    }
+
+                                    mSaveListDialog.dismiss();
+                                    CompositeSaveDialog compositeSaveDialog
+                                            = new CompositeSaveDialog(mActivity, mPath,
+                                            nowBitmap, oldBitmap, effectName,
+                                            mCompositeForPathRendererMethod,
+                                            mFilterSaveCallback);
+                                    compositeSaveDialog.show();
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void fail() {
+
+                    }
+
+                    @Override
+                    public void successForGLSurfaceView() {
+
+                    }
+                });
+                mSDKManager.showPhoto(getRendererMethod);
+            }
+        });
+
+        mSaveListDialog.show();
+    }
+
+    private EffectSaveManager.SaveCallback mFilterSaveCallback
+            = new EffectSaveManager.SaveCallback() {
+        @Override
+        public void onSaveFinished(final String effectJson, final String name) {
+
+            if (null != mProgressView) {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
+
+            final String tempFilePath = mActivity.getFilesDir().getAbsolutePath()
+                    + File.separator + "tmp_eft_pic";
+
+            final String tempFileWithoutExifPath = mActivity.getFilesDir().getAbsolutePath()
+                    + File.separator + "tmp_eft_pic_tmp";
+
+            final EffectGroupSavePathRendererMethod savePathRendererMethod
+                    = new EffectGroupSavePathRendererMethod();
+            savePathRendererMethod.setPath(mPath);
+            savePathRendererMethod.setSavePath(tempFileWithoutExifPath);
+
+            savePathRendererMethod.setPhotoMaxLength(640);
+            MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+            MakePhotoModel[] newMakePhotoModelArray = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(makePhotoModelArray, new HashSet<Integer>());
+
+            if (newMakePhotoModelArray == null) {
+                savePathRendererMethod.setEffectModeArray(makePhotoModelArray);
+            } else {
+                savePathRendererMethod.setEffectModeArray(newMakePhotoModelArray);
+            }
+
+            savePathRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+                @Override
+                public void success(Bitmap bitmap) {
+
+                    if (savePathRendererMethod.isJpegFile()) {
+                        int orientation = Exif.getPhotoOrientation(mPath);
+                        byte[] exif = Exif.getExifData(tempFileWithoutExifPath);
+                        PGExifInfo pgExifInfo = new PGExifInfo(exif);
+                        pgExifInfo.setOrientation(orientation);
+                        try {
+                            Exif.exifToJpegFile(tempFileWithoutExifPath,
+                                    tempFilePath, pgExifInfo.getExifData());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                FileUtils.copySingleFile(tempFileWithoutExifPath,
+                                        tempFilePath);
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                    } else {
+                        try {
+                            FileUtils.copySingleFile(tempFileWithoutExifPath,
+                                    tempFilePath);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (null != mActivity && !mActivity.isFinishing()) {
+                        mActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Intent intent = new Intent(mActivity, MixShareFilterActivity.class);
+                                intent.putExtra(MixShareFilterActivity.EXTRA_PHOTO_PATH, tempFilePath);
+                                intent.putExtra(MixShareFilterActivity.EXTRA_ORG_PHOTO_PATH, mPath);
+                                intent.putExtra(MixShareFilterActivity.EXTRA_COMPOSITE_EFFECT_NAME, name);
+                                intent.putExtra(MixShareFilterActivity.EXTRA_COMPOSITE_EFFECT, effectJson);
+                                mActivity.startActivity(intent);
+
+                                if (null != mProgressView) {
+                                    mProgressView.setVisibility(View.GONE);
+                                }
+                            }
+                        });
+
+                    }
+                }
+
+                @Override
+                public void fail() {
+                    StatisticManager.onEvent(mActivity,
+                            StatisticManager.KEY_ERROR_SAVE_PHOTO, "Save_Filter_Failed");
+                    if (null != mActivity && !mActivity.isFinishing()) {
+                        mActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (null != mProgressView) {
+                                    mProgressView.setVisibility(View.GONE);
+                                }
+
+                                Toast.makeText(mActivity, R.string.composite_sdk_save_filter_failed, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void successForGLSurfaceView() {
+
+                }
+            });
+            mSDKManager.makePhoto(savePathRendererMethod);
+
+            mIsSaved = true;
+            mIsFilterSaved = true;
+            CompositeDataReceiver.notifyDataChange(mActivity, CompositeDataReceiver.EVENT_UPDATE_COMPOSITE_EFFECT);
+//            if (null != mCompositeForPathRendererMethod) {
+//                mCompositeForPathRendererMethod.setBitmap(null);
+//            }
+//
+//            if (null != mCurrentMenu) {
+//                mCurrentMenu.finish();
+//            }
+
+//            Intent intent = new Intent();
+//            intent.putExtra(ConstantUtil.GROUP_RESULT_TYPE, ConstantUtil.GROUP_RESULT_TYPE_SAVE);
+//            mActivity.setResult(ConstantUtil.COMPOISTE_ACTIVITY_CHANGE_RESULT, intent);
+//            EffectDataManager.getInstance().clear();
+//            mActivity.finish();
+        }
+    };
+
+    private PhotoSaveController.SaveCallback mSaveCallback
+            = new PhotoSaveController.SaveCallback() {
+        @Override
+        public void onSaveFinished(String photoPath) {
+            saveFinish(mActivity, photoPath);
+        }
+
+        @Override
+        public void onSaveFailed() {
+            if (null == mActivity) {
+                return;
+            }
+
+            if (mActivity.isFinishing()) {
+                return;
+            }
+
+            if (null != mProgressView) {
+                mProgressView.setVisibility(View.GONE);
+            }
+
+            Toast.makeText(mActivity, R.string.composite_save_photo_failed, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    protected void saveFinish(Activity activity, String photoPath) {
+        if (null == activity) {
+            return;
+        }
+
+        if (activity.isFinishing()) {
+            return;
+        }
+
+        mLastSavePath = photoPath;
+        mIsSaved = true;
+        // TODO 更改为从配置文件获取返回界面
+        Intent intent = new Intent(activity, MixShareActivity.class);
+        intent.putExtra(MixShareActivity.EXTRA_PHOTO_PATH, photoPath);
+        intent.putExtra(MixShareActivity.EXTRA_ORG_PHOTO_PATH, mPath);
+
+        MakePhotoModel[] makePhotoModels
+                = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+        CompositeEffect compositeEffect = new CompositeEffect();
+        for (MakePhotoModel makePhotoModel : makePhotoModels) {
+            if (makePhotoModel != null) {
+                String key = makePhotoModel.getEffect().key;
+                Effect effect = EffectDataManager.getInstance().getEffect(key);
+
+                compositeEffect.addEffect(effect);
+            }
+        }
+
+        intent.putExtra(MixShareActivity.EXTRA_COMPOSITE_EFFECT,
+                compositeEffect.getJsonFilterInfo(activity));
+        activity.startActivity(intent);
+
+        if (null != mProgressView) {
+            mProgressView.setVisibility(View.GONE);
+        }
+    }
+
+    private BaseMenu.OnPhotoChangeListener mPhotoChangeListener
+            = new BaseMenu.OnPhotoChangeListener() {
+        @Override
+        public void onPhotoChanged() {
+            mIsPhotoChanged = true;
+            mIsSaved = false;
+            mIsFilterSaved = false;
+            mLastSavePath = null;
+        }
+    };
+
+    private CompositeDataReceiver mCompositeDataReceiver = new CompositeDataReceiver();
+    private CompositeDataReceiver.ICompositeDataObserver mCompositeDataObserver
+            = new CompositeDataReceiver.ICompositeDataObserver() {
+
+        @Override
+        public void onCompositeDataReceived(Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(CompositeDataReceiver.ACTION_USE_COMPOSITE_EFFECT)) {
+                EffectDataManager.getInstance().clear();
+                mActivity.finish();
+            }
+        }
+    };
+
+    private static final String INSTANCE_STATE_PATH = "instance_state_path";
+    public void onSaveInstanceState(Bundle outState) {
+        if (null != mPath) {
+            outState.putString(INSTANCE_STATE_PATH, mPath);
+        }
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        if (null != savedInstanceState) {
+            mPath = savedInstanceState.getString(INSTANCE_STATE_PATH);
+        }
+    }
+}

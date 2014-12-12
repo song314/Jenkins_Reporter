@@ -1,0 +1,37 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.option.message.PGMessage;
+
+/**
+ * Created by yinyu on 2014/10/8.
+ * 复合消息，合并反馈消息与消息中心消息
+ */
+public class CMessage implements Comparable<CMessage> {
+    public static final int TYPE_FEEDBACK_SEND = 0;
+    public static final int TYPE_FEEDBACK = 1;
+    public static final int TYPE_CAMERA360_MESSAGE = 2;
+
+    public int type;
+
+    public Camera360FeedbackData feedbackData;
+    public PGMessage messageData;
+
+    private long getTimeStamp() {
+        if (type == TYPE_FEEDBACK || type == TYPE_FEEDBACK_SEND) {
+            return feedbackData.getTime() / 1000;
+        } else if (type == TYPE_CAMERA360_MESSAGE) {
+            return messageData.timestamp;
+        } else {
+            return System.currentTimeMillis() / 1000;
+        }
+    }
+
+    @Override
+    public int compareTo(CMessage another) {
+        GLogger.i("CMessage", Long.toString(getTimeStamp())
+                + "-" + Long.toString(another.getTimeStamp())
+                + "=" + Long.toString(getTimeStamp() - another.getTimeStamp()));
+        return (int) (getTimeStamp() - another.getTimeStamp());
+    }
+}

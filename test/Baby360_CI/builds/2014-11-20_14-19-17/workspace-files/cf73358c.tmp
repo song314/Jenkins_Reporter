@@ -1,0 +1,11 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+/**
+ * Created by taoli on 14-2-14.
+ */
+public class Device {
+    private static final String TAG = Device.class.getSimpleName();
+
+    public String model = "";
+    public String brand = "";
+}

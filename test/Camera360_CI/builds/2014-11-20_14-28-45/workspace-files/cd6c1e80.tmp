@@ -1,0 +1,95 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.AttributeSet;
+import android.view.Gravity;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by marui on 13-11-13.
+ */
+public class ThumbnailView extends FrameLayout {
+
+    private RotateImageView mBackground;
+    private RotateImageView mForeGround;
+
+    private Bitmap mLastBitmap;
+
+    private static final int VIEW_W_H = 48;
+    private static final int TRAN_WHITE = 0x1affffff;//10%白色透明
+
+    public ThumbnailView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mBackground = new RotateImageView(context);
+        mForeGround = new RotateImageView(context);
+        mForeGround.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+        FrameLayout.LayoutParams flp1 = new FrameLayout.LayoutParams(
+                CameraModuleUtil.dpToPixel(VIEW_W_H), CameraModuleUtil.dpToPixel(VIEW_W_H)
+                , Gravity.CENTER);
+        addView(mBackground, flp1);
+        FrameLayout.LayoutParams flp2 = new FrameLayout.LayoutParams(
+                CameraModuleUtil.dpToPixel(VIEW_W_H), CameraModuleUtil.dpToPixel(VIEW_W_H)
+                , Gravity.CENTER);
+        addView(mForeGround,flp2);
+    }
+
+    public ThumbnailView(Context context) {
+        this(context, null);
+    }
+
+    /**
+     * 如果有lastbitmap，播放动画，否则不播
+     *
+     * @param thumb
+     */
+    public void setThumb(Bitmap thumb) {
+        if (mLastBitmap != null && !mLastBitmap.isRecycled()) {
+            setThumb(thumb, true);
+        } else {
+            setThumb(thumb, false);
+        }
+    }
+
+    public void setThumb(Bitmap thumb, boolean needAnim) {
+//        if (thumb != null && !thumb.isRecycled()) {
+//            if (mLastBitmap != null) {
+//                mBackground.setImageBitmap(mLastBitmap);
+//            } else {
+//                //默认10%的白色
+//                mBackground.setImageBitmap(null);
+//            }
+//            mForeGround.setImageBitmap(thumb);
+//            if (needAnim) {
+//                Animation animation = AnimationUtils.loadAnimation(mForeGround.getContext(),
+//                        ResourceHelper.getIdByName(getContext(), "anim", "composite_sdk_camera_thumbnail"));
+//                mForeGround.startAnimation(animation);
+//            }
+//            mLastBitmap = thumb;
+//        } else {
+            //设置为空，使用默认背景
+            setBackgroundResource(ResourceHelper.getDrawable(
+                    getContext(), "composite_sdk_mix_main_gallery"));
+            mForeGround.setImageBitmap(null);
+            mBackground.setImageBitmap(null);
+            mLastBitmap = null;
+//        }
+    }
+
+    public void setOrientation(int orientation, boolean animation) {
+        mBackground.setOrientation(orientation, animation);
+        mForeGround.setOrientation(orientation, animation);
+    }
+
+    public RotateImageView getForegroundView() {
+        return mForeGround;
+    }
+
+    public RotateImageView getBackgroundView() {
+        return mBackground;
+    }
+}

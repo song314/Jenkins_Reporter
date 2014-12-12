@@ -1,0 +1,62 @@
+package com.pinguo.mix.api.common;
+
+import android.os.Bundle;
+
+import com.pinguo.edit.sdk.utils.EncryptUtils;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+
+import org.json.JSONException;
+
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-10-22.
+ */
+public class GetAppUpdate extends BaseRequest {
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        GetUpdateInfoBean getUpdateInfoBean = (GetUpdateInfoBean) bean;
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_VERSION_NAME, getUpdateInfoBean.getVersionName());
+        bundle.putString(ApiConstants.PARAM_TITLE, getUpdateInfoBean.getTitle());
+        bundle.putString(ApiConstants.PARAM_DESCRIPTION, getUpdateInfoBean.getDescription());
+        bundle.putString(ApiConstants.PARAM_PACKAGE_URL, getUpdateInfoBean.getPackageUrl());
+        return bundle;
+    }
+
+    @Override
+    protected Object getResultData(BaseBean bean) {
+        GetUpdateInfoBean getUpdateInfoBean = (GetUpdateInfoBean) bean;
+        return getUpdateInfoBean.getVersionCode();
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+        GetUpdateInfoBean getUpdateInfoBean = new GetUpdateInfoBean();
+        try {
+            getUpdateInfoBean.parseJsonToObj(jsonString);
+            return getUpdateInfoBean;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    protected Map<String, String> buildParam(Bundle bundle) {
+
+        Map<String, String> params = super.buildParam(bundle);
+        if (params.size() > 0) {
+            String sig = EncryptUtils.getSig(params, "uVwhj4OSQkzil8d_MpI5umN7EWU4S5ro");
+            params.put("sig", sig);
+        }
+
+        return params;
+    }
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.pinguo.edit.sdk.filter.square.view.SquareListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/square_listview">
+
+    </com.pinguo.edit.sdk.filter.square.view.SquareListView>
+
+
+    <ImageButton
+        android:layout_width="79dp"
+        android:layout_height="65dp"
+        android:src="@drawable/composite_sdk_square_back"
+        android:onClick="backMain"
+        android:paddingLeft="17dp"/>
+
+    <ImageButton
+        android:layout_width="79dp"
+        android:layout_height="65dp"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/composite_sdk_square_refresh"
+        android:paddingRight="17dp"/>
+</RelativeLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?><!--  android:background="@drawable/pg_login_background"-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:editViewPrompt="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/id_find_password_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        layout="@layout/composite_sdk_login_head_view"
+        android:id="@+id/pg_login_head" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/pg_login_head"
+        android:layout_marginLeft="@dimen/pg_login_page_padding"
+        android:layout_marginRight="@dimen/pg_login_page_padding"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_marginTop="@dimen/pg_email_verify_prompt_text_top"
+            android:lineSpacingExtra="@dimen/pg_login_home_account_text_line_gap"
+            android:textSize="@dimen/pg_phone_number_verify_prompt_text_size"
+            android:textColor="#dfe2e3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/find_password_prompt_text" />
+
+        <com.pinguo.edit.sdk.login.view.EditTextWithPrompt
+            android:id="@+id/id_find_password_input_text"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/pg_login_input_height"
+            android:layout_marginTop="@dimen/pg_phone_number_verify_input_top"
+            android:hint="@string/id_pg_login_register_email_hint_text"
+            android:inputType="textEmailAddress"
+            android:singleLine="true"
+            android:textSize="@dimen/pg_login_input_text_size"
+            editViewPrompt:showPrompt="false" />
+
+        <TextView
+            android:id="@+id/id_pg_login_error_prompt_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/pg_login_error_prompt_text_top"
+            android:gravity="right"
+            android:singleLine="true"
+            android:textColor="@color/color_pg_login_error_tip"
+            android:textSize="@dimen/pg_login_error_prompt_text_size" />
+
+        <Button
+            android:id="@+id/id_find_password_btn"
+            android:text="@string/find_password_btn_text"
+            android:layout_width="@dimen/pg_login_button_width"
+            android:layout_gravity="center"
+            android:layout_height="@dimen/pg_login_button_height"
+            android:layout_marginTop="@dimen/pg_login_button_top"
+            android:background="@drawable/pg_login_btn_background"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/pg_login_button_text_size" />
+    </LinearLayout>
+
+</LinearLayout>

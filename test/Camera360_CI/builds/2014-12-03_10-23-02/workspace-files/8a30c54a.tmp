@@ -1,0 +1,151 @@
+package com.pinguo.ui.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+
+/**
+ * Created by zhongzheng on 14-10-23.
+ */
+public class RotateSeekBar extends View {
+    private Paint mMainPaint;
+    private Paint mBigPaint;
+    private Paint mSmallPaint;
+
+    private int maxDegree;
+    private int minDegree;
+    private int mCurDegree;
+    private int mOnShowDegree;
+
+    private int mPos = 0;
+
+    Rect mRect = new Rect();
+    private SeekFingerMoveEvent mFingerEvent;
+
+    private int[] mAlpha = {40,60,80,100,120,140,160,180,200,180,
+        160,140,120,100,80,60,40};
+
+    public RotateSeekBar(Context context) {
+        super(context);
+        initView();
+    }
+
+    private void initView(){
+        setBackgroundColor(Color.BLACK);
+
+        mMainPaint = new Paint(); //设置一个笔刷大小是3的黄色的画笔
+        mMainPaint.setColor(Color.BLUE);
+
+        mBigPaint = new Paint();
+        mBigPaint.setColor(Color.WHITE);
+        mBigPaint.setStrokeWidth(3);
+        mBigPaint.setTextSize(35);
+
+        mSmallPaint = new Paint();
+        mSmallPaint.setColor(Color.WHITE);
+        mSmallPaint.setStrokeWidth(2);
+
+    }
+
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.getClipBounds(mRect);
+        Log.e("Test", "rect:" + mRect.width() + "x" + mRect.height());
+        int saveCount = canvas.getSaveCount();
+        canvas.save();
+        drawSeekBar(canvas);
+        canvas.restoreToCount(saveCount);
+    }
+
+    public Rect getRect(){
+        return mRect;
+    }
+
+    private void drawSeekBar(Canvas canvas){
+        int h = mRect.height();
+        int w = mRect.width();
+        int hSize = h / 7;
+        int wSize = w / (mOnShowDegree + 1);
+
+        int degree = mCurDegree - 8;
+        int pos = mPos;
+        for(int i = 1; i<= mOnShowDegree; i++ , degree++){
+            float sx = pos + i * wSize;
+            float sy = 6 * hSize;
+
+            if(degree % 5 == 0){
+                mBigPaint.setAlpha(mAlpha[i-1]);
+                canvas.drawLine(sx , sy, sx, sy - 4 * hSize, mBigPaint);
+                if(degree <= maxDegree && degree >= minDegree){
+                    canvas.drawText(String.valueOf(degree), sx - 12,
+                            sy - 4.5f * hSize , mBigPaint);
+                }
+            }else {
+                mSmallPaint.setAlpha(mAlpha[i-1]);
+                canvas.drawLine(sx , sy, sx, sy - 3 * hSize, mSmallPaint);
+            }
+        }
+        canvas.drawLine(w / 2, h, w / 2, 5 * hSize, mMainPaint);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int x = (int)event.getX();
+        int y = (int)event.getY();
+        if(y > mRect.top && y < mRect.bottom
+                && x > mRect.left && x < mRect.right) {
+            switch(event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    if(mFingerEvent != null){
+                        mFingerEvent.onSeekStart(x);
+                    }
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if(mFingerEvent != null){
+                        mFingerEvent.onSeekChange(x);
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if(mFingerEvent != null){
+                        mFingerEvent.onSeekFinish(x);
+                    }
+                    break;
+            }
+        }
+        return true;
+    }
+
+    public void show(int degree, int pos){
+        mCurDegree = degree;
+        mPos = pos;
+        invalidate();
+    }
+
+    public void setSeekLinstener(SeekFingerMoveEvent event){
+        mFingerEvent = event;
+    }
+
+    public interface SeekFingerMoveEvent{
+        void onSeekChange(int x);
+        void onSeekStart(int x);
+        void onSeekFinish(int x);
+    }
+
+    public void setLimitDegree(int max, int min){
+        maxDegree = max;
+        minDegree = min;
+    }
+
+    public void setmOnShowDegree(int showDegree){
+        mOnShowDegree = showDegree;
+    }
+
+    public void setCurDegree(int degree){ mCurDegree = degree; }
+}

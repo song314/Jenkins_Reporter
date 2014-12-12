@@ -1,0 +1,301 @@
+package com.pinguo.edit.sdk.option.fragment;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.TextView;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.util.UtilStorage;
+import com.pinguo.edit.sdk.filter.square.BaseTitleFragment;
+import com.pinguo.edit.sdk.login.activity.PGLoginHomeActivity;
+import com.pinguo.edit.sdk.login.activity.PersonalInformation;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.login.view.TitleView;
+import com.pinguo.edit.sdk.option.feedback.Camera360FeedbackActivity;
+import com.pinguo.edit.sdk.option.view.RoundImageView;
+import com.pinguo.edit.sdk.option.view.SelectDialog;
+import com.pinguo.edit.sdk.option.view.SettingItemMore;
+import com.pinguo.mix.RatingController;
+import com.pinguo.mix.UpdateController;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by zengchuanmeng on 14-9-2.
+ */
+public class OptionsSettings extends BaseTitleFragment implements
+        View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+    private static final int REQUEST_CODE_FOR_USERINFO = 1000;
+    private View mPersonInfoView;
+    private RoundImageView mUserIcon;
+    private TextView mUserName;
+    private boolean mUserLogin;
+    private UpdateController mUpdateController;
+
+    public static final int REQUEST_SAVE_PATH = 10;
+    private static final String TAG = OptionsSettings.class.getSimpleName();
+    private SelectDialog mSelectDialog;
+
+    public static OptionsSettings newInstance() {
+        OptionsSettings fragment = new OptionsSettings();
+        Bundle b = new Bundle();
+//        b.putString(LoginCanstants.EXTRA_MESSAGE_FOR_EMAIL, email);
+        fragment.setArguments(b);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        checkUserState();
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.composite_sdk_option_main, container, false);
+        View rootView = v.findViewById(R.id.option_main_root);
+//        setRootViewBackground(rootView);
+
+        TitleView titleView = (TitleView) v.findViewById(R.id.option_head);
+        titleView.setTiTleText(R.string.cloud_native_find_password);
+        titleView.setOnTitleViewClickListener(this);
+
+        mPersonInfoView = v.findViewById(R.id.option_personal_info);
+        mPersonInfoView.setOnClickListener(this);
+        mUserIcon = (RoundImageView) v.findViewById(R.id.personal_image);
+        mUserName = (TextView) v.findViewById(R.id.personal_nick_name);
+
+        SettingItemMore optionPicQuality = (SettingItemMore) v.findViewById(R.id.option_item_picture_quality);
+        optionPicQuality.setOnClickListener(this);
+        optionPicQuality.getTitle().setText("画质");
+//        optionCameraMore.getIcon().setImageResource(R.drawable.icon_set_more);
+
+        SettingItemMore optionSavePathy = (SettingItemMore) v.findViewById(R.id.option_item_save_path);
+        optionSavePathy.setOnClickListener(this);
+        optionSavePathy.getTitle().setText("存储路径");
+
+        SettingItemMore optionOpinionBack = (SettingItemMore) v.findViewById(R.id.option_item_opinion_back);
+        optionOpinionBack.setOnClickListener(this);
+        optionOpinionBack.getTitle().setText("意见反馈");
+
+        SettingItemMore optionVersionUpdate = (SettingItemMore) v.findViewById(R.id.option_item_version_update);
+        optionVersionUpdate.setOnClickListener(this);
+        optionVersionUpdate.getTitle().setText("版本升级");
+
+        SettingItemMore optionCareInstagram = (SettingItemMore) v.findViewById(R.id.option_item_care_instagram);
+        optionCareInstagram.setOnClickListener(this);
+        optionCareInstagram.getTitle().setText("关注我们的Instagram");
+
+        SettingItemMore optionCareFaceBook = (SettingItemMore) v.findViewById(R.id.option_item_care_facebook);
+        optionCareFaceBook.setOnClickListener(this);
+        optionCareFaceBook.getTitle().setText("关注我们的Facebook");
+
+        SettingItemMore optionInspire = (SettingItemMore) v.findViewById(R.id.option_item_inspire);
+        optionInspire.setOnClickListener(this);
+        optionInspire.getTitle().setText("鼓励下我们");
+        return v;
+    }
+
+    @Override
+    public void onClick(View v) {
+        GLogger.d(TAG, "---------->v");
+        switch (v.getId()) {
+            case R.id.title_right_img_btn:
+                break;
+            case R.id.option_personal_info:
+                enterUserInfo();
+                break;
+            case R.id.option_item_picture_quality:
+                showPicQualitySelectDialog();
+                break;
+            case R.id.option_item_save_path:
+                checkAllSDcardPermissions();
+                break;
+            case R.id.option_item_opinion_back:
+                startUserBack();
+                break;
+            case R.id.option_item_version_update:
+                checkUpdateVersion();
+                break;
+            case R.id.option_item_care_instagram:
+                break;
+            case R.id.option_item_care_facebook:
+                break;
+            case R.id.option_item_inspire:
+                checkRating();
+                break;
+        }
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton view, boolean isOn) {
+        GLogger.v(TAG, "---------------->view id" + view.getId());
+        switch (view.getId()) {
+            case 0X00000002:
+                //                        final RotateTextToast rtt =
+//                                new RotateTextToast(this,
+//                                        R.string.camera_render_tip_render_lag,
+//                                        mOrientationCompensation);
+                break;
+        }
+    }
+
+    private void checkUserState() {
+        User user = User.create(getActivity().getApplicationContext());
+        if (!user.isLogin()) {
+            mUserLogin = false;
+//            personalFace.setImageUrl("checkBoxDrawable://" + );
+            //红色提示用户未登录
+            mUserName.setText(R.string.person_info);
+        } else {
+            mUserLogin = true;
+            User.Info userInfo = user.getInfo();
+            mUserIcon.setImageUrl(user.getAvatar());
+            //系统默认颜色
+            mUserName.setText(userInfo.nickname);
+        }
+    }
+
+    private void checkAllSDcardPermissions() {
+        //4.4以上以上系统含有外置sdcard检查外置sdcard的读写权限
+//        final String exSDCardPath = UtilStorage.getInstance().getExternalSdCardPath();
+        showSavePathDialog(true);
+//        if (ApiHelper.AFTER_KITKAT && UtilStorage.getInstance().isHasExternalSdCard() && exSDCardPath != null) {
+//            if (sdCardCheckTask == null || sdCardCheckTask.getStatus() == AsyncTask.Status.FINISHED) {
+//
+//            }
+//        } else {
+//            showSavePathDialog(true);
+//        }
+    }
+
+    private void showSavePathDialog(boolean haveSDCard) {
+        if (!haveSDCard) {
+//            lpPicSaveType.filterUnsupported(getSavePathSupported(false));
+        }
+        int which = 1;
+        if (which == 1) {
+            if (which == 1) {
+
+                File storageFile = Environment.getExternalStorageDirectory();
+                if (storageFile == null || !storageFile.exists()) {
+//                    dialog.dismiss();
+                    return;
+                }
+                mFragmentChange.changeFragment(OptionsSavePath.newInstance(which,
+                        Environment.getExternalStorageDirectory().getAbsolutePath()));
+            } else if (which == 2) {
+                // File storageFile = PinguoEnvironment.getExternalAltStorageDirectory();
+                UtilStorage storage = UtilStorage.getInstance();
+                if (!storage.isHasExternalSdCard()) {
+//                    toast = new RotateTextToast(getActivity(), R.string.no_storage_save_path,
+//                            0);
+//                    toast.show();
+//                    dialog.dismiss();
+                    return;
+                }
+                mFragmentChange.changeFragment(OptionsSavePath.newInstance(which, storage.getExternalSdCardPath()));
+            }
+        }
+    }
+
+    public void showPicQualitySelectDialog() {
+        if (mSelectDialog != null && mSelectDialog.isShowing()) {
+            return;
+        }
+        mSelectDialog = new SelectDialog(getActivity());
+        mSelectDialog.setCancelable(false);
+        mSelectDialog.setCanceledOnTouchOutside(false);
+        mSelectDialog.setMessage(R.string.option_pic_quality_select);
+        mSelectDialog.setExtraMessage("");
+        List<String> data = new ArrayList<String>();
+        data.add("超精细");
+        data.add("精细");
+        data.add("普通");
+        mSelectDialog.setList(data);
+        mSelectDialog.setListItemClick(new SelectDialog.OnListItemClick() {
+            @Override
+            public void onClick(String data) {
+
+            }
+        });
+        mSelectDialog.show();
+    }
+
+    /**
+     * 用户信息
+     */
+    private void enterUserInfo() {
+        if (mUserLogin) {
+            Intent intentPersonalInformation = new Intent(getActivity(), PersonalInformation.class);
+            startActivityForResult(intentPersonalInformation, REQUEST_CODE_FOR_USERINFO);
+        } else {
+            PGLoginHomeActivity.launchLoginPageAdapte(getActivity(), 0);
+        }
+    }
+
+    private void checkUpdateVersion() {
+        if (mUpdateController == null) {
+            mUpdateController = new UpdateController();
+        }
+
+        if (mUpdateController.needShowUpdateDialog(getActivity())) {
+            mUpdateController.showUpdateDialog(getActivity());
+
+        } else if (mUpdateController.needCheckUpdate(getActivity())) {
+            mUpdateController.setUpdateCallback(mUpdateCallback);
+            mUpdateController.checkUpdate(getActivity().getApplicationContext());
+        }
+    }
+
+    private UpdateController.IUpdateCallback mUpdateCallback
+            = new UpdateController.IUpdateCallback() {
+        @Override
+        public void onUpdateSucceed(int versionCode, String versionName,
+                                    String title, String description, String url) {
+
+        }
+
+        @Override
+        public void onUpdateFailed() {
+            // Do nothing
+        }
+    };
+
+    private void checkRating() {
+        RatingController controller = new RatingController();
+        if (controller.needRating(getActivity())) {
+            controller.showRatingDialog(getActivity(), null,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            getActivity().onBackPressed();
+                        }
+                    });
+        }
+    }
+
+    private void startUserBack() {
+        Intent intents = new Intent(getActivity(), Camera360FeedbackActivity.class);
+        startActivity(intents);
+    }
+}

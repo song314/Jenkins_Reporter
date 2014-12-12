@@ -1,0 +1,235 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+/**
+ * 相机页面底部view
+ *
+ * @author Tsmile
+ */
+public class CameraBottomMenuView extends RelativeLayout
+        implements Rotatable, View.OnClickListener,
+        View.OnLongClickListener, View.OnTouchListener,
+        GestureDetector.OnGestureListener {
+    //ChildView
+    private ImageButton mMultiShotBtn;
+    private ImageButton mShutterBtn;
+    private ThumbnailView mThumbNailBtn;
+
+    private CameraCaptureModeSelector mPictureModeSelector;
+
+    //Listener
+    private ICameraBottomMenuListener mListener;
+
+    private float mTouchDownX = 0;
+    private float mTouchDownY = 0;
+    private float mTouchUpX = 0;
+    private float mTouchUpY = 0;
+    // 移动的阈值
+    private static final float MOVE_DISTANCE = 100;
+    private GestureDetector mGestureDetector;
+
+    public CameraBottomMenuView(Context context) {
+        super(context);
+    }
+
+    public CameraBottomMenuView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public void setListener(ICameraBottomMenuListener listener) {
+        mListener = listener;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        mShutterBtn = (ImageButton) findViewById(
+                ResourceHelper.getId(getContext(), "shutter_btn"));
+        mShutterBtn.setOnLongClickListener(this);
+        mShutterBtn.setOnTouchListener(this);
+
+        // 初始化小图入口按钮
+        mThumbNailBtn = (ThumbnailView) findViewById(
+                ResourceHelper.getId(getContext(), "thumbnail"));
+        mThumbNailBtn.setOnClickListener(this);
+
+        mMultiShotBtn = (ImageButton) findViewById(
+                ResourceHelper.getId(getContext(), "multi_shot_btn"));
+        mMultiShotBtn.setOnClickListener(this);
+
+        mPictureModeSelector = (CameraCaptureModeSelector) findViewById(
+                ResourceHelper.getId(getContext(), "selector_layout"));
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean hasUsedMultiShot = sharedPreferences.getBoolean("has_used_multi_shot", false);
+        if (!hasUsedMultiShot) {
+            Animation animation = AnimationUtils.loadAnimation(
+                    getContext(), R.anim.composite_sdk_breathing);
+            mMultiShotBtn.setAnimation(animation);
+        } else {
+            if (sharedPreferences.getBoolean("is_multi_shot_enable", false)) {
+                mMultiShotBtn.setImageResource(R.drawable.composite_sdk_multi_shot_enable);
+            } else {
+                mMultiShotBtn.setImageResource(R.drawable.composite_sdk_multi_shot_disable);
+            }
+        }
+
+        mGestureDetector = new GestureDetector(getContext(), this);
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+        mThumbNailBtn.setOrientation(orientation, animation);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (mListener != null) {
+            if (view == mThumbNailBtn) {
+                mListener.onGalleryEnterClick();
+            }
+
+            if (view == mMultiShotBtn) {
+                SharedPreferences sharedPreferences = getContext().getSharedPreferences(
+                        PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("has_used_multi_shot", true).commit();
+                mMultiShotBtn.clearAnimation();
+                mListener.onMultiShotClick();
+            }
+        }
+    }
+
+    public void setThumbNail(Bitmap bitmap, boolean needAnim) {
+        mThumbNailBtn.setThumb(bitmap, needAnim);
+    }
+
+    public void setThumbNail(Bitmap bitmap) {
+        mThumbNailBtn.setThumb(bitmap, false);
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        mListener.onShutterBtnLongClick();
+        return true;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (null != mGestureDetector) {
+            return mGestureDetector.onTouchEvent(event);
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent e) {
+
+        if (e.getAction() == MotionEvent.ACTION_DOWN) {
+            mTouchDownX = e.getX();
+            mTouchDownY = e.getY();
+            return false;
+        }
+
+        if (e.getAction() == MotionEvent.ACTION_UP) {
+            mTouchUpX = e.getX();
+            mTouchUpY = e.getY();
+            if (Math.abs(mTouchUpX - mTouchDownX) > MOVE_DISTANCE && (mTouchDownX != 0)
+                    || Math.abs(mTouchUpY - mTouchDownY) > MOVE_DISTANCE && (mTouchDownY != 0)) {
+                mListener.onShutterBtnMoving();
+                clearTouchValue();
+                return false;
+            } else {
+                mListener.onShutterBtnClick();
+                clearTouchValue();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void clearTouchValue() {
+        mTouchDownX = 0;
+        mTouchDownY = 0;
+        mTouchUpX = 0;
+        mTouchUpY = 0;
+    }
+
+    public void toggleMultiShot(boolean isMultiShotEnable) {
+        if (isMultiShotEnable) {
+            mMultiShotBtn.setImageResource(R.drawable.composite_sdk_multi_shot_enable);
+        } else {
+            mMultiShotBtn.setImageResource(R.drawable.composite_sdk_multi_shot_disable);
+        }
+    }
+
+    public void selectPictureMode(int mode) {
+        mPictureModeSelector.selectPictureMode(mode);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+        if (null != mListener) {
+            mListener.onBottomFling(motionEvent, motionEvent2);
+        }
+
+        return true;
+    }
+
+    public interface ICameraBottomMenuListener {
+        public void onShutterBtnClick();
+
+        public void onShutterBtnLongClick();
+
+        public void onShutterBtnMoving();
+
+        public void onGalleryEnterClick();
+
+        public void onMultiShotClick();
+
+        public void onBottomFling(MotionEvent event, MotionEvent event1);
+    }
+}

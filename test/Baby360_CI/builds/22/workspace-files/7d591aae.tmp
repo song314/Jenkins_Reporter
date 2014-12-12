@@ -1,0 +1,312 @@
+package us.pinguo.androidsdk;
+
+public abstract class PGRendererMethod {
+    public enum EM_MAKE_TYPE {
+        RENDER_NORMAL, // 普通的渲染方式 0
+        RENDER_SCENE// 情景模板渲染方式 1
+    }
+
+    private int mRendererPointer = 0;
+
+    public void setRendererPointer(int value) {
+        mRendererPointer = value;
+    }
+
+    // 必须完成这个渲染的动作才可以
+    public abstract void rendererAction();
+
+    public void resetRenderMethod() {
+        lastParamsString = -1;
+        lastPngFilename = -1;
+    }
+
+    // 以下函数提供动作调用
+    public boolean clearImage(int index) {
+        return PGNativeMethod.clearImage(mRendererPointer, index);
+    }
+
+    public boolean renderType(EM_MAKE_TYPE type) {
+        int select = 0;
+
+        switch (type) {
+            case RENDER_NORMAL:
+                select = 0;
+
+                lastParamsString = -1;
+                lastPngFilename = -1;
+
+                break;
+
+            case RENDER_SCENE:
+                select = 1;
+
+                break;
+
+            default:
+                lastParamsString = -1;
+                lastPngFilename = -1;
+
+                break;
+
+        }
+
+        return PGNativeMethod.renderType(mRendererPointer, select);
+    }
+
+    protected boolean setAutoClearShaderCache(boolean isAuto) {
+        return PGNativeMethod.setAutoClearShaderCache(mRendererPointer, isAuto);
+    }
+
+    // //////////////////////////////////////////////////////////////////////////////
+    public boolean setImageFromPath(int index, String path) {
+        return PGNativeMethod.setImageFromPath(mRendererPointer, index, path,
+                0, 1.0f, 0);
+    }
+
+    protected boolean setImageFromPath(int index, String path, float ratio,
+                                       float zoom_scale) {
+        return PGNativeMethod.setImageFromPath(mRendererPointer, index, path,
+                ratio, zoom_scale, 0);
+    }
+
+    protected boolean setImageFromPath(int index, String path, int max_length) {
+        return PGNativeMethod.setImageFromPath(mRendererPointer, index, path,
+                0, 1.0f, max_length);
+    }
+
+    protected boolean setImageFromPath(int index, String path, float ratio,
+                                       float zoom_scale, int max_length) {
+        return PGNativeMethod.setImageFromPath(mRendererPointer, index, path,
+                ratio, zoom_scale, max_length);
+    }
+
+    // /////////////////////////////////////////////////////////////////////////
+    protected boolean setImageFromJPEG(int index, byte[] buffer) {
+        return PGNativeMethod.setImageFromJPEG(mRendererPointer, index, buffer,
+                0, 1.0f, 0);
+    }
+
+    public boolean setResultImageToInput(int index) {
+        return PGNativeMethod.setResultImageToInput(mRendererPointer, index);
+    }
+
+    protected boolean setImageFromJPEG(int index, byte[] buffer, float ratio,
+                                       float zoom_scale) {
+        return PGNativeMethod.setImageFromJPEG(mRendererPointer, index, buffer,
+                ratio, zoom_scale, 0);
+    }
+
+    protected boolean setImageFromJPEG(int index, byte[] buffer, int max_length) {
+        return PGNativeMethod.setImageFromJPEG(mRendererPointer, index, buffer,
+                0, 1.0f, max_length);
+    }
+
+    protected boolean setImageFromJPEG(int index, byte[] buffer, float ratio,
+                                       float zoom_scale, int max_length) {
+        return PGNativeMethod.setImageFromJPEG(mRendererPointer, index, buffer,
+                ratio, zoom_scale, max_length);
+    }
+
+    // /////////////////////////////////////////////////////////////////////////
+    public boolean setImageFromARGB(int index, int[] argb, int width, int height) {
+        return PGNativeMethod.setImageFromARGB(mRendererPointer, index, argb,
+                width, height, 0, 1.0f);
+    }
+
+    protected boolean setImageFromARGB(int index, int[] argb, int width,
+                                       int height, float ratio, float zoom_scale) {
+        return PGNativeMethod.setImageFromARGB(mRendererPointer, index, argb,
+                width, height, ratio, zoom_scale);
+    }
+
+    protected boolean setImageFromYUV420SP(int index, byte[] yuv, int width,
+                                           int height) {
+        return PGNativeMethod.setImageFromYUV(mRendererPointer, index, yuv,
+                width, height, 0, 1.0f);
+    }
+
+    protected boolean setImageFromYUV420SP(int index, byte[] yuv, int width,
+                                           int height, float ratio, float zoom_scale) {
+        return PGNativeMethod.setImageFromYUV(mRendererPointer, index, yuv,
+                width, height, ratio, zoom_scale);
+    }
+
+    /**
+     * 该函数的执行顺序：缩放 旋转 剪裁 镜像
+     *
+     * @return
+     */
+    public boolean adjustImage(int imgIndex, boolean canvasAngle,
+                               int rotateAngle, PGRect rect, boolean mirrorX, boolean mirrorY,
+                               int dstMaxWH, boolean useCPURotate) {
+        if (rect == null) {
+            rect = new PGRect();
+        }
+
+        return PGNativeMethod.adjustImage(mRendererPointer, imgIndex,
+                canvasAngle, rotateAngle, rect.getX_1(), rect.getY_1(),
+                rect.getX_2(), rect.getY_2(), mirrorX, mirrorY, dstMaxWH, useCPURotate);
+    }
+
+    public boolean setSupportImageFromPNGPath(int index, String path) {
+        return PGNativeMethod.setSupportImageFromPNGPath(mRendererPointer,
+                index, path, 0, 1.0f);
+    }
+
+    public boolean setSupportImageFromPNGPath(int index, String path,
+                                              float ratio, float zoom_scale) {
+        return PGNativeMethod.setSupportImageFromPNGPath(mRendererPointer,
+                index, path, ratio, zoom_scale);
+    }
+
+    public boolean setSupportImageFromPNG(int index, byte[] png_buffer) {
+        return PGNativeMethod.setSupportImageFromPNG(mRendererPointer, index,
+                png_buffer, 0, 1.0f);
+    }
+
+    public boolean setSupportImageFromPNG(int index, byte[] png_buffer,
+                                          float ratio, float zoom_scale) {
+        return PGNativeMethod.setSupportImageFromPNG(mRendererPointer, index,
+                png_buffer, ratio, zoom_scale);
+    }
+
+    public boolean setEffect(String effect) {
+        return PGNativeMethod.setEffect(mRendererPointer, effect);
+    }
+
+    public boolean setEffectParams(String effect, String params) {
+        return PGNativeMethod.setEffectParams(mRendererPointer, effect, params);
+    }
+
+    protected void setBackground(float r, float g, float b, float a) {
+        PGNativeMethod.setBackground(mRendererPointer, r, g, b, a);
+    }
+
+    public boolean makeWithSize(int width, int height) {
+        return PGNativeMethod.makeWithSize(mRendererPointer, width, height);
+    }
+
+    public boolean make() {
+        return PGNativeMethod.make(mRendererPointer);
+    }
+
+    public boolean getMakedImage2Screen(int mirror, int left, int top,
+                                        int width, int height) {
+        return PGNativeMethod.getMakedImage2Screen(mRendererPointer, mirror,
+                left, top, width, height);
+    }
+
+    public boolean getMakedImage2JpegFile(String path, int quality) {
+        return PGNativeMethod.getMakedImage2JpegFile(mRendererPointer, path,
+                quality);
+    }
+
+    protected boolean getMakedImage2PngFile(String path, boolean alpha) {
+        return PGNativeMethod.getMakedImage2PngFile(mRendererPointer, path, alpha);
+    }
+
+    protected PGColorBuffer getMakedImagePreview(int max_length) {
+        int[] argb = PGNativeMethod.getMakedImagePreview(mRendererPointer,
+                max_length);
+
+        if (argb == null) {
+            return null;
+        }
+
+        PGColorBuffer result = new PGColorBuffer();
+
+        result.setColorBuffer(argb);
+        result.setImageWidth(PGNativeMethod
+                .getMakedImagePreviewWidth(mRendererPointer));
+        result.setImageHeight(PGNativeMethod
+                .getMakedImagePreviewHeight(mRendererPointer));
+
+        return result;
+    }
+
+    protected PGColorBuffer getMakedImage2Buffer() {
+        int[] argb = PGNativeMethod.getMakedImage2Buffer(mRendererPointer);
+
+        if (argb == null) {
+            return null;
+        }
+
+        PGColorBuffer result = new PGColorBuffer();
+
+        result.setColorBuffer(argb);
+        result.setImageWidth(PGNativeMethod
+                .getMakedImage2BufferWidth(mRendererPointer));
+        result.setImageHeight(PGNativeMethod
+                .getMakedImage2BufferHeight(mRendererPointer));
+
+        return result;
+    }
+
+    /*
+     * 功能:提取情景模版 参数: pngFilename --情景模版文件 paramsString--参数
+     */
+    private int lastPngFilename = -1;
+
+    private int lastParamsString = -1;
+
+    protected boolean loadTemplate(String pngFilename, String paramsString) {
+        boolean bResult = false;
+
+        if (lastPngFilename != pngFilename.hashCode()
+                || lastParamsString != paramsString.hashCode()) {
+            bResult = PGNativeMethod.loadTemplate(mRendererPointer,
+                    pngFilename, paramsString);
+
+            if (PGNativeMethod.getTemplateLoadResult(mRendererPointer)) {
+                lastPngFilename = pngFilename.hashCode();
+
+                lastParamsString = paramsString.hashCode();
+
+                bResult = true;
+            } else {
+                lastPngFilename = -1;
+
+                lastParamsString = -1;
+
+                bResult = false;
+            }
+        } else {
+            bResult = true;
+        }
+
+        return bResult;
+    }
+
+    // 模版是否提取成功
+    protected boolean loadTemplateSuccess() {
+        return PGNativeMethod.getTemplateLoadResult(mRendererPointer);
+    }
+
+    // 模版宽度
+    protected int getTemplateWidth() {
+        return PGNativeMethod.getTemplateWidth(mRendererPointer);
+    }
+
+    // 模版高度
+    protected int getTemplateHeight() {
+        return PGNativeMethod.getTemplateHeight(mRendererPointer);
+    }
+
+    protected void setScreenSize(boolean changed, int screenWidth, int screenHeight) {
+    }
+
+    /**
+     * 取得制图后的预览尺寸
+     *
+     * @param max_length 0不缩放
+     * @param quality    质量，建议95
+     * @return jpg格式的预览图, 失败返回null
+     */
+    protected byte[] getMakedImagePreviewJpeg(int max_length, int quality) {
+        return PGNativeMethod.getMakedImagePreviewJpeg(mRendererPointer, max_length, quality);
+    }
+
+    protected int getRendererPointer() {
+        return mRendererPointer;
+    }
+}

@@ -1,0 +1,9 @@
+commit 55576c48c4a54e31e935bc96d422bd1c282edd3f
+tree 9ef01af28e87c88f680384f212c020c29b7ddbcd
+parent f49efc483017c8e2adf67fc497700e40abdc6118
+author pinguo-tangsong <tangsong@camera360.com> 1416541449 +0800
+committer pinguo-tangsong <tangsong@camera360.com> 1416541449 +0800
+
+    [唐松]debug: 配置daily build
+
+:100644 100644 01e019e8bed0e9b690497cb43d5c45c21dfc89c3 b826b123a441c0ade1379f0488f9449dc83109d7 M	gradle_script/buildci.gradle

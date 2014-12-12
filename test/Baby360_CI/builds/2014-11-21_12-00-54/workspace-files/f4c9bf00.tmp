@@ -1,0 +1,86 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+
+import java.io.File;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+
+/**
+ * Created by pinguo on 14-7-22.
+ */
+public class EffectGroupSavePathRendererMethod extends EffectGroupRendererMethod {
+
+    private final static String TAG = EffectGroupSavePathRendererMethod.class.getSimpleName();
+    private String mSavePath;
+    private boolean mIsJpgFile = true;
+
+    public void setSavePath(String savePath) {
+        this.mSavePath = savePath;
+    }
+
+    public int mPhotoMaxLength = 0;
+
+    public void setPhotoMaxLength(int maxLength) {
+        mPhotoMaxLength = maxLength;
+    }
+
+    protected boolean setPhotoInfo() {
+        if (!this.setImageFromPath(0, mPath)) {
+            mIsJpgFile = false;
+            if (!this.setSupportImageFromPNGPath(0, mPath)) {
+                if (mRendererMethodActionListener != null) {
+                    mRendererMethodActionListener.fail();
+                }
+                GLogger.i(TAG, "setImageFromPath fail");
+                return false;
+            }
+        }
+
+        if (0 != mPhotoMaxLength) {
+            if (!this.adjustImage(0, false, 0, null, false, false, mPhotoMaxLength, false)) {
+                if (mRendererMethodActionListener != null) {
+                    mRendererMethodActionListener.fail();
+                }
+                GLogger.i(TAG, "adjustImage fail");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected void makePhoto() {
+        File parentFile = new File(mSavePath).getParentFile();
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
+        }
+
+        if (mIsJpgFile) {
+            if (!this.getMakedImage2JpegFile(mSavePath, ConstantUtil.PHOTO_QUALITY)) {
+                if (mRendererMethodActionListener != null) {
+                    mRendererMethodActionListener.fail();
+                }
+                GLogger.i(TAG, "getMakedImage2JpegFile fail");
+                return;
+            }
+        } else {
+            if (!this.getMakedImage2PngFile(mSavePath, true)) {
+                if (mRendererMethodActionListener != null) {
+                    mRendererMethodActionListener.fail();
+                }
+                GLogger.i(TAG, "getMakedImage2PngFile fail");
+                return;
+            }
+        }
+
+        if (mRendererMethodActionListener != null) {
+            mRendererMethodActionListener.success(null);
+        }
+    }
+
+    public boolean isJpegFile() {
+        return mIsJpgFile;
+    }
+}

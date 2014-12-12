@@ -1,0 +1,174 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.ui.widget.SeekBar;
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamNoEffectItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.Filter;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class FilterMenu extends BaseMenu {
+
+    private final static String TAG = FilterMenu.class.getSimpleName();
+    private ParamNoEffectItem mOpactityParamNoEffectItem;
+    private String mLastOpactityValue;
+
+    private EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener = new EffectGroupRendererMethod.RendererMethodActionListener() {
+
+
+        @Override
+        public void success(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void fail() {
+
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+    private SeekBar.OnSeekChangeListener mOpactitySeekChangeListener = new SeekBar.OnSeekChangeListener(){
+
+
+        @Override
+        public void onSeekChanged(float currentValue, float step) {
+            if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                setParamItem(currentValue);
+                makePhoto();
+            }
+            setAutoHideTextViewValue(currentValue / step);
+        }
+
+        @Override
+        public void onSeekStopped(float currentValue, float step) {
+            if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                setParamItem(currentValue);
+                mAutoHideTextView.hideForNow();
+                mProgressBar.setVisibility(View.VISIBLE);
+                mScreenLayout.setVisibility(View.VISIBLE);
+
+                makePhoto(rendererMethodActionListener);
+            }
+        }
+    };
+
+
+    public FilterMenu(Context context,SDKManager sdkManager,GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context,sdkManager,compositeRendererMethod);
+    }
+
+    protected void setParamItem(float currentValue) {
+        mOpactityParamNoEffectItem.value = currentValue;
+        setNoParamsModel(mOpactityParamNoEffectItem.key, String.valueOf(currentValue));
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.Filter.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.Filter;
+    }
+
+    @Override
+    protected  boolean isOnClickShowScroll(){
+        return true;
+    }
+
+    @Override
+    protected void showScrollViewClick(){
+        super.showScrollViewClick();
+
+
+        //在这个位置mselectedEffectView肯定是不为null
+        setEditSeekBarInfo(mEditSeekBar, Math.round(mOpactityParamNoEffectItem.min),
+                Math.round(mOpactityParamNoEffectItem.max),
+                Math.round(mOpactityParamNoEffectItem.noEffectValue),
+                mOpactityParamNoEffectItem.step);
+
+    }
+
+    protected SeekBar.OnSeekChangeListener getOpactitySeekChangeListener() {
+        return mOpactitySeekChangeListener;
+    }
+
+    protected void setEditSeekBarInfo(SeekBar editSeekBar, int min, int max, int noEffect, float step) {
+
+        GLogger.i("error", "setEditSeekBarInfo,min:" + min + ",max:" + max + ",noEffect:" + noEffect + ",step:" + step + ",value:" + getEditSeekBarValue());
+        editSeekBar.reset();
+        editSeekBar.setSeekLength(min, max, noEffect, step);
+        editSeekBar.setOnSeekChangeListener(null);
+        editSeekBar.setValue(getEditSeekBarValue());
+        editSeekBar.setOnSeekChangeListener(getOpactitySeekChangeListener());
+    }
+
+
+    protected float getEditSeekBarValue(){
+        mLastOpactityValue = String.valueOf(mOpactityParamNoEffectItem.value);
+        return mOpactityParamNoEffectItem.value;
+    }
+
+    @Override
+    public void quitScrollView(){
+
+        hideScrollView();
+        if(mLastOpactityValue!=null){
+            mOpactityParamNoEffectItem.value = Float.parseFloat(mLastOpactityValue);
+            setNoParamsModel(mOpactityParamNoEffectItem.key, mLastOpactityValue);
+        }else{
+            mOpactityParamNoEffectItem.value = mOpactityParamNoEffectItem.defaultValue;
+            clearNoParamsModel(mOpactityParamNoEffectItem.key);
+        }
+        makePhoto();
+    }
+
+    @Override
+    public void hideScrollView(){
+       super.hideScrollView();
+       mEditSeekBar.setOnSeekChangeListener(null);
+    }
+
+    protected final static int MAKE_PHOTO_FINISH = 100;
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+
+    private void setNoParamsModel(String key, String value){
+        mEffectModelArray[getEffectModelArrayIndex()].setNoEffectParams(key, value);
+        mCompositeRendererMethod.getMakePhotoModelArray()[getEffectModelArrayIndex()].setNoEffectParams(key, value);
+    }
+
+    @Override
+    protected void initParams(Effect effect) {
+        mOpactityParamNoEffectItem = (ParamNoEffectItem) effect.getParamItem(
+                Filter.PARAM_KEY_OPACITY, "");
+        setNoParamsModel(mOpactityParamNoEffectItem.key,
+                String.valueOf(mOpactityParamNoEffectItem.value));
+    }
+}

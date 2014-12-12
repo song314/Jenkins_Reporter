@@ -1,0 +1,254 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.ui.widget.RotateSeekBar;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.RotateStraighten;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by zhongzheng on 14-10-31.
+ */
+public class RotateStraightenMenu extends BaseMenu {
+    private final static String TAG = RotateStraightenMenu.class.getSimpleName();
+    protected final static int MAKE_PHOTO_FINISH = 100;
+
+    private Effect mRotate;
+    private SeekBarControl mSeekBarControl;
+
+
+    private EffectGroupRendererMethod.RendererMethodActionListener
+            rendererMethodActionListener = new EffectGroupRendererMethod.
+            RendererMethodActionListener() {
+        @Override
+        public void success(Bitmap bitmap) {
+        }
+
+        @Override
+        public void fail() {
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+    public RotateStraightenMenu(Context context, SDKManager sdkManager, GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context, sdkManager, compositeRendererMethod);
+        mSeekBarControl = new SeekBarControl();
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.EnhanceHdr.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.EnhanceHdr;
+    }
+
+    @Override
+    protected boolean isOnClickShowScroll() {
+        return false;
+    }
+
+    @Override
+    public void quitScrollView() {
+        super.quitScrollView();
+    }
+
+    @Override
+    public void doneScrollView() {
+        super.doneScrollView();
+    }
+
+    @Override
+    public void showSecondMenu() {
+        mRotate = EffectDataManager.getInstance().getEffect(RotateStraighten.class.getSimpleName());
+        setMakePhotoModel(mRotate);
+    }
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+
+    private class SeekBarControl implements RotateSeekBar.SeekFingerMoveEvent {
+        private RotateSeekBar mSeekBar;
+        private final int mSeekMaxDegree = 25;
+        private final int mSeekMinDegree = -25;
+        private final int mOnShowDegree = 17;
+        private int mCurDegree = 2;
+        private int mCurPos;
+        private int mPos = 0;
+        private int mBitmapMaxLength = 0;
+
+        @Override
+        public void onSeekChange(int x) {
+            if (x != mCurPos) {
+                int move = x - mCurPos;
+                if (move > 0 && mCurDegree > mSeekMinDegree ||
+                        move < 0 && mCurDegree < mSeekMaxDegree) {
+                    calDegree(move);
+                } else if (move != 0) {
+                    setAutoHideTextViewValue(mCurDegree);
+                }
+                mCurPos = x;
+
+            }
+        }
+
+        @Override
+        public void onSeekStart(int x) {
+            mCurPos = x;
+        }
+
+        @Override
+        public void onSeekFinish(int x) {
+
+        }
+
+        public void setRotateSeekBar(RotateSeekBar progressBar) {
+            mSeekBar = progressBar;
+            mSeekBar.setLimitDegree(mSeekMaxDegree, mSeekMinDegree);
+            mSeekBar.setmOnShowDegree(mOnShowDegree);
+            mSeekBar.setCurDegree(mCurDegree);
+            mSeekBar.setSeekLinstener(this);
+        }
+
+        private void calDegree(int move) {
+            int w = mSeekBar.getRect().width();
+            int wSize = w / (mOnShowDegree + 1);
+            int moveDegree = move / wSize;
+            int remainder = Math.abs(move % wSize);
+            boolean isShowing = false;
+            if (move > 0) {
+                if (mPos <= 0 && remainder >= Math.abs(mPos)) {
+                    isShowing = true;
+                }
+                mPos = remainder + mPos;
+                if (mPos >= wSize) {
+                    moveDegree += (mPos / wSize);
+                    mPos = mPos % wSize;
+                }
+                if (moveDegree != 0) {
+                    mCurDegree -= moveDegree;
+                    if (mCurDegree <= -25) {
+                        mCurDegree = -25;
+                        mPos = 0;
+                    }
+                    rotate();
+                    isShowing = true;
+                }
+            } else {
+                if (mPos >= 0 && remainder >= mPos) {
+                    isShowing = true;
+                }
+                mPos = mPos - remainder;
+                if (mPos <= (0 - wSize)) {
+                    moveDegree = moveDegree + (mPos / wSize);
+                    mPos = mPos % wSize;
+                }
+                if (moveDegree != 0) {
+                    mCurDegree -= moveDegree;
+                    if (mCurDegree >= 25) {
+                        mCurDegree = 25;
+                        mPos = 0;
+                    }
+                    isShowing = true;
+                    rotate();
+                }
+            }
+            mSeekBar.show(mCurDegree, mPos);
+            if (isShowing) {
+                setAutoHideTextViewValue(mCurDegree);
+            }
+        }
+
+        public void setScale(float scale) {
+//            calDegree((int)(scale * mRect.width()));
+        }
+
+        public void finishSetScale(float scale) {
+            setScale(scale);
+        }
+
+        private void rotate() {
+            Bitmap bm = mCompositeRendererMethod.getBitmap();
+            int w = mOrgBitmap.getWidth();
+            int h = mOrgBitmap.getHeight();
+            mBitmapMaxLength = w + getPulledLength(mCurDegree);
+            mSDKManager.showPhoto(new PGRendererMethod() {
+                @Override
+                public void rendererAction() {
+                    renderType(EM_MAKE_TYPE.RENDER_NORMAL);
+                    clearImage(0);
+                    //设置特效
+                    if (!setEffect("Effect=Normal")) {
+                        GLogger.i(TAG, "setEffect fail");
+                    }
+                    //设置资源
+                    int[] argbArray = new int[mOrgBitmap.getWidth() * mOrgBitmap.getHeight()];
+                    mOrgBitmap.getPixels(argbArray, 0, mOrgBitmap.getWidth(), 0, 0, mOrgBitmap.getWidth(), mOrgBitmap.getHeight());
+                    if (!setImageFromARGB(0, argbArray, mOrgBitmap.getWidth(), mOrgBitmap.getHeight())) {
+                        GLogger.i(TAG, "setImageFromARGB fail");
+                    }
+                    //设置调整的参数（第三个参数旋转，倒数第二个最大边）
+                    if (!adjustImage(0, false, mCurDegree, null, false, false, mBitmapMaxLength, true)) {
+                        GLogger.i(TAG, "adjustImage fail");
+                    }
+                    //做图
+                    if (!make()) {
+                        GLogger.i(TAG, "make fail");
+                    }
+                    //显示在glsurfaceview
+                    if (!this.getMakedImage2Screen(0, 0, 0, mCompositeRendererMethod.getShowBitmapWidth(),
+                            mCompositeRendererMethod.getShowBitmapHeight())) {
+                        GLogger.i(TAG, "getMakedImage2Screen fail");
+                    }
+                }
+            });
+        }
+
+        private int getPulledLength(int degree) {
+            if (degree == 0) {
+                return 0;
+            }
+            double w = mOrgBitmap.getWidth();
+            double h = mOrgBitmap.getHeight();
+
+            double r = Math.sqrt(w * w / 4 + h * h / 4);//Math.sqrt(2) * w / 2;
+            double d = Math.sqrt(r * r + r * r -
+                    2 * r * r * Math.cos(((float) degree / 180 * Math.PI)));
+            double e = Math.sin(((float) (90 - degree)) / 2 / 180 * Math.PI);
+            float length = (float) (e * d) * 2;
+            return (int) Math.ceil(length);
+        }
+    }
+
+    public void setRotateSeekBar(RotateSeekBar progressBar) {
+        if (progressBar != null) {
+            mSeekBarControl.setRotateSeekBar(progressBar);
+        }
+    }
+}

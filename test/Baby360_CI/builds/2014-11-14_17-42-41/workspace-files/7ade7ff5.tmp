@@ -1,0 +1,59 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+
+import android.content.Context;
+import android.content.res.AssetManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+/**
+ * Created by liubo on 12/12/13.
+ */
+public final class EffectFactory {
+
+    public static byte[] array;
+
+    public static String getGPUCmd(Effect effect) {
+
+        return "Effect="+effect.gpuCmdStr;
+    }
+
+    public synchronized static byte[] getShaderFile(Context context){
+
+        if(array == null){
+            AssetManager am = context.getAssets();
+            BufferedInputStream in = null;
+            try {
+                in = new BufferedInputStream(am.open("load_background.jpg", AssetManager.ACCESS_BUFFER));
+
+                ByteArrayOutputStream out = null;
+
+                out = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024 * 4];
+                int len = -1;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+                out.flush();
+                array = out.toByteArray();
+            }catch (IOException e) {
+                    e.printStackTrace();
+
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        return array;
+    }
+
+}

@@ -1,0 +1,217 @@
+/*
+ * Copyright (C) 2010 The Android Open Source Project Licensed under the Apache
+ * License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.gallery.ui;
+
+import android.content.Context;
+
+import com.pinguo.edit.sdk.gallery.AlbumActivity;
+import com.pinguo.edit.sdk.gallery.AlbumDataLoader;
+import com.pinguo.edit.sdk.gallery.data.MediaSet;
+
+import java.util.ArrayList;
+
+public class AlbumSlotRenderer extends AbstractSlotRenderer {
+
+    @SuppressWarnings("unused")
+    private static final String TAG = "AlbumSlotRenderer";
+
+    public interface SlotFilter {
+
+        public boolean acceptSlot(int index);
+    }
+
+    private static final int PLACEHOLDER_COLOR = 0xFF222222;//0xFFEEEEEE;
+    private AlbumSlidingWindow mDataWindow;
+    private final AlbumActivity mActivity;
+    private final ColorTexture mWaitLoadingTexture;
+    private final SlotView mSlotView;
+    private int mPressedIndex = -1;
+    private boolean mAnimatePressedUp;
+    private SlotFilter mSlotFilter;
+    protected final SortTagSpec mSortTagSpec;
+    private String mHighlightItemPath = null;
+
+    public static class SortTagSpec {
+
+        public int titleFontSize;
+        public int countFontSize;
+        public int iconSize;
+    }
+
+    public AlbumSlotRenderer(AlbumActivity activity, SlotView slotView,
+                             SortTagSpec sortTagSpec) {
+        super((Context) activity);
+        mActivity = activity;
+        mSlotView = slotView;
+        mWaitLoadingTexture = new ColorTexture(PLACEHOLDER_COLOR);
+        mWaitLoadingTexture.setSize(1, 1);
+        mSortTagSpec = sortTagSpec;
+    }
+
+    public void setPressedIndex(int index) {
+        if (mPressedIndex == index) {
+            return;
+        }
+        mPressedIndex = index;
+        mSlotView.invalidate();
+    }
+
+    public void setPressedUp() {
+        if (mPressedIndex == -1) {
+            return;
+        }
+        mAnimatePressedUp = true;
+        mSlotView.invalidate();
+    }
+
+    public void setHighlightItemPath(String path) {
+        if (mHighlightItemPath == path) {
+            return;
+        }
+        mHighlightItemPath = path;
+        mSlotView.invalidate();
+    }
+
+    public void setModel(AlbumDataLoader model) {
+        if (mDataWindow != null) {
+            mDataWindow.setListener(null);
+            mSlotView.setSlotCount(0);
+            mDataWindow = null;
+        }
+        if (model != null) {
+            mDataWindow = new AlbumSlidingWindow(mActivity, model, mSortTagSpec);
+            mDataWindow.setListener(new MyDataModelListener());
+            mSlotView.setSlotCount(model.size());
+        }
+    }
+
+    public void setSlotFilter(SlotFilter slotFilter) {
+        mSlotFilter = slotFilter;
+    }
+
+    private static Texture checkTexture(Texture texture) {
+        return (texture instanceof UploadedTexture) && ((UploadedTexture) texture).isUploading() ? null : texture;
+    }
+
+    @Override
+    public int renderSortTag(GLCanvas canvas, int tagIndex, int width, int height) {
+        Texture t = mDataWindow.getSortTagEntry(tagIndex).bitmapTexture;
+        Texture content = checkTexture(t);
+        if (content != null) {
+            canvas.save(GLCanvas.SAVE_FLAG_MATRIX);
+            int b = AlbumSortTagMaker.getBorderSize();
+            int h = content.getHeight();
+            content.draw(canvas, -b, height - h + b, width + b + b, h);
+            canvas.restore();
+        }
+        return 0;
+    }
+
+    @Override
+    public int renderSlot(GLCanvas canvas, int index, int width, int height) {
+        if (mSlotFilter != null && !mSlotFilter.acceptSlot(index)) {
+            return 0;
+        }
+        AlbumSlidingWindow.AlbumEntry entry = mDataWindow.getSlotEntry(index);
+        int renderRequestFlags = 0;
+        Texture content = checkTexture(entry.content);
+        if (content == null) {
+            content = mWaitLoadingTexture;
+            entry.isWaitDisplayed = true;
+        } else if (entry.isWaitDisplayed) {
+            entry.isWaitDisplayed = false;
+            content = new FadeInTexture(PLACEHOLDER_COLOR, entry.bitmapTexture);
+            entry.content = content;
+        }
+        renderRequestFlags |= renderOverlay(canvas, index, entry, width, height);
+        drawContent(canvas, content, width, height, entry.rotation, 0);
+        if ((content instanceof FadeInTexture) && ((FadeInTexture) content).isAnimating()) {
+            renderRequestFlags |= SlotView.RENDER_MORE_FRAME;
+        }
+
+        return renderRequestFlags;
+    }
+
+    private int renderOverlay(GLCanvas canvas, int index, AlbumSlidingWindow.AlbumEntry entry, int width, int height) {
+        int renderRequestFlags = 0;
+        if (mPressedIndex == index) {
+            if (mAnimatePressedUp) {
+                drawPressedUpFrame(canvas, width, height);
+                renderRequestFlags |= SlotView.RENDER_MORE_FRAME;
+                if (isPressedUpFrameFinished()) {
+                    mAnimatePressedUp = false;
+                    mPressedIndex = -1;
+                }
+            } else {
+                drawPressedFrame(canvas, width, height);
+            }
+        } else if ((entry.path != null && mHighlightItemPath != null) && (mHighlightItemPath.equals(entry.path))) {
+            drawSelectedFrame(canvas, width, height);
+        }
+        //GMLogger.i(TAG, "----------" + mActivity.getPhotoPicker().inPickerMode() + ":" + mActivity.getPhotoPicker().isItemPicked(entry.path));
+        return renderRequestFlags;
+    }
+
+    private class MyDataModelListener implements AlbumSlidingWindow.Listener {
+
+        @Override
+        public void onContentChanged() {
+            mSlotView.invalidate();
+        }
+
+        @Override
+        public void onSizeChanged(int size, ArrayList<MediaSet.SortTag> tags) {
+            mSlotView.setSortTags(tags);
+            mSlotView.setSlotCount(size);
+        }
+    }
+
+    public void resume() {
+        mDataWindow.resume();
+    }
+
+    public void pause() {
+        mDataWindow.pause();
+    }
+
+    @Override
+    public void prepareDrawing() {
+    }
+
+    // for slots
+    @Override
+    public void onVisibleSlotRangeChanged(int visibleStart, int visibleEnd) {
+        if (mDataWindow != null) {
+            mDataWindow.setActiveSlotWindow(visibleStart, visibleEnd);
+        }
+    }
+
+    @Override
+    public void onSlotSizeChanged(int width, int height) {
+        // do nothing
+    }
+
+    @Override
+    public void onVisibleTagRangeChanged(int visibleStart, int visibleEnd) {
+        if (mDataWindow != null) {
+            mDataWindow.setActiveTagWindow(visibleStart, visibleEnd);
+        }
+    }
+
+    @Override
+    public void initSortTagMetrics(int width, int height) {
+        if (mDataWindow != null) {
+            mDataWindow.setSortTagMetrics(width, height);
+        }
+    }
+
+}

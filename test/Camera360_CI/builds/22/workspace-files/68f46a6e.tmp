@@ -1,0 +1,31 @@
+package com.pinguo.edit.sdk.option.message;
+
+import android.text.TextUtils;
+
+/**
+ * Created by wangpeng on 14-5-10.
+ */
+public class PGOrderMessage implements Comparable<PGOrderMessage> {
+    public String id;
+    public String logic;
+    public String type;
+
+    @Override
+    public int compareTo(PGOrderMessage pgMessage) {
+        return logic.compareTo(pgMessage.logic);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof PGOrderMessage) {
+            return TextUtils.equals(logic, ((PGOrderMessage) o).logic);
+        }
+
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return logic.hashCode();
+    }
+}

@@ -1,0 +1,49 @@
+package com.pinguo.edit.sdk.gallery.ui;
+
+
+import com.pinguo.edit.sdk.gallery.AlbumActivity;
+
+/**
+ * 列表方式渲染ablumSet
+ * <p/>
+ * Created by tsmile on 14-5-23.
+ */
+public class AlbumSetListSlotRenderer extends AlbumSetSlotRenderer {
+
+    public AlbumSetListSlotRenderer(AlbumActivity activity, SlotView slotView, LabelSpec labelSpec) {
+        super(activity, slotView, labelSpec);
+    }
+
+    @Override
+    public void onSlotSizeChanged(int width, int height) {
+        if (mDataWindow != null) {
+            int labelWidth = width - height;
+            if (labelWidth < 0) {
+                labelWidth = width;
+            }
+            mDataWindow.onSlotSizeChanged(width, height, labelWidth);
+        }
+    }
+
+    @Override
+    protected int renderLabel(GLCanvas canvas, AlbumSetSlidingWindow.AlbumSetEntry entry, int width, int height) {
+        Texture content = checkTexture(entry.labelTexture);
+        if (content != null) {
+            int b = AlbumLabelMaker.getBorderSize();
+            int h = content.getHeight();
+            content.draw(canvas, height + b, (height - h) / 2, width - height - b, h);
+        }
+        return 0;
+    }
+
+    @Override
+    public int renderSlot(GLCanvas canvas, int index, int width, int height) {
+        AlbumSetSlidingWindow.AlbumSetEntry entry = mDataWindow.get(index);
+        int renderRequestFlags = 0;
+        renderRequestFlags |= renderOverlay(canvas, index, entry, width, height);
+        renderRequestFlags |= renderContent(canvas, entry, width - 20, height - 20, 20);
+        renderRequestFlags |= renderLabel(canvas, entry, width, height);
+
+        return renderRequestFlags;
+    }
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="@color/login_alert_dialog_bg"
+    android:layout_width="@dimen/login_alert_dialog_width"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
+
+    <TextView
+        android:id="@+id/dialog_tv"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFFFF"
+        android:textSize="@dimen/login_alert_dialog_mes_text_size"
+        android:layout_width="wrap_content"
+        android:gravity="center"
+        android:text="aaa"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true" />
+
+    <View
+        android:layout_width="@dimen/login_alert_dialog_line_width"
+        android:layout_below="@id/dialog_tv"
+        android:layout_height="1dp"
+        android:background="#ffffffff"
+        android:layout_marginLeft="@dimen/login_alert_dialog_inner_padding"
+        android:layout_marginRight="@dimen/login_alert_dialog_inner_padding"
+        android:gravity="center"></View>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/dialog_tv"
+        android:id="@+id/list_view"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/login_alert_dialog_btn_top"
+        android:layout_marginLeft="@dimen/login_alert_dialog_inner_padding"
+        android:layout_marginRight="@dimen/login_alert_dialog_inner_padding"></ListView>
+
+</RelativeLayout>

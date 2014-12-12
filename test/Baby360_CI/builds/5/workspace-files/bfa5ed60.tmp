@@ -1,0 +1,347 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import android.content.Context;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.AssetsUtils;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.Camera360Lib.utils.UnzipUtils;
+import com.pinguo.edit.sdk.utils.DownloadFileUtils;
+import com.pinguo.edit.sdk.utils.SDCardUtils;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.*;
+
+/**
+ * Created by huowaa on 14-6-28.
+ * 操作特效数据的工具类
+ */
+public class ResourceManagerUtils {
+    private final static String TAG = ResourceManagerUtils.class.getSimpleName();
+
+    public static String getIconPathByType(File installedDir) {
+        return new File(installedDir.getAbsolutePath() + File.separator + "icon" + File.separator).getAbsolutePath();
+    }
+
+    private static Map<String, Type> typeMapper = new HashMap<String, Type>();
+    private static Map<String, Class> effectClassMapper = new HashMap<String, Class>();
+    static {
+        initTypeMapper();
+        initEffectClassMapper();
+    }
+
+    private static void initEffectClassMapper() {
+        String pack = Filter.class.getPackage().getName();
+
+        try {
+            for ( Effect.Type type : Effect.Type.values() ) {
+                if ( (type == Effect.Type.Composite)  || (type == Effect.Type.CompositeLib) ) {
+                    continue;
+                }
+
+                String name = type.name();
+                Class clazz = Class.forName(pack + "." + name);
+
+                effectClassMapper.put(name, clazz);
+            }
+        } catch (ClassNotFoundException e) {
+            GLogger.e(TAG, "Init effect class mapper failed!");
+            GLogger.e(TAG, e);
+        }
+    }
+
+    private static void initTypeMapper() {
+        typeMapper.put(Effect.Type.EnhanceHdr.name(), new TypeToken<EnhanceHdr>(){}.getType());
+        typeMapper.put(Effect.Type.EnhanceSkin.name(), new TypeToken<EnhanceSkin>(){}.getType());
+        typeMapper.put(Effect.Type.Sharpen.name(), new TypeToken<Sharpen>(){}.getType());
+        typeMapper.put(Effect.Type.TiltShift.name(), new TypeToken<TiltShift>(){}.getType());
+        typeMapper.put(Effect.Type.Filter.name(), new TypeToken<Filter>(){}.getType());
+        typeMapper.put(Effect.Type.AdvanceBase.name(), new TypeToken<AdvanceBase>(){}.getType());
+        typeMapper.put(Effect.Type.AdvanceHSL.name(), new TypeToken<AdvanceHSL>(){}.getType());
+        typeMapper.put(Effect.Type.AdvanceVignette.name(), new TypeToken<AdvanceVignette>(){}.getType());
+        typeMapper.put(Effect.Type.Lighting.name(), new TypeToken<Lighting>(){}.getType());
+        typeMapper.put(Effect.Type.Frame.name(), new TypeToken<Frame>(){}.getType());
+    }
+
+    public static Effect getEffectSubObjectByTypeKey(String type) {
+        Class clazz = effectClassMapper.get(type);
+        Effect effect = null;
+
+        if ( null != clazz ) {
+            try {
+                effect = (Effect)clazz.newInstance();
+            } catch (InstantiationException e) {
+                GLogger.e(TAG, "New effect object according to class failed!");
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                GLogger.e(TAG, "New effect object according to class failed!");
+                e.printStackTrace();
+            }
+        }
+
+        return effect;
+    }
+
+    public static Type getEffectSubTypeByTypeKey(String type) {
+        return typeMapper.get(type);
+    }
+
+    public static boolean isSDCardAvalable(Context context)
+    {
+        File downloadDir = SDCardUtils.getSDCardDir(context, "download");
+        if (null == downloadDir)
+            return false;
+        else
+            return true;
+    }
+
+    public static String getZipFileName(String url)
+    {
+        String zipFileName = "";
+
+        if ( null == url || url.isEmpty() )
+        {
+            GLogger.e(TAG, "Bad url: " + url);
+            return zipFileName;
+        }
+
+        String[] arr = url.split("/");
+        if (null == arr || arr.length < 1)
+        {
+            GLogger.e(TAG, "Install unzip fail! Bad download url: " + url);
+            return zipFileName;
+        }
+        zipFileName = arr[arr.length - 1];
+
+        // for internet download path, ignore '?' params
+        arr = zipFileName.split("\\?");
+        if ( null != arr && arr.length > 0 )
+        {
+            zipFileName = arr[0];
+        }
+
+        if ( !zipFileName.toLowerCase().endsWith(".zip") )
+            zipFileName = "";
+
+        return zipFileName;
+    }
+
+    public static boolean download(Context context, String url, String zipFileName, boolean isSDCardAvalable) {
+        File downloadDir; // inner or outer storage
+        if (isSDCardAvalable) {
+            downloadDir = SDCardUtils.getSDCardDir(context, "download");
+        } else {
+            downloadDir = context.getCacheDir();
+        }
+
+        File effectPackFile = new File(downloadDir.getPath() + File.separator + zipFileName);
+        GLogger.d(TAG, "Download zip: " + url);
+
+        // scheme
+        String[] arr = url.split("://");
+        if (null == arr || arr.length < 1) {
+            GLogger.e(TAG, "Param error, url:" + url);
+            return false;
+        }
+        String scheme = arr[0];
+        GLogger.d(TAG, "Download file from " + url + " to " + effectPackFile.getAbsolutePath());
+
+        // 如果目标文件已存在
+        if (effectPackFile.exists()) {
+            long timeDiff = System.currentTimeMillis() - effectPackFile.lastModified();
+
+            if ( timeDiff > 0 && timeDiff < IEffectResourceManager.ZIP_FILE_RESERVE_TIME_MS) {
+                // 时间窗口内，直接复用，不用下载
+                GLogger.d(TAG, effectPackFile.getAbsolutePath() + " exist for " + timeDiff + " ms, reuse it");
+                return true;
+            } else {
+                // 超过时间窗口，删除
+                FileUtils.deleteFile(effectPackFile);
+                GLogger.d(TAG, effectPackFile.getAbsolutePath() + " exist, delete first");
+            }
+        }
+
+        try {
+            if (scheme.equals("assets")) {
+                String srcFilePath = arr[1];
+                AssetsUtils.copyAssetsFileTo(context, srcFilePath, effectPackFile);
+            } else if (scheme.equals("http")) {
+                DownloadFileUtils.download(url, effectPackFile, downloadDir);
+            }
+        } catch (Exception e) {
+            GLogger.e(TAG, e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static File unzip(Context context, String effectPackFileName, boolean isSDCardAvalable) {
+        File downloadDir, unzippedDir;
+        if (isSDCardAvalable) {
+            downloadDir = SDCardUtils.getSDCardDir(context, "download");
+            unzippedDir = SDCardUtils.getSDCardDir(context, "unzipped");
+        } else {
+            downloadDir = context.getCacheDir();
+            unzippedDir = context.getCacheDir();
+        }
+
+        String[] arr = effectPackFileName.split("\\.");
+        if (null == arr || arr.length < 1) {
+            GLogger.e(TAG, "Unzip fail, bad effect pack file name: " + effectPackFileName);
+            return null;
+        }
+        String packDirName = arr[0];
+
+        File unpackProductDir = new File(unzippedDir.getAbsolutePath() + File.separator + packDirName + File.separator);
+
+        //如果目标目录已经存在，先删除
+        if (unpackProductDir.exists() && unpackProductDir.isDirectory()) {
+            FileUtils.deleteFile(unpackProductDir);
+            GLogger.d(TAG, "Target dir: " + unpackProductDir.getAbsolutePath() + " exists, delete it before unzipping");
+        }
+
+        File effectPackFile = new File(downloadDir.getPath() + File.separator + effectPackFileName);
+        UnzipUtils.unzip(effectPackFile.getAbsolutePath(), unzippedDir.getAbsolutePath() + File.separator);
+        return unpackProductDir;
+    }
+
+    public static EffectType parseMetaJson(String packKey, File metaJsonFile) throws Exception {
+        EffectType effectType = parseEffectType(metaJsonFile);
+
+        if ( null == packKey || packKey.isEmpty() ) { // 若product的packKey(guid)为空，则赋值为effectType的guid
+            packKey = effectType.guid;
+        }
+
+        if ( effectType.type.equals(Effect.Type.Composite.name()) ) {
+            return parseCompositeMeta(effectType, packKey, metaJsonFile);
+        } else if ( effectType.type.equals(Effect.Type.CompositeLib.name()) ) {
+            return parseCompositeMeta(effectType, packKey, metaJsonFile);
+        } else {
+            return parseEffectMeta(effectType, packKey, metaJsonFile);
+        }
+    }
+
+    private static EffectType parseCompositeMeta(EffectType effectType, String packKey, File metaJsonFile) throws Exception{
+        if (null != effectType.effectNames)
+        {
+            // 因为CompositeEffect是以安装时间倒序的，为确保顺序正确，需要先做倒序
+            List<String> effectNameList = Arrays.asList(effectType.effectNames);
+            Collections.reverse(effectNameList);
+
+            int i = 0;
+            for (String effectName : effectNameList)
+            {
+                File effectFile = new File(metaJsonFile.getParent(), effectName.toLowerCase() + ".json");
+                CompositeEffect compositeEffect = parseCompositeEffect(effectFile, packKey, i);
+                effectType.addCompositeEffect(compositeEffect);
+                i++;
+            }
+        }
+
+        return effectType;
+    }
+
+    private static EffectType parseEffectMeta(EffectType effectType, String packKey, File metaJsonFile) throws Exception{
+        if (null != effectType.effectNames)
+        {
+            for (int i = 0; i < effectType.effectNames.length; i++)
+            {
+                String effectName = effectType.effectNames[i];
+                File effectFile = new File(metaJsonFile.getParent(), effectName.toLowerCase() + ".json");
+                Effect effect = parseEffect(effectFile, effectType.type, packKey, i);
+                effectType.addEffect(effect);
+            }
+        }
+        return effectType;
+    }
+
+    private static EffectType parseEffectType(File effectTypeFile) throws Exception {
+        GLogger.d(TAG, "Parse effect type json: " + effectTypeFile.getAbsolutePath());
+        EffectType effectType;
+        try {
+            String metaStr = FileUtils.getFileContent(effectTypeFile);
+            Gson gson = new Gson();
+            java.lang.reflect.Type type = new TypeToken<EffectType>() {}.getType();
+            effectType = gson.fromJson(metaStr, type);
+        } catch (Exception e) {
+            GLogger.e(TAG, "Parse effect type json fail!");
+            GLogger.e(TAG, e);
+            throw e;
+        }
+        return effectType;
+    }
+
+    private static CompositeEffect parseCompositeEffect(File ceFile, String packKey, int i) throws IOException {
+        // FIXME:无用的参数
+        GLogger.d(TAG, "Parse composite effect json: " + ceFile.getAbsolutePath());
+        CompositeEffect compositeEffect;
+        String jsonStr;
+        try {
+            jsonStr = FileUtils.getFileContent(ceFile);
+            compositeEffect =  CompositeEffect.loadFromJsonStr(jsonStr);
+        } catch (RuntimeException e) {
+            GLogger.e(TAG, "Parse composite effect json fail!");
+            GLogger.e(TAG, e);
+            throw e;
+        }
+
+        return compositeEffect;
+    }
+
+    private static Effect parseEffect(File effectFile, String typeKey, String packKey, int idxInPack) throws Exception {
+        GLogger.d(TAG, "Parse effect json: " + effectFile.getAbsolutePath());
+        Effect effect;
+        String jsonStr;
+        try
+        {
+            jsonStr = FileUtils.getFileContent(effectFile);
+            Gson gson = new Gson();
+            java.lang.reflect.Type type = getEffectSubTypeByTypeKey(typeKey);
+
+            effect = gson.fromJson(jsonStr, type);
+            effect.packKey = packKey;
+            effect.idxInPack = idxInPack;
+        }
+        catch (RuntimeException e)
+        {
+            GLogger.e(TAG, "Parse effect json fail!");
+            GLogger.e(TAG, e);
+            throw e;
+        }
+
+        return effect;
+    }
+
+    public static boolean copyResource(File installedDir, File unpackProductDir)
+    {
+        GLogger.d(TAG, "Copy shader and texture to installed dir");
+        try
+        {   String fromTexturePath = unpackProductDir.getAbsolutePath() + File.separator + "texture" + File.separator;
+            String toTexturePath = installedDir.getAbsolutePath() + File.separator + "texture" + File.separator;
+            if ( new File(fromTexturePath).exists() ) {
+                FileUtils.copyFolder(new File(fromTexturePath), new File(toTexturePath));
+            }
+
+            String fromIconPath = unpackProductDir.getAbsolutePath() + File.separator + "icon" + File.separator;
+            String toIconPath = installedDir.getAbsolutePath() + File.separator + "icon" + File.separator;
+            if ( new File(fromIconPath).exists() ) {
+                FileUtils.copyFolder(new File(fromIconPath), new File(toIconPath));
+            }
+        }
+        catch (IOException e)
+        {
+            GLogger.e(TAG, "Copy shader and texture fail, exit install!");
+            GLogger.e(TAG, e);
+            return false;
+        }
+        return true;
+    }
+}

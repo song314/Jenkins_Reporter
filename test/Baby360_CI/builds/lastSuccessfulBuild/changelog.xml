@@ -1,0 +1,9 @@
+commit a83c59d8fec4397645d47bdca20a635da2696d9e
+tree a0c18fe363e3ac654ec4d1254a002ce019ba871c
+parent d9eaadb50e168109d03f4f0f4ca116fd3afee787
+author hlffeng <helinfeng@camera360.com> 1417575658 +0800
+committer hlffeng <helinfeng@camera360.com> 1417575658 +0800
+
+    [何林峰]之前提交错误把更新关闭了提交，现在修正
+
+:100644 100644 b7033b26f357d4a008749043144e5c13e913411d 17bd22b3a8b3b231fc520e071238cebf7c644a31 M	src/com/pinguo/mix/UpdateController.java

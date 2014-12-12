@@ -1,0 +1,2096 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<annotation-array>
+  <bug plugin="pmd@3.38">
+    <message>These nested if statements could be combined.</message>
+    <priority>NORMAL</priority>
+    <key>15328254</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>50</start>
+        <end>57</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>50</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/EntryCompositeCropRendererMethod.java</fileName>
+    <moduleName></moduleName>
+    <packageName>us.pinguo.android.effect.group.sdk.androidsdk.model</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328255</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Avoid empty catch blocks.</message>
+    <priority>NORMAL</priority>
+    <key>15328234</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>54</start>
+        <end>54</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>54</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/DownloadFileUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.utils</packageName>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328235</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>80</primaryColumnStart>
+    <primaryColumnEnd>106</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328269</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>204</start>
+        <end>206</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>204</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/BaseMenu.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>us.pinguo.android.effect.group.sdk.group</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328270</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328272</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>83</start>
+        <end>85</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>83</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/CompositeSaveListDialog.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[3]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328273</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328188</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>589</start>
+        <end>591</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>589</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/CcCameraFragment.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328189</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Avoid empty if statements.</message>
+    <priority>NORMAL</priority>
+    <key>15328218</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>467</start>
+        <end>469</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>467</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/GLRootView.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.gallery.ui</packageName>
+    <category>Basic Rules</category>
+    <type>EmptyIfStmt</type>
+    <contextHashCode>15328219</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>33</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328196</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>118</start>
+        <end>120</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>118</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/setting/PreferenceGroup.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.setting</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328197</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/setting</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328258</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>269</start>
+        <end>271</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>269</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328259</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328264</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>135</start>
+        <end>141</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>135</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328265</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328245</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>260</start>
+        <end>262</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>260</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/MixShareActivity.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.mix</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328246</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328215</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>67</start>
+        <end>69</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>67</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/FadeTexture.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328216</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>An empty statement (semicolon) not part of a loop.</message>
+    <priority>NORMAL</priority>
+    <key>15328244</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>123</start>
+        <end>123</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>123</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/CrashReportActivity.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[10]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyStatementNotInLoop</type>
+    <contextHashCode>15328245</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix</pathName>
+    <primaryColumnStart>110</primaryColumnStart>
+    <primaryColumnEnd>110</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328238</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>316</start>
+        <end>318</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>316</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/ImageManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328239</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Avoid empty finally blocks.</message>
+    <priority>NORMAL</priority>
+    <key>15328220</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>164</start>
+        <end>165</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>164</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/TileImageViewAdapter.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyFinallyBlock</type>
+    <contextHashCode>15328221</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328243</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>29</start>
+        <end>31</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>29</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/AppCrashHandler.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[10]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328244</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328270</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>440</start>
+        <end>442</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>440</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/BaseMenu.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[3]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328271</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group</pathName>
+    <primaryColumnStart>29</primaryColumnStart>
+    <primaryColumnEnd>29</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328263</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>108</start>
+        <end>115</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>108</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328264</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328274</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>590</start>
+        <end>604</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>590</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/menu/DetailMenu.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>us.pinguo.android.effect.group.sdk.group.menu</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328275</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group/menu</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328255</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>80</start>
+        <end>82</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>80</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/EntryCompositeCropRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328256</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328214</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>71</start>
+        <end>72</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>71</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/AlbumEGLConfigChooser.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328215</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>29</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Do not use if statements that are always true or always false.</message>
+    <priority>NORMAL</priority>
+    <key>15328236</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>161</start>
+        <end>161</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>161</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/ImageManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>UnconditionalIfStatement</type>
+    <contextHashCode>15328237</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328225</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>167</start>
+        <end>169</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>167</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BlobCache.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.gallery.util</packageName>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328226</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328252</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>154</start>
+        <end>160</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>154</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/CropRendererMethodForPictureInfo.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328253</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328262</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>95</start>
+        <end>102</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>95</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328263</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[6]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328216</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>772</start>
+        <end>776</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>772</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/GLCanvasImpl.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyIfStmt</type>
+    <contextHashCode>15328217</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>56</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328197</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>102</start>
+        <end>104</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>102</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/ui/RotateLayout.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.ui</packageName>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328198</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/ui</pathName>
+    <primaryColumnStart>19</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328208</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>85</start>
+        <end>87</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>85</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/data/ImageCacheService.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.gallery.data</packageName>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328209</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/data</pathName>
+    <primaryColumnStart>15</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328190</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>605</start>
+        <end>605</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>605</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/focus/FocusManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.focus</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328191</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/focus</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>84</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328223</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>211</start>
+        <end>213</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>211</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BitmapUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328224</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328276</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>1074</start>
+        <end>1078</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>1074</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/sdk/BeautyController.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>us.pinguo.sdk</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328277</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/sdk</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328273</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>491</start>
+        <end>501</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>491</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/menu/DetailMenu.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[18]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328274</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group/menu</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328241</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>31</start>
+        <end>34</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>31</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/intent/IntentCameraActivity.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.intent</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328242</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/intent</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328268</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>174</start>
+        <end>176</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>174</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/BaseMenu.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[3]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328269</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328249</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>75</start>
+        <end>81</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>75</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/EffectGroupRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>us.pinguo.android.effect.group.sdk.androidsdk</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328250</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Avoid unnecessary return statements.</message>
+    <priority>NORMAL</priority>
+    <key>15328202</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>223</start>
+        <end>223</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>223</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/AlbumPage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.gallery</packageName>
+    <category>Basic Rules</category>
+    <type>UnnecessaryReturn</type>
+    <contextHashCode>15328203</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery</pathName>
+    <primaryColumnStart>9</primaryColumnStart>
+    <primaryColumnEnd>15</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328247</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>126</start>
+        <end>128</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>126</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/UpdateController.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[10]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328248</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328237</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>216</start>
+        <end>218</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>216</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/ImageManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328238</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328192</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>133</start>
+        <end>150</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>133</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/save/ImageSaver.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.save</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328193</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/save</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328228</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>621</start>
+        <end>623</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>621</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BlobCache.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328229</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Overriding method merely calls super.</message>
+    <priority>NORMAL</priority>
+    <key>15328260</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>596</start>
+        <end>598</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>596</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>UselessOverridingMethod</type>
+    <contextHashCode>15328261</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>16</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328212</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>352</start>
+        <end>356</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>352</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/support/OverScroller.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.gallery.support</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328213</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/support</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328200</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>298</start>
+        <end>305</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>298</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/util/UtilStorage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.util</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328201</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/util</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328233</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>53</start>
+        <end>53</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>53</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/DownloadFileUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328234</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>80</primaryColumnStart>
+    <primaryColumnEnd>106</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328246</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>148</start>
+        <end>150</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>148</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/MixShareFilterActivity.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[10]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328247</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328271</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>207</start>
+        <end>209</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>207</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/group/CompositeSaveDialog.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[3]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328272</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/group</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[6]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328219</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>117</start>
+        <end>120</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>117</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/TileImageViewAdapter.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyIfStmt</type>
+    <contextHashCode>15328220</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>29</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328226</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>434</start>
+        <end>436</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>434</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BlobCache.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328227</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[40]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328204</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>111</start>
+        <end>113</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>111</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[35]/packageName"/>
+    <category>Basic Rules</category>
+    <type>UselessOverridingMethod</type>
+    <contextHashCode>15328205</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery</pathName>
+    <primaryColumnStart>12</primaryColumnStart>
+    <primaryColumnEnd>5</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328201</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>302</start>
+        <end>303</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>302</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/util/UtilStorage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[42]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328202</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/util</pathName>
+    <primaryColumnStart>29</primaryColumnStart>
+    <primaryColumnEnd>46</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328210</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>344</start>
+        <end>348</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>344</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/support/OverScroller.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[41]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328211</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/support</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328235</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>55</start>
+        <end>55</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>55</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/DownloadFileUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328236</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>80</primaryColumnStart>
+    <primaryColumnEnd>106</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[40]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328189</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>123</start>
+        <end>125</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>123</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/entity/SizeInfo.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.edit.sdk.camera.entity</packageName>
+    <category>Basic Rules</category>
+    <type>UselessOverridingMethod</type>
+    <contextHashCode>15328190</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/entity</pathName>
+    <primaryColumnStart>15</primaryColumnStart>
+    <primaryColumnEnd>5</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[6]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328217</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>777</start>
+        <end>780</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>777</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/ui/GLCanvasImpl.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[6]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyIfStmt</type>
+    <contextHashCode>15328218</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/ui</pathName>
+    <primaryColumnStart>57</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[40]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328261</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>601</start>
+        <end>603</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>601</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>UselessOverridingMethod</type>
+    <contextHashCode>15328262</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>16</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328240</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>69</start>
+        <end>71</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>69</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/intent/IntentBeautyController.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[32]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328241</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/intent</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328231</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>182</start>
+        <end>184</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>182</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/AssetsUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328232</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328275</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>1053</start>
+        <end>1056</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>1053</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/sdk/BeautyController.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[30]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328276</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/sdk</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328250</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>146</start>
+        <end>153</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>146</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/EffectGroupRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[34]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328251</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk</pathName>
+    <primaryColumnStart>25</primaryColumnStart>
+    <primaryColumnEnd>25</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message>Ensure you override both equals() and hashCode().</message>
+    <priority>NORMAL</priority>
+    <key>15328209</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>59</start>
+        <end>59</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>59</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/data/Path.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[27]/packageName"/>
+    <category>Basic Rules</category>
+    <type>OverrideBothEqualsAndHashcode</type>
+    <contextHashCode>15328210</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/data</pathName>
+    <primaryColumnStart>20</primaryColumnStart>
+    <primaryColumnEnd>38</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328203</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>313</start>
+        <end>319</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>313</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/AlbumPage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[35]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328204</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328199</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>233</start>
+        <end>235</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>233</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/util/UtilStorage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[42]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328200</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/util</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328198</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>314</start>
+        <end>316</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>314</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/util/CameraModuleUtil.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[42]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328199</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328193</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>425</start>
+        <end>428</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>425</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/setting/CameraSettingModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[7]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328194</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/setting</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328195</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>167</start>
+        <end>169</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>167</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/setting/ListPreference.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[7]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328196</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/setting</pathName>
+    <primaryColumnStart>19</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328213</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>353</start>
+        <end>355</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>353</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/support/OverScroller.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[41]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328214</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/support</pathName>
+    <primaryColumnStart>25</primaryColumnStart>
+    <primaryColumnEnd>25</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328253</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>42</start>
+        <end>48</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>42</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/EffectGroupSavePathRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328254</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328230</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>74</start>
+        <end>76</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>74</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/AssetsUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328231</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328251</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>23</start>
+        <end>27</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>23</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/CropEffectGroupRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328252</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[12]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328242</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>56</start>
+        <end>56</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>56</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/intent/IntentPhotoCropActivity.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[32]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyStatementNotInLoop</type>
+    <contextHashCode>15328243</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/intent</pathName>
+    <primaryColumnStart>75</primaryColumnStart>
+    <primaryColumnEnd>75</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328222</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>209</start>
+        <end>211</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>209</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BitmapUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328223</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328194</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>64</start>
+        <end>66</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>64</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/setting/IconListPreference.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[7]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328195</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/setting</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328277</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>1458</start>
+        <end>1460</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>1458</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/sdk/BeautyController.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[30]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328278</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/sdk</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328206</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>252</start>
+        <end>258</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>252</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[35]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328207</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328187</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>442</start>
+        <end>444</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>442</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/CcCameraFragment.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[5]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328188</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328256</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>27</start>
+        <end>29</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>27</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/GLSurfaceViewAdvanceRendererMethod.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328257</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328239</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>147</start>
+        <end>149</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>147</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/SDCardUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328240</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328265</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>152</start>
+        <end>158</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>152</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328266</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328257</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>246</start>
+        <end>248</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>246</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328258</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328267</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>713</start>
+        <end>714</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>713</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/effect/model/EffectResourceManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>us.pinguo.android.effect.group.sdk.effect.model</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328268</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/effect/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>41</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328248</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>92</start>
+        <end>97</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>92</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/mix/api/BaseBean.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName>com.pinguo.mix.api</packageName>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328249</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/mix/api</pathName>
+    <primaryColumnStart>25</primaryColumnStart>
+    <primaryColumnEnd>25</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328191</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>630</start>
+        <end>632</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>630</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/camera/focus/FocusManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[28]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328192</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/camera/focus</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328227</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>446</start>
+        <end>464</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>446</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BlobCache.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328228</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328211</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>345</start>
+        <end>347</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>345</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/support/OverScroller.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[41]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328212</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/support</pathName>
+    <primaryColumnStart>25</primaryColumnStart>
+    <primaryColumnEnd>25</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[12]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328266</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>159</start>
+        <end>159</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>159</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/TiltShiftMakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyStatementNotInLoop</type>
+    <contextHashCode>15328267</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>18</primaryColumnStart>
+    <primaryColumnEnd>18</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328224</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>228</start>
+        <end>229</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>228</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/BitmapUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328225</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>15</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328229</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>67</start>
+        <end>69</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>67</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/CacheManager.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328230</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328232</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>41</start>
+        <end>43</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>41</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/utils/DownloadFileUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[2]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328233</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/utils</pathName>
+    <primaryColumnStart>17</primaryColumnStart>
+    <primaryColumnEnd>17</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328259</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>301</start>
+        <end>303</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>301</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/us/pinguo/android/effect/group/sdk/androidsdk/model/MakePhotoModel.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328260</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/us/pinguo/android/effect/group/sdk/androidsdk/model</pathName>
+    <primaryColumnStart>21</primaryColumnStart>
+    <primaryColumnEnd>21</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug[2]/message"/>
+    <priority>NORMAL</priority>
+    <key>15328207</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>70</start>
+        <end>72</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>70</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/data/ImageCacheService.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[27]/packageName"/>
+    <category>Basic Rules</category>
+    <type>EmptyCatchBlock</type>
+    <contextHashCode>15328208</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/data</pathName>
+    <primaryColumnStart>11</primaryColumnStart>
+    <primaryColumnEnd>9</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328205</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>251</start>
+        <end>259</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>251</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[35]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328206</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+  <bug plugin="pmd@3.38">
+    <message reference="../../bug/message"/>
+    <priority>NORMAL</priority>
+    <key>15328221</key>
+    <lineRanges>
+      <range plugin="analysis-core@1.57">
+        <start>102</start>
+        <end>105</end>
+      </range>
+    </lineRanges>
+    <primaryLineNumber>102</primaryLineNumber>
+    <fileName>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/src/com/pinguo/edit/sdk/gallery/util/AlbumUtils.java</fileName>
+    <moduleName reference="../../bug/moduleName"/>
+    <packageName reference="../../bug[22]/packageName"/>
+    <category>Basic Rules</category>
+    <type>CollapsibleIfStatements</type>
+    <contextHashCode>15328222</contextHashCode>
+    <origin>pmd</origin>
+    <pathName>src/com/pinguo/edit/sdk/gallery/util</pathName>
+    <primaryColumnStart>13</primaryColumnStart>
+    <primaryColumnEnd>13</primaryColumnEnd>
+    <tooltip></tooltip>
+  </bug>
+</annotation-array>

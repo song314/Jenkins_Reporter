@@ -1,0 +1,132 @@
+package com.pinguo.edit.sdk.option;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Toast;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.BaseTitleFragment;
+import com.pinguo.edit.sdk.login.LoginCanstants;
+import com.pinguo.edit.sdk.option.fragment.OptionsSettings;
+
+
+/**
+ * Created by crab on 14-5-16.
+ */
+public class OpsitonActivity extends FragmentActivity implements BaseTitleFragment.OnFrgmentChangeListener {
+    private Toast mToast;
+    private ProgressDialog mWaitDialog;
+    //toast 显示位置的view
+    private View mTop;
+    private View mBottom;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_options_layout);
+        init();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void init() {
+        changeFragment(OptionsSettings.newInstance());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+        if (requestCode == LoginCanstants.REQUEST_CODE_MODIFY_PASSWORD) {
+            if (resultCode == Activity.RESULT_OK) {
+                returnResultFinish();
+            }
+        } else if (requestCode == LoginCanstants.REQUEST_CODE_FIND_PASSWORD) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, getString(R.string.find_password_success), Toast.LENGTH_SHORT).show();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void showToast(View top, View bottom, String message) {
+        int[] topLocation = new int[2];
+        top.getLocationOnScreen(topLocation);
+        int topY = topLocation[1];
+        int[] bottomLocation = new int[2];
+        bottom.getLocationOnScreen(bottomLocation);
+        int bottomY = bottomLocation[1];
+        int yOffset = (topY + bottomY) / 2;
+        if (mToast != null) {
+            mToast.cancel();
+        }
+        mToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        mToast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, yOffset - top.getHeight() / 2);
+        mToast.show();
+
+    }
+
+    private void returnResultFinish() {
+        sendBroadcast(new Intent(LoginCanstants.ACTION_LOGIN_SUCCESS));
+        setResult(RESULT_OK);
+        finish();
+    }
+
+    private void showDialog() {
+        if (mWaitDialog != null && mWaitDialog.isShowing()) {
+            return;
+        }
+        mWaitDialog = new ProgressDialog(OpsitonActivity.this);
+        mWaitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mWaitDialog.setCancelable(false);
+        mWaitDialog.setCanceledOnTouchOutside(false);
+        mWaitDialog.show();
+    }
+
+    private void dissmissDialog() {
+        if (mWaitDialog != null && mWaitDialog.isShowing()) {
+            mWaitDialog.dismiss();
+        }
+        mWaitDialog = null;
+    }
+
+    private void showMessage(String message) {
+        showToast(mTop, mBottom, message);
+    }
+
+    @Override
+    public void onCurrentFragmentFinish() {
+        FragmentManager fm = getSupportFragmentManager();
+        fm.popBackStack();
+        if (fm.getBackStackEntryCount() == 1) {
+            finish();
+        }
+    }
+
+    @Override
+    public void changeFragment(Fragment fragment) {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.fragment_container, fragment);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    @Override
+    public void onActivityFinish() {
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        onCurrentFragmentFinish();
+    }
+}

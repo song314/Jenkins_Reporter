@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/id_personal_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <!-- **************顶部标题***************** -->
+    <include
+        layout="@layout/composite_sdk_login_head_view"
+        android:id="@+id/pg_login_head" />
+    <!-- 个人信息内容容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <!-- 用户头像-->
+        <RelativeLayout
+            android:id="@+id/id_personal_information_face_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.pinguo.edit.sdk.option.view.RoundImageView
+                android:id="@+id/id_personal_information_face"
+                android:layout_centerInParent="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true" />
+
+            <TextView
+                android:layout_below="@id/id_personal_information_face"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="头像设置" />
+        </RelativeLayout>
+        <!-- 用户昵称-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="昵称" />
+
+        <TextView
+            android:id="@+id/personal_nick_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/confirm_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+    </LinearLayout>
+</LinearLayout>

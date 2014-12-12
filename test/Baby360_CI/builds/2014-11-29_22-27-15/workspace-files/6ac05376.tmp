@@ -1,0 +1,67 @@
+package com.pinguo.edit.sdk.login.user;
+
+import android.content.Context;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.pinguo.Camera360Lib.network.HttpGsonRequest;
+import com.pinguo.edit.sdk.login.lib.network.ApiAsyncTaskBase;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.model.LoginConfig;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by crab on 14-10-28.
+ */
+public class ApiPhoneGetVerifyCode extends ApiAsyncTaskBase<ApiPhoneGetVerifyCode.RealyResponse> {
+    private String mPhoneNumber;
+
+    public ApiPhoneGetVerifyCode(Context context, String phoneNumber) {
+        super(context);
+        mPhoneNumber = phoneNumber;
+    }
+
+    @Override
+    public void get(final AsyncResult<RealyResponse> result) {
+        String url = LoginConfig.HOST + LoginConfig.PHONE_GET_VERIFY_CODE_URL;
+        execute(new HttpGsonRequest<RealyResponse>(Request.Method.POST, url) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+
+                LoginConfig.prepareCommonParams(mContext, params);
+                params.put("mobile", mPhoneNumber);
+                //获取签名
+                String sig = com.pinguo.Camera360Lib.utils.NetworkUtils.getSigByParamMap(params);
+                params.put("sig", sig);
+                return params;
+            }
+
+            @Override
+            protected void onResponse(ApiPhoneGetVerifyCode.RealyResponse o) {
+                postResponse(result, o);
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                postError(result, e);
+            }
+        });
+    }
+
+    public static class Response<T> {
+        public int status;
+        public String message;
+        public T data;
+    }
+
+    public static class Data {
+        public String verifyCode;
+    }
+
+    public static class RealyResponse extends Response<Data> {
+
+    }
+}

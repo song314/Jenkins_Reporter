@@ -1,0 +1,323 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+/**
+ * 用户配置,全局配置以及当前相机配置
+ *
+ * @author liubo
+ */
+public final class PGCameraPreferences {
+    private static final String TAG = PGCameraPreferences.class.getName();
+    private static WeakHashMap<Context, PGCameraPreferences> mMap = new WeakHashMap<Context, PGCameraPreferences>();
+    private static final byte[] lock = new byte[0];
+    private SharedPreferences mPrefLocal = null;
+    private SharedPreferences mPrefGlobal = null;
+    private ConcurrentHashMap<String, Object> localModifiedMap = new ConcurrentHashMap<String, Object>();
+    private ConcurrentHashMap<String, Object> globalModifiedMap = new ConcurrentHashMap<String, Object>();
+    private static final Set<String> LOCAL_KEY_SET = new HashSet<String>();
+
+    static {
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_DISPLAY_REDRESS_ENABLE);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_DISPLAY_REDRESS_VALUE);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_JPEG_REDRESS_ENABLE);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_JPEG_REDRESS_MIRROR);
+        LOCAL_KEY_SET.add(CameraPrefKeys.KEY_CAMERA_JPEG_REDRESS_ORIENTATION);
+
+    }
+
+    /**
+     * 构造函数加载全局配置
+     */
+    private PGCameraPreferences(Context appContext) {
+        //防止重复创建对象
+        mPrefGlobal = appContext.getSharedPreferences(appContext.getPackageName() + "_global", Context.MODE_PRIVATE);
+    }
+
+    /**
+     * 此函数只能在application的oncreate中调用,禁止其他时候调用。<br/>
+     * 里面存储了application context的弱引用，在程序退出时，自动清空
+     */
+    public static void initInApp() {
+        synchronized (lock) {
+            Context appContext = PGCompositeSDKApi.getAppContext();
+            if (appContext == null) {
+                return;
+            }
+
+            if (!mMap.containsKey(appContext)) {
+                mMap.put(appContext, new PGCameraPreferences(appContext));
+            }
+        }
+    }
+
+    public static PGCameraPreferences get() {
+        synchronized (lock) {
+            Context appContext = PGCompositeSDKApi.getAppContext();
+            if (appContext == null) {
+                return null;
+            }
+
+            return mMap.get(appContext);
+        }
+    }
+
+    public static boolean isGlobal(String key) {
+        return !LOCAL_KEY_SET.contains(key);
+    }
+
+    /**
+     * 清除所有缓存
+     */
+    public static void clearAllCache() {
+        mMap.clear();
+    }
+
+    /**
+     * 清除修改过的缓存
+     */
+    public void clearModifiedCache() {
+        globalModifiedMap.clear();
+        localModifiedMap.clear();
+    }
+
+    public void clearModifiedCache(String key) {
+        globalModifiedMap.remove(key);
+        localModifiedMap.remove(key);
+    }
+
+    /**
+     * 加载当前相机参数,切换相机时，会commit转换前相机的配置
+     *
+     * @param context  Context
+     * @param cameraId 相机ID
+     */
+    public void setLocal(Context context, int cameraId) {
+        CMLogger.i(TAG, "初始化相机配置,CameraId=" + cameraId);
+        commitMapPreferences(mPrefLocal, localModifiedMap);
+        String prefName = getPrefName(context, cameraId);
+        mPrefLocal = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+    }
+
+    private static String getPrefName(Context context, int cameraId) {
+        return context.getPackageName() + "_local_" + cameraId;
+    }
+
+    /**
+     * 取得全局配置
+     *
+     * @return
+     */
+    public SharedPreferences getGlobal() {
+        return mPrefGlobal;
+    }
+
+    /**
+     * 取得此时的相机配置
+     *
+     * @return
+     */
+    public SharedPreferences getLocal() {
+        return mPrefLocal;
+    }
+
+    /**
+     * 该key是否被更改过
+     *
+     * @param key key
+     * @return key是否被更改过
+     */
+    public boolean isModifiedKey(String key) {
+        if (isGlobal(key)) {
+            return globalModifiedMap.containsKey(key);
+        }
+
+        return localModifiedMap.containsKey(key);
+    }
+
+    /**
+     * 非全局配置，如果设置当前相机配置会出null指针异常
+     *
+     * @param key
+     * @param defValue
+     * @return
+     */
+    public String getString(String key, String defValue) {
+        if (isGlobal(key)) {
+            Object obj = globalModifiedMap.get(key);
+            if (obj instanceof String) {
+                return (String) obj;
+            }
+            return mPrefGlobal.getString(key, defValue);
+        } else {
+            Object obj = localModifiedMap.get(key);
+            if (obj instanceof String) {
+                return (String) obj;
+            }
+            return mPrefLocal.getString(key, defValue);
+        }
+    }
+
+    public int getInt(String key, int defValue) {
+        if (isGlobal(key)) {
+            Object obj = globalModifiedMap.get(key);
+            if (obj instanceof Integer) {
+                return (Integer) obj;
+            }
+            return mPrefGlobal.getInt(key, defValue);
+        } else {
+            Object obj = localModifiedMap.get(key);
+            if (obj instanceof Integer) {
+                return (Integer) obj;
+            }
+            return mPrefLocal.getInt(key, defValue);
+        }
+    }
+
+    public long getLong(String key, long defValue) {
+        if (isGlobal(key)) {
+            Object obj = globalModifiedMap.get(key);
+            if (obj instanceof Long) {
+                return (Long) obj;
+            }
+            return mPrefGlobal.getLong(key, defValue);
+        } else {
+            Object obj = localModifiedMap.get(key);
+            if (obj instanceof Long) {
+                return (Long) obj;
+            }
+            return mPrefLocal.getLong(key, defValue);
+        }
+    }
+
+    public float getFloat(String key, float defValue) {
+        if (isGlobal(key)) {
+            Object obj = globalModifiedMap.get(key);
+            if (obj instanceof Float) {
+                return (Float) obj;
+            }
+            return mPrefGlobal.getFloat(key, defValue);
+        } else {
+            Object obj = localModifiedMap.get(key);
+            if (obj instanceof Float) {
+                return (Float) obj;
+            }
+            return mPrefLocal.getFloat(key, defValue);
+        }
+    }
+
+    public boolean getBoolean(String key, boolean defValue) {
+        if (isGlobal(key)) {
+            Object obj = globalModifiedMap.get(key);
+            if (obj instanceof Boolean) {
+                return (Boolean) obj;
+            }
+            return mPrefGlobal.getBoolean(key, defValue);
+        } else {
+            Object obj = localModifiedMap.get(key);
+            if (obj instanceof Boolean) {
+                return (Boolean) obj;
+            }
+            return mPrefLocal.getBoolean(key, defValue);
+        }
+    }
+
+    public void putString(String key, String value) {
+        if (isGlobal(key)) {
+            globalModifiedMap.put(key, value);
+        } else {
+            localModifiedMap.put(key, value);
+        }
+    }
+
+    public void putInt(String key, int value) {
+        if (isGlobal(key)) {
+            globalModifiedMap.put(key, Integer.valueOf(value));
+        } else {
+            localModifiedMap.put(key, Integer.valueOf(value));
+        }
+    }
+
+    public void putLong(String key, long value) {
+        if (isGlobal(key)) {
+            globalModifiedMap.put(key, Long.valueOf(value));
+        } else {
+            localModifiedMap.put(key, Long.valueOf(value));
+        }
+    }
+
+    public void putFloat(String key, float value) {
+        if (isGlobal(key)) {
+            globalModifiedMap.put(key, Float.valueOf(value));
+        } else {
+            localModifiedMap.put(key, Float.valueOf(value));
+        }
+    }
+
+    public void putBoolean(String key, boolean value) {
+        if (isGlobal(key)) {
+            globalModifiedMap.put(key, Boolean.valueOf(value));
+        } else {
+            localModifiedMap.put(key, Boolean.valueOf(value));
+        }
+    }
+
+    /**
+     * 在界面切换时，一定要对配置进行提交，否则会导致配置不同步
+     *
+     * @return 提交是否成功
+     */
+    public boolean commit() {
+        boolean rst1 = commitMapPreferences(mPrefLocal, localModifiedMap);
+        boolean rst2 = commitMapPreferences(mPrefGlobal, globalModifiedMap);
+        return rst1 && rst2;
+    }
+
+    private boolean commitMapPreferences(SharedPreferences pref, ConcurrentHashMap<String, Object> map) {
+        if (pref == null) {
+            return true;
+        }
+
+        boolean flag = true;
+        int size = map.size();
+        if (size > 0) {
+            SharedPreferences.Editor editor = pref.edit();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                updatePreferences(editor, key, value);
+            }
+            flag = editor.commit();
+            map.clear();
+        }
+        return flag;
+    }
+
+    private void updatePreferences(SharedPreferences.Editor editor, String key, Object value) {
+        //使用if-else-if 嵌套方式效率更高
+        if (value instanceof String) {
+            editor.putString(key, (String) value);
+        } else if (value instanceof Integer) {
+            editor.putInt(key, (Integer) value);
+        } else if (value instanceof Boolean) {
+            editor.putBoolean(key, (Boolean) value);
+        } else if (value instanceof Long) {
+            editor.putLong(key, (Long) value);
+        } else if (value instanceof Float) {
+            editor.putFloat(key, (Float) value);
+        }
+    }
+}

@@ -1,0 +1,233 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Point;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.RelativeLayout;
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * 正方形显示预览
+ *
+ * @author Tsmile
+ */
+public class PreviewTouchLayout extends RelativeLayout implements Rotatable, GestureDetector.OnGestureListener {
+
+    private View mTouchView;
+    private GestureDetector mGestureDetector;
+    private GestureDetector.OnGestureListener mGestureListener;
+    private RectF frameRect;
+    private RectF scaleFrameRect;
+    private SizeInfo screenSize;
+    private SizeInfo previewSize;
+    private float topMenuHeight;
+
+    private PreviewFrameView mFrameView;
+
+    public PreviewTouchLayout(Context context) {
+        super(context);
+    }
+
+    public PreviewTouchLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public PreviewTouchLayout(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public void setGestureListener(GestureDetector.OnGestureListener gestureListener) {
+        mGestureListener = gestureListener;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        mTouchView = findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "touch_view"));
+        mTouchView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (null != mGestureDetector) {
+                    return mGestureDetector.onTouchEvent(event);
+                }
+
+                return false;
+            }
+        });
+
+        mGestureDetector = new GestureDetector(getContext(), this);
+
+        mFrameView = (PreviewFrameView) findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "camera_preview_frame_view"));
+    }
+
+    public void setAllSize(SizeInfo screenSize, SizeInfo previewSize,
+                           float topHeight, float topMenuHeight) {
+        this.screenSize = screenSize;
+        this.previewSize = previewSize;
+        this.topMenuHeight = topMenuHeight;
+        frameRect = new RectF();
+        float sideLength = previewSize.getWidth();
+        float left = (screenSize.getWidth() - sideLength) / 2;
+        float top = topHeight;
+        float right = left + sideLength;
+        float bottom = top + sideLength;
+        frameRect.set(left, top, right, bottom);
+        scaleFrameRect = new RectF();
+        scaleFrameRect.set(0, top / previewSize.getHeight(), 1, bottom / previewSize.getHeight());
+        mFrameView.setFrameRect(frameRect);
+    }
+
+    public RectF getFinalPicScaleFrameRect() {
+        return scaleFrameRect;
+    }
+
+//    public void setAllSize(SizeInfo screenSize, SizeInfo previewSize) {
+//        this.screenSize = screenSize;
+//        this.previewSize = previewSize;
+//        frameRect = new RectF();
+//        float scaleScreen = (float) screenSize.getHeight() / screenSize.getWidth();
+//        float scalePreview = (float) previewSize.getHeight() / previewSize.getWidth();
+//        float left;
+//        float right;
+//        float top;
+//        float bottom;
+//
+//        float previewFinalW;
+//        float previewFinalH;
+//        if (scalePreview >= frameScale) {
+//            previewFinalW = previewSize.getWidth();
+//            previewFinalH = previewSize.getWidth() * frameScale;
+//        } else {
+//            previewFinalH = previewSize.getHeight();
+//            previewFinalW = previewSize.getHeight() / frameScale;
+//        }
+//
+//        float wInterval = ((float) previewSize.getWidth() - previewFinalW) / 2;
+//        left = wInterval;
+//        right = left + previewFinalW;
+//        float hInterval = ((float) previewSize.getHeight() - previewFinalH) / 2;
+//        top = hInterval;
+//        bottom = hInterval + previewFinalH;
+//
+//        if (scaleScreen >= scalePreview) {
+//            float hSInterval = ((float) screenSize.getHeight() - previewSize.getHeight()) / 2;
+//            top = top + hSInterval;
+//            bottom = bottom + hSInterval;
+//        } else {
+//            float wSInterval = ((float) screenSize.getWidth() - previewSize.getWidth()) / 2;
+//            left = left + wSInterval;
+//            right = right + wSInterval;
+//        }
+//
+//        frameRect.set(left, top, right, bottom);
+//
+//        mFrameView.setFrameRect(frameRect);
+//    }
+
+    public Point getTouchViewLeftPoint() {
+//        if (this.mTouchView == null || screenSize == null || previewSize == null) {
+//            return new Point(0, 0);
+//        }
+//
+//        int left = this.mTouchView.getLeft();
+//        int top = this.mTouchView.getTop();
+//        if (screenSize.getHeight() > previewSize.getHeight()) {
+//            top -= (screenSize.getHeight() - previewSize.getHeight()) / 2;
+//        }
+//        if (screenSize.getWidth() > previewSize.getWidth()) {
+//            left -= (screenSize.getWidth() - previewSize.getWidth()) / 2;
+//        }
+//        CMLogger.d("cx", "screenSize w:" + screenSize.getWidth() + ",h:" + screenSize.getHeight());
+//        CMLogger.d("cx", "previewSize w:" + previewSize.getWidth() + ",h:" + previewSize.getHeight());
+//        CMLogger.d("cx", "top:" + top + ",left:" + left);
+//        return new Point(left, top);
+        if (this.mTouchView == null || screenSize == null || previewSize == null) {
+            return new Point(0, 0);
+        }
+
+        int left = this.mTouchView.getLeft();
+        int top = this.mTouchView.getTop();
+        if (frameRect.top < topMenuHeight) {
+            top -= (topMenuHeight - frameRect.top);
+        }
+        if (frameRect.left > 0) {
+            left -= frameRect.left;
+        }
+        CMLogger.d("cx", "screenSize w:" + screenSize.getWidth() + ",h:" + screenSize.getHeight());
+        CMLogger.d("cx", "previewSize w:" + previewSize.getWidth() + ",h:" + previewSize.getHeight());
+        CMLogger.d("cx", "top:" + top + ",left:" + left);
+        return new Point(left, top);
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        if (frameRect != null && !frameRect.contains(e.getX(), e.getY())) {
+            return false;
+        }
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onDown(e);
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        if (null == mGestureListener) {
+            return;
+        }
+
+        mGestureListener.onShowPress(e);
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onSingleTapUp(e);
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onScroll(e1, e2, distanceX, distanceY);
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        if (null == mGestureListener) {
+            return;
+        }
+
+        mGestureListener.onLongPress(e);
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onFling(e1, e2, velocityX, velocityY);
+    }
+}

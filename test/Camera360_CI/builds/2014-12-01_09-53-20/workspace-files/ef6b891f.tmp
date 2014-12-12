@@ -1,0 +1,116 @@
+package com.pinguo.ui.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
+import android.util.AttributeSet;
+import android.view.View;
+
+/**
+ * Created by taoli on 14-10-16.
+ */
+public class GradientSeekBar extends View {
+
+    private GradientDrawable mGradientDrawable;
+    private final float mNailRadius;
+    private final float mNailStrokeWidth;
+    private final float mLineWidth;
+    private Paint mNailPaint;
+    private Paint mLinePaint1;
+    private Paint mLinePaint2;
+    private float mSeekLength;
+    private int mDefaultValue;
+    private int mMaxValue;
+    private float mSeekLineStart;
+    private float mSeekLineEnd;
+    private float mNailOffset;
+    private int mCurrentValue;
+
+    public GradientSeekBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        mNailRadius = context.getResources().getDimension(com.pinguo.ui.widget.R.dimen.seekbar_nail_radius);
+        mNailStrokeWidth = context.getResources().getDimension(com.pinguo.ui.widget.R.dimen.seekbar_nail_stroke_width);
+        mLineWidth = context.getResources().getDimension(com.pinguo.ui.widget.R.dimen.seekbar_gradient_seek_bar_line_width);
+
+        init();
+    }
+
+    private void init() {
+        mNailPaint = new Paint();
+        mNailPaint.setAntiAlias(true);
+        mNailPaint.setColor(Color.parseColor("#a1a1a1"));
+        mNailPaint.setStrokeWidth(mNailStrokeWidth);
+        mNailPaint.setStyle(Paint.Style.STROKE);
+
+        mLinePaint1 = new Paint();
+        mLinePaint1.setAntiAlias(true);
+        mLinePaint1.setColor(Color.parseColor("#a1a1a1"));
+        mLinePaint1.setAlpha(200);
+
+        mLinePaint2 = new Paint();
+        mLinePaint2.setAntiAlias(true);
+        mLinePaint2.setColor(Color.parseColor("#a1a1a1"));
+        mLinePaint2.setAlpha(200);
+
+        mGradientDrawable = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT, new int[] {0xff42ebe1, 0xffc768fe});
+        mGradientDrawable.setShape(GradientDrawable.RECTANGLE);
+        mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+    }
+
+    public void setValue(int currentValue, int maxValue, int defaultValue) {
+        mMaxValue = maxValue;
+        mCurrentValue = currentValue;
+        mDefaultValue = defaultValue;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+
+        if (mSeekLength == 0) {
+            final int width = getWidth();
+            mSeekLength = width - getPaddingLeft() - getPaddingRight();
+            mSeekLineStart = getPaddingLeft();
+            mSeekLineEnd = width - getPaddingRight();
+
+            mNailOffset = mSeekLength * mDefaultValue / mMaxValue;
+        }
+
+        final float top = getMeasuredHeight() / 2 - mLineWidth / 2;
+        final float bottom = top + mLineWidth;
+        final float right1 = mSeekLineStart + mNailOffset + mNailStrokeWidth / 2 - mNailRadius;
+
+        if (right1 > mSeekLineStart) {
+            canvas.drawRect(mSeekLineStart, top, right1, bottom, mLinePaint1);
+        }
+        final float left2 = mSeekLineStart + mNailOffset + mNailRadius - mNailStrokeWidth / 2;
+        if (mSeekLineEnd > left2) {
+            canvas.drawRect(left2, top, mSeekLineEnd, bottom, mLinePaint2);
+        }
+
+        canvas.save();
+
+        Rect rect = new Rect();
+        if (mCurrentValue > mDefaultValue) {
+            float right = (mSeekLineEnd - left2) * (mCurrentValue - 100) / (mMaxValue - mDefaultValue) + left2;
+            rect.set(Math.round(left2), Math.round(top), Math.round(right), Math.round(bottom));
+        } else {
+            float left = (right1 - mSeekLineStart) * (mCurrentValue) / (mDefaultValue);
+            rect.set(Math.round(left), Math.round(top), Math.round(right1), Math.round(bottom));
+        }
+
+        mGradientDrawable.setBounds(rect);
+        mGradientDrawable.draw(canvas);
+        canvas.restore();
+
+        final float nailX = mSeekLineStart + mNailOffset;
+        final float nailY = getMeasuredHeight() / 2;
+        canvas.drawCircle(nailX, nailY, mNailRadius, mNailPaint);
+
+        super.onDraw(canvas);
+    }
+}

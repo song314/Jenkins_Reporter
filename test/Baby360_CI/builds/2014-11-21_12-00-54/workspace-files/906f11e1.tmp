@@ -1,0 +1,47 @@
+package com.pinguo.edit.sdk.filter.square;
+
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewPager;
+import android.view.Window;
+import android.view.WindowManager;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.Info.FilterInfoManager;
+import com.pinguo.edit.sdk.filter.square.page.PageAdapter;
+import com.pinguo.edit.sdk.filter.square.tab.TabPageIndicator;
+
+/**
+ * Created by zhongzheng on 14-10-27.
+ */
+public class FilterSquareActivity extends FragmentActivity {
+
+    private PageAdapter mAdapter;
+    private ViewPager mPager;
+    private TabPageIndicator mTab;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.composite_sdk_filter_square_layout);
+
+        mAdapter = new PageAdapter(getSupportFragmentManager());
+
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setAdapter(mAdapter);
+
+        mTab = (TabPageIndicator) findViewById(R.id.album_info_tabs);
+        mTab.setViewPager(mPager);
+//        FilterInfoManager.getInstance().getFiterInfo();
+    }
+
+//    private void addFragment(){
+//        FragmentManager fragmentManager =getSupportFragmentManager();
+//        FragmentTransaction fragmentTransaction =fragmentManager.beginTransaction();
+//        fragmentTransaction.add(R.id.view,new ViewFragment());
+//        fragmentTransaction.add(R.id.control,new ControlFragment());
+//        fragmentTransaction.commit();
+//    }
+}

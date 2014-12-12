@@ -1,0 +1,42 @@
+package com.pinguo.mix.api.common;
+
+import android.os.Build;
+import android.os.Bundle;
+
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+
+/**
+ * Created by taoli on 14-10-22.
+ */
+public class CommonApi {
+
+    public static void getAppUpdate(String deviceId,
+                                    String mcc,
+                                    String mnc,
+                                    String channel,
+                                    String versionName,
+                                    String versionCode,
+                                    final ApiCallback callback) {
+
+        //TODO 这里传入的参数与base里面加入的基础参数有重复的，暂时不修改
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_VERSION_CODE, versionCode);
+        bundle.putString(ApiConstants.PARAM_APP_ID, "d9bcf210547ea386");
+        bundle.putString(ApiConstants.PARAM_APP_NAME, "MIX");
+        bundle.putString(ApiConstants.PARAM_APP_VERSION, versionName);
+        bundle.putString(ApiConstants.PARAM_PLATFORM, "android");
+        bundle.putString(ApiConstants.PARAM_LOCALE, SystemUtils.getLocationInfo());
+        bundle.putString(ApiConstants.PARAM_SYSTEM_VERSION, Build.VERSION.RELEASE);
+        bundle.putString(ApiConstants.PARAM_DEVICE, Build.MODEL);
+        bundle.putString(ApiConstants.PARAM_DEVICE_ID, deviceId);
+        bundle.putString(ApiConstants.PARAM_IMEI, deviceId);
+        bundle.putString(ApiConstants.PARAM_MCC, mcc);
+        bundle.putString(ApiConstants.PARAM_MNC, mnc);
+        bundle.putString(ApiConstants.PARAM_CHANNEL, channel);
+        bundle.putString(ApiConstants.PARAM_GEOINFO, "");
+        new GetAppUpdate().execute(
+                ApiConstants.API_URL_GET_APP_UPDATE, bundle, callback);
+    }
+}

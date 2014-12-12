@@ -1,0 +1,161 @@
+package us.pinguo.android.effect.group.sdk.data;
+
+import android.content.Context;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-7-9.
+ */
+public class EffectDataManager {
+
+    private static final EffectDataManager DATA_MANAGER = new EffectDataManager();
+
+    private Map<Object, Effect> mOperationDataMap = new HashMap<Object, Effect>();
+
+    private Map<String, Effect> mMakeDataMap = new HashMap<String, Effect>();
+
+    private EffectModel mEffectModel;
+
+    private EffectDataManager() {
+
+    }
+
+    public static EffectDataManager getInstance() {
+        return DATA_MANAGER;
+    }
+
+    public void init(Context context) {
+        mEffectModel = EffectModel.getInstance().init(context);
+    }
+
+    public void setParamValue(String key, String paramKey, String paramValue) {
+        Effect effect = getEffect(key);
+        setParamValueInterval(effect, paramKey, paramValue);
+    }
+
+    public String getParamValue(String key, String paramKey) {
+        Effect effect = getEffect(key);
+        return getParamValueInterval(effect, paramKey);
+    }
+
+    public ParamItem getParam(String key, String paramKey) {
+        Effect effect = getEffect(key);
+        return effect.getParamItem(paramKey, effect.key);
+    }
+
+    public Effect getEffect(String key) {
+        Effect effect = mOperationDataMap.get(key);
+        if (null == effect) {
+            effect = createEffect(key);
+            mOperationDataMap.put(key, effect);
+        }
+        mMakeDataMap.put(effect.type, effect);
+        return effect;
+    }
+
+    public Effect getCurrentTypeEffect(String type) {
+        return mMakeDataMap.get(type);
+    }
+
+    private Effect createEffect(String key) {
+        Effect clonedEffect = null;
+        try {
+            clonedEffect = (Effect) mEffectModel.getEffectByKey(key).clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return clonedEffect;
+    }
+
+    private void setParamValueInterval(Effect effect, String paramKey, String paramValue) {
+        ParamItem paramItem = effect.getParamItem(paramKey, effect.key);
+        if (ParamItem.Type.FloatItem.name().equals(paramItem.type)) {
+            ((ParamFloatItem) paramItem).value = Float.parseFloat(paramValue);
+            return;
+        }
+
+        if (ParamItem.Type.NoEffectItem.name().equals(paramItem.type)) {
+            ((ParamNoEffectItem) paramItem).value = Float.parseFloat(paramValue);
+            return;
+        }
+
+        if (ParamItem.Type.StringItem.name().equals(paramItem.type)) {
+            ((ParamStringItem) paramItem).value = paramValue;
+            return;
+        }
+
+        if (ParamItem.Type.VecItem.name().equals(paramItem.type)) {
+            ((ParamVecItem) paramItem).value = paramValue;
+            return;
+        }
+
+        if (ParamItem.Type.CurveItem.name().equals(paramItem.type)) {
+            ((ParamCurveItem) paramItem).value = paramValue;
+            return;
+        }
+
+        if (ParamItem.Type.ColorBalanceItem.name().equals(paramItem.type)) {
+            ((ParamColorBalanceItem) paramItem).value = paramValue;
+            return;
+        }
+    }
+
+    private String getParamValueInterval(Effect effect, String paramKey) {
+        ParamItem paramItem = effect.getParamItem(paramKey, effect.key);
+        if (ParamItem.Type.FloatItem.name().equals(paramItem.type)) {
+            return String.valueOf(((ParamFloatItem) paramItem).value);
+        }
+
+        if (ParamItem.Type.NoEffectItem.name().equals(paramItem.type)) {
+            return String.valueOf(((ParamNoEffectItem) paramItem).value);
+        }
+
+        if (ParamItem.Type.StringItem.name().equals(paramItem.type)) {
+            return ((ParamStringItem) paramItem).value;
+        }
+
+        if (ParamItem.Type.VecItem.name().equals(paramItem.type)) {
+            return ((ParamVecItem) paramItem).value;
+        }
+
+        if (ParamItem.Type.CurveItem.name().equals(paramItem.type)) {
+            return ((ParamCurveItem) paramItem).value;
+        }
+
+        if (ParamItem.Type.ColorBalanceItem.name().equals(paramItem.type)) {
+            return ((ParamColorBalanceItem) paramItem).value;
+        }
+
+        return null;
+    }
+
+    public void clear() {
+        mOperationDataMap.clear();
+        mMakeDataMap.clear();
+        mEffectModel = null;
+    }
+
+    public void clearType(String type) {
+        mOperationDataMap.remove(type);
+        mMakeDataMap.remove(type);
+    }
+
+    public void setEffect(Effect mapEffect) {
+        Effect effect = mOperationDataMap.get(mapEffect.key);
+        if (null == effect) {
+            effect = createEffect(mapEffect.key);
+            mOperationDataMap.put(effect.key, effect);
+            mMakeDataMap.put(effect.type, effect);
+            return;
+        }
+
+        mOperationDataMap.put(effect.key, mapEffect);
+        mMakeDataMap.put(effect.type, mapEffect);
+    }
+}

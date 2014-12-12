@@ -1,0 +1,66 @@
+package us.pinguo.androidsdk;
+
+import android.util.Log;
+
+public class PGGLThread {
+    private PGImageSDK imageSDK = null;
+    private volatile boolean mRunningFlag;
+
+    public void setImageSDK(PGImageSDK m) {
+        imageSDK = m;
+    }
+
+    public boolean isBusyRunning() {
+        return mRunningFlag;
+    }
+
+    private Runnable mAction = new Runnable() {
+        public void run() {
+            if (imageSDK != null && imageSDK.createEGLDisplay()) {
+
+                synchronized (imageSDK.getRenderActionLock()) {
+                    if (imageSDK.getSDKStatus() == PGImageSDK.SDK_STATUS_RELOAD) {
+                        imageSDK.create();
+                        imageSDK.setSDKStatus(PGImageSDK.SDK_STATUS_RELOAD);
+                    } else {
+                        imageSDK.create();
+                    }
+
+                    while (true) {
+                        try {
+                            imageSDK.getRenderActionLock().notify();
+                            imageSDK.getRenderActionLock().wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        mRunningFlag = true;
+                        if (imageSDK.getSDKStatus() == PGImageSDK.SDK_STATUS_DESTROY) {
+                            break;
+                        } else if (imageSDK.getSDKStatus() == PGImageSDK.SDK_STATUS_RELOAD) {
+                            imageSDK.setResourceStatus(PGNativeMethod
+                                    .loadResource(imageSDK.getRenderPointer(),
+                                            imageSDK.getResource()));
+                        } else if (imageSDK.getRenderMethod() != null) {
+                            imageSDK.getRenderMethod().rendererAction();
+                        }
+
+                        mRunningFlag = false;
+                        imageSDK.getRenderActionLock().notify();
+                    }
+
+                    imageSDK.destroy();
+                }
+
+                imageSDK.releaseEGLDisplay();
+                System.gc();// 立即回收所占资源
+            } else {
+                Log.e("PGImageSDK", "SDK Thread is failed!!!");
+            }
+        }
+    };
+
+    public void run() {
+        PGThreadPool.getInstance().execute(mAction);
+    }
+}

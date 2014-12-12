@@ -1,0 +1,44 @@
+package com.pinguo.edit.sdk.camera.model;
+
+import android.content.Context;
+import android.hardware.Camera;
+
+public interface ICameraModel {
+
+    public CameraManager.CameraProxy openCamera(int cameraId);
+
+    public void startPreview();
+
+    public void stopPreview();
+
+    public void releaseCamera();
+
+    public CameraManager.CameraState getCameraState();
+
+    public void setCameraState(CameraManager.CameraState state);
+
+    public void switchCamera(Context context);
+
+    public void takePicture(Camera.ShutterCallback shutter, Camera.PictureCallback raw, Camera.PictureCallback post, TakePictureCallBack jpeg, int uiOrientaion);
+
+    public void cancelTakePicture();
+
+    public void setDisplayOrientation(int orientation);
+
+    public void addCallbackBuffer(byte[] data);
+
+    public void setPreviewCallbackWithBuffer(Camera.PreviewCallback callback);
+
+    public void makePreviewPicture(byte[] data, Camera camera);
+
+    public void autoFocus(Camera.AutoFocusCallback callback);
+
+    public void cancelAutoFocus();
+
+    /**
+     * 拍照回调
+     */
+    public interface TakePictureCallBack {
+        public void onPictureTaken(byte[] data, byte[] exifData, Camera camera,int orientationRotate);
+    }
+}

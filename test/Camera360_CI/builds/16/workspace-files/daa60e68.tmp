@@ -1,0 +1,245 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.view.Dialog.AlertDialog;
+import com.pinguo.edit.sdk.login.view.Dialog.LogicDialog;
+import com.pinguo.edit.sdk.login.view.RotateTextToast;
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+/**
+ * Created by crab on 14-10-30.
+ */
+public abstract class PGLoginBaseActivity extends Activity implements TitleView.OnTitleViewClickListener {
+    private static final String TAG = "PGLoginBaseActivity";
+
+    public interface DialogConfirmListener {
+        public void onConfirm();
+    }
+
+    public View mRootView;
+    public TextView mErrorTipText;
+
+    private ProgressDialog mWaitDialog;
+    private AlertDialog mAlertDialog;
+    private LogicDialog mLogicDialog;
+
+    protected int mScreenWidth;
+    protected int mScreenHeight;
+
+    public void showMessage(String message) {
+        RotateTextToast toast = new RotateTextToast(this, message, 0);
+        toast.show();
+    }
+
+    public void showDialog() {
+        if (mWaitDialog != null && mWaitDialog.isShowing()) {
+            return;
+        }
+        mWaitDialog = new ProgressDialog(this);
+        mWaitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mWaitDialog.setCancelable(false);
+        mWaitDialog.setCanceledOnTouchOutside(false);
+        mWaitDialog.show();
+    }
+
+    public void dismissDialog() {
+        if (mWaitDialog != null && mWaitDialog.isShowing()) {
+            mWaitDialog.dismiss();
+        }
+        mWaitDialog = null;
+    }
+
+    public void hideSoftwareKeyboard(EditText input) {
+        try {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(input.getWindowToken(), 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        mScreenHeight = displayMetrics.heightPixels;
+        mScreenWidth = displayMetrics.widthPixels;
+
+    }
+
+    @Override
+    protected void onDestroy() {
+//        try {
+//            if(mRootView!=null) {
+//                Drawable background = mRootView.getBackground();
+//                if (background instanceof BitmapDrawable) {
+//                    BitmapDrawable bmpDrawable = (BitmapDrawable) background;
+//                    Bitmap bmp = bmpDrawable.getBitmap();
+//                    if (bmp != null && !bmp.isRecycled()) {
+//                        Log.i(TAG,"释放背景图片");
+//                        bmp.recycle();
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            //Nothing to do
+//        }
+        super.onDestroy();
+    }
+
+    public void setRootViewBackground(View rootView) {
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            //options.inPreferredConfig = Bitmap.Config.RGB_565;
+            Resources res = getResources();
+            Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.composite_sdk_login_background, options);
+            BitmapDrawable backgroundDrawable = new BitmapDrawable(res, bmp);
+            rootView.setBackgroundDrawable(backgroundDrawable);
+        } catch (Exception e) {
+            rootView.setBackgroundColor(Color.parseColor("#60495b"));
+        } catch (OutOfMemoryError e) {
+            rootView.setBackgroundColor(Color.parseColor("#60495b"));
+        }
+//        rootView.setBackgroundColor(0xFFE8E8E8);
+    }
+
+    public void showErrorMessage(String message) {
+        if (mErrorTipText != null) {
+            if (mErrorTipText.getVisibility() != View.VISIBLE) {
+                mErrorTipText.setVisibility(View.VISIBLE);
+            }
+            mErrorTipText.setText(message);
+        }
+    }
+
+    public void hideErrorMessage() {
+        if (mErrorTipText != null) {
+            if (mErrorTipText.getVisibility() != View.INVISIBLE) {
+                mErrorTipText.setVisibility(View.INVISIBLE);
+                mErrorTipText.setText("");
+            }
+        }
+    }
+
+    public boolean isErrorMessageShow() {
+        if (mErrorTipText.getVisibility() == View.VISIBLE) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public int getErrorTipVisibility() {
+        if (mErrorTipText != null) {
+            return mErrorTipText.getVisibility();
+        }
+        return View.GONE;
+    }
+
+    @Override
+    public void onBackClick() {
+        finish();
+    }
+
+    @Override
+    public void onRightBtnClick() {
+
+    }
+
+    public abstract void initView();
+
+    public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+                                                         int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(res, resId, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+        return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    private static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > reqHeight
+                    && (halfWidth / inSampleSize) > reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public void showVerifyNumberLimitDialog() {
+        showAlertDialog(R.string.status_errorcode10540, null);
+    }
+
+    public void showAlertDialog(int messageID, String extraMes) {
+        if (mAlertDialog != null && mAlertDialog.isShowing()) {
+            return;
+        }
+        mAlertDialog = new AlertDialog(this);
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setCanceledOnTouchOutside(false);
+        mAlertDialog.setMessage(messageID);
+        mAlertDialog.setExtraMessage(extraMes);
+        mAlertDialog.show();
+    }
+
+    public void showSelectDialog(int messageID, String extraMes, final DialogConfirmListener listener) {
+        if (mLogicDialog != null && mLogicDialog.isShowing()) {
+            return;
+        }
+        mLogicDialog = new LogicDialog(this);
+        mLogicDialog.setCancelable(false);
+        mLogicDialog.setCanceledOnTouchOutside(false);
+        mLogicDialog.setMessage(messageID);
+        mLogicDialog.setExtraMessage(extraMes);
+        mLogicDialog.setPositiveBtn(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mLogicDialog.dismiss();
+                        if (listener != null) {
+                            listener.onConfirm();
+                        }
+                    }
+                });
+        mLogicDialog.show();
+    }
+}

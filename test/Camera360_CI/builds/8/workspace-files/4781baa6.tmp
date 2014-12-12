@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.pinguo.edit.sdk.camera.ui.CameraBottomMenuView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/camera_bottom_menu"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_camera_bottom_height"
+        android:background="#cc000000">
+
+    <ImageView
+        android:id="@+id/indicator"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/composite_sdk_camera_capture_mode_indicator">
+    </ImageView>
+
+    <TextView
+        android:id="@+id/anchor"
+        android:layout_centerHorizontal="true"
+        android:layout_width="@dimen/composite_sdk_camera_shutter_size"
+        android:layout_height="wrap_content"/>
+
+    <include
+        android:id="@+id/selector_layout"
+        layout="@layout/composite_sdk_capture_mode_selector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/anchor"
+        android:layout_below="@id/indicator">
+    </include>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/selector_layout">
+
+        <com.pinguo.edit.sdk.camera.ui.ThumbnailView
+            android:id="@+id/thumbnail"
+            android:clickable="true"
+            android:focusable="false"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="20dp"
+            android:layout_centerVertical="true"
+            android:layout_width="@dimen/composite_sdk_camera_thumbnail_width"
+            android:layout_height="@dimen/composite_sdk_camera_thumbnail_height">
+        </com.pinguo.edit.sdk.camera.ui.ThumbnailView>
+
+        <ImageButton
+            android:id="@+id/shutter_btn"
+            android:background="@drawable/composite_sdk_camera_shutter"
+            android:layout_centerInParent="true"
+            android:layout_width="@dimen/composite_sdk_camera_shutter_size"
+            android:layout_height="@dimen/composite_sdk_camera_shutter_size"/>
+
+        <ImageButton
+            android:id="@+id/multi_shot_btn"
+            android:src="@drawable/composite_sdk_multi_shot_disable"
+            android:background="#00000000"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:scaleType="fitCenter"
+            android:layout_marginRight="20dp"
+            android:layout_width="@dimen/composite_sdk_multi_shot_width"
+            android:layout_height="@dimen/composite_sdk_multi_shot_height"/>
+
+
+    </RelativeLayout>
+
+
+</com.pinguo.edit.sdk.camera.ui.CameraBottomMenuView>

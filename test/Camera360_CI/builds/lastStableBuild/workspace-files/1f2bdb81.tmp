@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="#24292d"
+              android:paddingLeft="30dp"
+              android:paddingRight="30dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="58dp"
+        android:textColor="#e0e0e1"
+        android:textSize="16sp"
+        android:text="新的滤镜已经组合完成，马上取一个专属于自己的名字吧"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="57dp"
+        android:textColor="#e0e0e1"
+        android:textSize="18sp"
+        android:id="@+id/effect_name"
+        android:background="@android:color/transparent"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+
+        android:background="#676a6c"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:layout_marginTop="37dp">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/composite_sdk_quit"
+            android:textSize="16sp"
+            android:background="#7e8890"
+            android:layout_marginRight="18dp"
+            android:id="@+id/quit"
+            android:textColor="@android:color/white"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/composite_sdk_ok"
+            android:textSize="16sp"
+            android:background="#3b9c64"
+            android:id="@+id/ok"
+            android:layout_marginLeft="18dp"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+

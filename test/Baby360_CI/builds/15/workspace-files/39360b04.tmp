@@ -1,0 +1,214 @@
+package us.pinguo.android.effect.group.sdk.beauty;
+
+import android.app.Activity;
+import android.view.View;
+
+import java.util.List;
+import java.util.Random;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+
+/**
+ * Created by taoli on 14-7-29.
+ */
+public class RandomController implements View.OnClickListener {
+
+    private View mMixBtn;
+    private OnRandomListener mListener;
+
+    private List<RandomSceneClass> mSceneClass;
+    private Random mRandom;
+
+    private static final int RATIO_TOTAL = 100;
+    private static final int RATIO_COMMON = 30;
+    private static final int RATIO_SCENE = 70;
+    private int mTotalRatio;
+
+    public void onCreate(final Activity activity, final String path) {
+//        mMixBtn = activity.findViewById(
+//                ResourceHelper.getIdByName(activity, "id", "mix_btn"));
+//        mMixBtn.setOnClickListener(this);
+//
+//        EffectModel.getInstance().init(activity.getApplicationContext());
+//
+//        if (GAdapter.isArmabi()) {
+//            new AsyncTask() {
+//
+//                @Override
+//                protected void onPreExecute() {
+//                    super.onPreExecute();
+//                    if (null != mListener) {
+//                        mListener.onRandomPrepareStart();
+//                    }
+//                }
+//
+//                @Override
+//                protected Object doInBackground(Object[] params) {
+//                    String modelPath = activity.getFilesDir().getAbsolutePath()
+//                            + File.separator + "svm_model.dat.model";
+//
+//                    int sceneCount = ImageClassifier.init(modelPath);
+//
+//                    Bitmap bitmap = BitmapUtils.scalePicture(path, 128, true);
+//                    if (null == bitmap) {
+//                        return null;
+//                    }
+//
+//                    byte[] rgb888pixels = BitmapUtils.decodeByRGB888(bitmap);
+//                    if (null == rgb888pixels) {
+//                        return null;
+//                    }
+//
+//                    if (null == mSceneClass) {
+//                        mSceneClass = new ArrayList<RandomSceneClass>();
+//                    }
+//
+//                    double[] imageSceneClass = ImageClassifier.getImageClass(rgb888pixels, sceneCount);
+//                    RandomSceneClass randomSceneClass;
+//                    for (int i = 0; i < imageSceneClass.length; i++) {
+//                        if (imageSceneClass[i] <= 0.2f) {
+//                            continue;
+//                        }
+//
+//                        randomSceneClass = new RandomSceneClass();
+//                        randomSceneClass.index = i;
+//                        randomSceneClass.tag = "tag" + i;
+//                        randomSceneClass.ratio = (int) Math.round(imageSceneClass[i] * 100);
+//                        mTotalRatio += randomSceneClass.ratio;
+//                        mSceneClass.add(randomSceneClass);
+//                    }
+//
+//                    //排序
+//                    Collections.sort(mSceneClass, new Comparator<RandomSceneClass>() {
+//
+//                        @Override
+//                        public int compare(RandomSceneClass c1, RandomSceneClass c2) {
+//
+//                            if (c1.ratio > c2.ratio) {
+//                                return 1;
+//                            } else if (c1.ratio < c2.ratio) {
+//                                return -1;
+//                            } else {
+//                                return 0;
+//                            }
+//                        }
+//                    });
+//
+//                    ImageClassifier.destroy();
+//
+//                    return null;
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Object o) {
+//                    super.onPostExecute(o);
+//                    if (null != mListener) {
+//                        mListener.onRandomPrepareFinish();
+//                    }
+//                }
+//            }.execute();
+//        }
+//
+//        mRandom = new Random(System.currentTimeMillis());
+    }
+
+    public void onResume() {
+
+    }
+
+    public void onPause() {
+
+    }
+
+    public void onDestroy() {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+//        if (v == mMixBtn) {
+//
+//            new AsyncTask() {
+//
+//                @Override
+//                protected void onPreExecute() {
+//                    super.onPreExecute();
+//                    if (null != mListener) {
+//                        mListener.onRandomStart();
+//                    }
+//                }
+//
+//                @Override
+//                protected Object doInBackground(Object[] params) {
+//                    return getRandomEffect();
+//                }
+//
+//                @Override
+//                protected void onPostExecute(Object o) {
+//                    super.onPostExecute(o);
+//                    if (null != mListener) {
+//                        CompositeEffect compositeEffect = (CompositeEffect) o;
+//                        mListener.onRandomFinish(compositeEffect);
+//                    }
+//                }
+//            }.execute();
+//        }
+    }
+
+    private CompositeEffect getRandomEffect() {
+        EffectModel effectModel = EffectModel.getInstance();
+        List<CompositeEffect> compositeList;
+        int ratio = mRandom.nextInt(RATIO_TOTAL);
+        if (null == mSceneClass || ratio < RATIO_COMMON) {
+            // get common type effects;
+            compositeList = effectModel.getCompositeEffectsByRandom(1);
+            return compositeList.get(0);
+        } else {
+            // get effects by type;
+            Random random = new Random();
+            random.setSeed(System.currentTimeMillis());
+            int randomValue = random.nextInt(mTotalRatio);
+            int curTotalRatio = 0;
+            RandomSceneClass randomSceneClass = mSceneClass.get(0);
+            for (RandomSceneClass sceneClass : mSceneClass) {
+                curTotalRatio += sceneClass.ratio;
+                if (randomValue < curTotalRatio) {
+                    randomSceneClass = sceneClass;
+                    break;
+                }
+            }
+            if (null != randomSceneClass) {
+                compositeList = effectModel.getCompositeEffectsByTags(
+                        new String[]{randomSceneClass.tag});
+            } else {
+                compositeList = effectModel.getCompositeEffectsByRandom(1);
+            }
+        }
+
+        Random random = new Random();
+        random.setSeed(System.currentTimeMillis());
+        int randomIndex = random.nextInt(compositeList.size() - 1);
+        return compositeList.get(randomIndex);
+    }
+
+    public void setRandomListener(OnRandomListener listener) {
+        mListener = listener;
+    }
+
+    public interface OnRandomListener {
+        void onRandomPrepareStart();
+
+        void onRandomPrepareFinish();
+
+        void onRandomStart();
+
+        void onRandomFinish(CompositeEffect compositeEffect);
+    }
+
+    private class RandomSceneClass {
+        int index;
+        String tag;
+        int ratio;
+    }
+}

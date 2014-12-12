@@ -1,0 +1,125 @@
+package com.pinguo.edit.sdk.login.model;
+
+import android.content.Context;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileLock;
+import java.util.Properties;
+
+/**
+ * Created by crab on 14-6-12.
+ * 存储用户信息
+ */
+public class UserHelper {
+
+    //文件名字
+    private static final String FILE_NAME = "userinfo.txt";
+    private static final String LOCK_FILE_NAME = "userinfo_lock.txt";
+    private static final String USER_GSON_KEY = "user_info_gson";
+
+    public static final String KEY_ACCOUNT_NAME = "currentAccount";
+
+    protected static void putPGLoginUserInfo(Context context, String value) {
+        synchronized (UserHelper.class) {
+            saveProperties(context, USER_GSON_KEY, value);
+        }
+    }
+
+    protected static String getPGLoginUserInfo(Context context) {
+        synchronized (UserHelper.class) {
+            return getProperties(context, USER_GSON_KEY);
+        }
+    }
+
+    protected static void saveProperties(Context context, String key, String value) {
+        Properties properties = getProperties(context);
+        properties.setProperty(key, value);
+        saveProperties(context, properties);
+    }
+
+    private static void saveProperties(Context context, Properties prop) {
+        FileOutputStream fos = null;
+        FileOutputStream lockFos = null;
+
+        FileLock fl = null;
+        try {
+            lockFos = context.openFileOutput(LOCK_FILE_NAME, Context.MODE_PRIVATE);
+            fl = lockFos.getChannel().lock();
+            fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
+            prop.store(fos, "saveFreePuzzlePic prop " + System.currentTimeMillis());
+        } catch (FileNotFoundException e) {
+            //do not print
+        } catch (IOException e) {
+            //do not print
+        } finally {
+            try {
+                if (fl != null) {
+                    fl.release();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (lockFos != null) {
+                try {
+                    lockFos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static Properties getProperties(Context context) {
+        Properties prop = new Properties();// 属性集合对象
+        FileInputStream fis = null;
+        FileOutputStream lockFos = null;
+        FileLock fl = null;
+        try {
+            lockFos = context.openFileOutput(LOCK_FILE_NAME, Context.MODE_PRIVATE);
+            fl = lockFos.getChannel().lock();
+            fis = context.openFileInput(FILE_NAME);
+            prop.load(fis);// 将属性文件流装载到Properties对象中
+        } catch (FileNotFoundException e) {
+            //do not print
+        } catch (IOException e) {
+            //do not print
+        } finally {
+            try {
+                if (fl != null) {
+                    fl.release();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (lockFos != null) {
+                try {
+                    lockFos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return prop;
+    }
+
+    public static String getProperties(Context context, String key) {
+        return getProperties(context).getProperty(key);
+    }
+}

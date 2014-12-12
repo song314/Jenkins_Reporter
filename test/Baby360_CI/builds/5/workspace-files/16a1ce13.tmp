@@ -1,0 +1,357 @@
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.*;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.widget.Scroller;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+// A view that indicates the focus area or the metering area.
+public class FocusIndicatorRotateLayout extends View implements IFocusIndicator {
+    // Sometimes continuous autofucus starts and stops several times quickly.
+    // These states are used to make sure the animation is run for at least some
+    // time.
+    private static final String TAG = FocusIndicatorRotateLayout.class.getName();
+
+    // 设置聚焦开始显示的颜色为白色
+    private static final int FOCUS_START_COLOR = 0xffffffff;
+    // 设置聚焦成功显示的颜色为绿色
+    private static final int FOCUS_SUC_COLOR = 0xff9fff49;
+    // 设置聚焦失败显示的颜色为红色
+    private static final int FOCUS_FAIL_COLOR = 0xffff5400;
+
+    private int mState;
+
+    private boolean mIsDoingAnimation;
+    // 聚焦状态
+    private static final int STATE_IDLE = 0;
+    private static final int STATE_FOCUSING = 1;
+    private static final int STATE_FOCUS_SUCCESS = 2;
+    private static final int STATE_FOCUS_FAIL = 3;
+    // 圆周角是360度
+    private static final int CIRCLE_ANGLE = 360;
+
+    // 聚焦中间的圆角矩形的半径是8dp
+    private static final int ROUND_REC_RADIUS = 8;
+    // 圆角矩形的圆角半径4dp
+    private static final int ROUND_RADIUS = 5;
+    // 聚焦圆形离它的parent的margin 2dp
+    private static final int FOCUS_VIEW_MARGIN_TO_PARENT = 2;
+    // 绘制聚焦UI圆圈的宽度
+    private static final int STROKE_WIDTH = 2;
+    // 绘制聚焦UI内环的宽度
+    private static final int ROUND_REC_STROKE_WIDTH = 1;
+    private Runnable mDisappear = new Disappear();
+    private static final int DISAPPEAR_TIMEOUT = 200;
+    // 聚焦框绘制完成后回调,此时需要显示动画
+    private DrawFocusViewDoneListener mDrawFocusViewDoneCallback;
+    // 聚焦中间圆角矩形半径
+    private float mRoundRecRadius;
+    // 圆角半径
+    private float mRoundRadius;
+    // 聚焦框中间圆角矩形的空隙距离圆角矩形两边距离.note：当前距离是1/3
+    private int mOneThird_RoundRec;
+    // 聚焦的圆形框离它的parent的margin距离
+    private float mFocusViewMarginToParent;
+    // 每次绘制聚焦View的绘制增量
+    private float mSweep;
+    // 绘制聚焦view左边部分的开始角度
+    private float mStartLeftRec = 270;
+    // 绘制聚焦view右边部分的开始角度
+    private float mStartRightRec = 90;
+    // 用scroller来帮助计算每次需要绘制聚焦view的绘制角度增量
+    Scroller mScroller = new Scroller(getContext(), new LinearInterpolator());
+    // 画笔绘制外圆的宽度
+    private float mStrokeWidth;
+    // 画笔绘制内部圆角矩形的宽度
+    private float mRoundRecWidth;
+    private Paint mPaint;
+    private DrawFilter mDrawFilter;
+    private static int sCanvasFlag = Canvas.MATRIX_SAVE_FLAG |
+            Canvas.CLIP_SAVE_FLAG |
+            Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |
+            Canvas.FULL_COLOR_LAYER_SAVE_FLAG |
+            Canvas.CLIP_TO_LAYER_SAVE_FLAG;
+
+
+    public FocusIndicatorRotateLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mDrawFilter = new PaintFlagsDrawFilter(0, Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+        // 根据当前手机的dpi来计算各个值
+        mRoundRecRadius = CameraModuleUtil.dpToPixel(ROUND_REC_RADIUS);
+        mRoundRadius = CameraModuleUtil.dpToPixel(ROUND_RADIUS);
+        mFocusViewMarginToParent = CameraModuleUtil.dpToPixel(FOCUS_VIEW_MARGIN_TO_PARENT);
+        mStrokeWidth = CameraModuleUtil.dpToPixel(STROKE_WIDTH);
+        mRoundRecWidth = CameraModuleUtil.dpToPixel(ROUND_REC_STROKE_WIDTH);
+        // 聚焦框中间圆角矩形的空隙距离圆角矩形两边距离为1/3
+        mOneThird_RoundRec = (int) (mRoundRecRadius * 2 / 3);
+        initPaint();
+        CMLogger.i(TAG, "mRoundRadius = " + mRoundRadius + " mRoundRecRadius = " + mRoundRecRadius + "  mFocusViewMarginToParent = " + mFocusViewMarginToParent);
+
+    }
+
+    /**
+     * 接口用于聚焦UI绘制完成回调
+     */
+    interface DrawFocusViewDoneListener {
+        public void drawFocusViewDone();
+    }
+
+    /**
+     * 设置聚焦绘制完成的回调
+     *
+     * @param callback
+     */
+    public void setDrawFocusViewDoneCallback(DrawFocusViewDoneListener callback) {
+        mDrawFocusViewDoneCallback = callback;
+    }
+
+    /**
+     * 显示聚焦开始UI
+     */
+    @Override
+    public void showStart() {
+        mIsDoingAnimation = false;
+        CMLogger.i(TAG, "show focus View start " + mState);
+        // 开始显示聚焦UI的时候清空mSweep
+        mSweep = 0;
+        clearAnimation();
+        mState = STATE_FOCUSING;
+        mScroller.startScroll(0, 0, 180, 0, 200);
+        setPaintColor(FOCUS_START_COLOR);
+        invalidate();
+    }
+
+    /**
+     * 显示聚焦成功UI
+     *
+     * @param timeout
+     */
+    @Override
+    public void showSuccess(boolean timeout) {
+        CMLogger.i(TAG, "show focus View success " + mState);
+        if (mState == STATE_FOCUSING) {
+            mState = STATE_FOCUS_SUCCESS;
+            setPaintColor(FOCUS_SUC_COLOR);
+            invalidate();
+            if (timeout) {
+                postDelayed(mDisappear, DISAPPEAR_TIMEOUT);
+            }
+        }
+    }
+
+    /**
+     * 显示聚焦失败UI
+     *
+     * @param timeout
+     */
+    @Override
+    public void showFail(boolean timeout) {
+        CMLogger.i(TAG, "show focus View fail " + mState);
+        if (mState == STATE_FOCUSING) {
+            mState = STATE_FOCUS_FAIL;
+            // 设置颜色为类似红色
+            setPaintColor(FOCUS_FAIL_COLOR);
+            // 刷新,重新调用ondraw
+            invalidate();
+            if (timeout) {
+                postDelayed(mDisappear, DISAPPEAR_TIMEOUT);
+            }
+        }
+    }
+
+    /**
+     * 清除聚焦UI
+     */
+    @Override
+    public void clear() {
+        CMLogger.i(TAG, "clear focus View " + mState);
+        Animation anim = new AlphaAnimation(1.0f, 0.0f);
+        anim.setDuration(200);
+        anim.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                invalidate();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        mState = STATE_IDLE;
+        startAnimation(anim);
+    }
+
+    /**
+     * 这个现在没用
+     */
+    private class Disappear implements Runnable {
+        @Override
+        public void run() {
+
+            Animation anim = new AlphaAnimation(1.0f, 0.0f);
+            anim.setDuration(200);
+            anim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    if (mState == STATE_IDLE) {
+                        setBackgroundDrawable(null);
+                    }
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+
+            startAnimation(anim);
+
+            mState = STATE_IDLE;
+        }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        // 获得当前聚焦框分配的宽度和高度
+        int width = getMeasuredWidth();
+        int height = getMeasuredHeight();
+        float halfWidth = width >> 1;
+        float halfHeight = height >> 1;
+        int left = (int) (halfWidth - mRoundRecRadius);
+        int top = (int) (halfHeight - mRoundRecRadius);
+        int right = (int) (halfWidth + mRoundRecRadius);
+        int bottom = (int) (halfHeight + mRoundRecRadius);
+        CMLogger.i(TAG, "width = " + width + " height = " + height + "state = " + mState + " mOneThird_RoundRec =" + mOneThird_RoundRec);
+        if (mDrawFilter != null) {
+            canvas.setDrawFilter(mDrawFilter);
+        }
+        switch (mState) {
+            case STATE_FOCUSING:
+                // 通过scroller计算当前需要画的圆形角度
+                mScroller.computeScrollOffset();
+                // 获得当前的角度
+                mSweep = mScroller.getCurrX();
+                // 画中心的圆角矩形
+                mPaint.setStrokeWidth(mRoundRecWidth);
+                // draw the src/dst example into our offscreen bitmap
+                int sc = canvas.saveLayer(left, top, right, bottom, null, sCanvasFlag);
+                canvas.drawRoundRect(new RectF(left, top, right, bottom), mRoundRadius, mRoundRadius, mPaint);
+                // 使用xfermode是时候，绘制两个盖在中见圆角矩形上的矩形框需要设置paint为FILL_AND_STROKE绘制，不然会导致
+                // 不能完全覆盖下面显示的像素
+                mPaint.setStyle(Paint.Style.FILL_AND_STROKE); // 绘制实心且有图形的轮廓
+                // 设置xfermode为DST_OUT,意思就是不显示图形相交的部分
+                mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+                canvas.drawRect(left + mOneThird_RoundRec, top, right - mOneThird_RoundRec, bottom, mPaint);
+                canvas.drawRect(left, top + mOneThird_RoundRec, right, bottom - mOneThird_RoundRec, mPaint);
+                mPaint.setXfermode(null);
+                // 在offscreen上绘制完成后,提交绘制结果到上一个canvas显示，当前save的canvas退出stack
+                canvas.restoreToCount(sc);
+                // 重新设置style为空心
+                mPaint.setStyle(Paint.Style.STROKE);
+
+                mPaint.setStrokeWidth(mStrokeWidth);
+                // 画左边部分的圆弧
+                canvas.drawArc(new RectF(mFocusViewMarginToParent, mFocusViewMarginToParent, (float) width - mFocusViewMarginToParent,
+                        (float) height - mFocusViewMarginToParent), mStartLeftRec, -mSweep, false,
+                        mPaint);
+                // 画右边部分的弧形
+                canvas.drawArc(new RectF(mFocusViewMarginToParent, mFocusViewMarginToParent, (float) width - mFocusViewMarginToParent,
+                        (float) height - mFocusViewMarginToParent), mStartRightRec, -mSweep, false,
+                        mPaint);
+                // 绘制完成后通知做动画
+                if (mSweep >= (CIRCLE_ANGLE >> 1)) {
+                    CMLogger.i(TAG, "start the focus view animation" + mSweep);
+                    mDrawFocusViewDoneCallback.drawFocusViewDone();
+                    mIsDoingAnimation = true;
+                    return;
+                } else {
+                    // 未绘制完成则继续绘制
+                    invalidate();
+                }
+                break;
+            case STATE_FOCUS_SUCCESS:
+            case STATE_FOCUS_FAIL:
+                if (!mIsDoingAnimation) {
+                    mDrawFocusViewDoneCallback.drawFocusViewDone();
+                    mIsDoingAnimation = true;
+                    CMLogger.i(TAG, "Not start focus animation. just do it in success or fail state.");
+                }
+                // 根据成功或者失败绘制圆角矩形
+                mPaint.setStrokeWidth(mRoundRecWidth);
+                sc = canvas.saveLayer(left, top, right, bottom, null, sCanvasFlag);
+                canvas.drawRoundRect(new RectF(left, top, right, bottom), mRoundRadius, mRoundRadius, mPaint);
+                // 使用xfermode是时候，绘制两个盖在中见圆角矩形上的矩形框需要设置paint为FILL_AND_STROKE绘制，不然会导致
+                // 不能完全覆盖下面显示的像素
+                mPaint.setStyle(Paint.Style.FILL_AND_STROKE);  // 绘制实心且有图形的轮廓
+                // 设置xfermode为DST_OUT,意思就是不显示图形相交的部分
+                mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
+                canvas.drawRect(left + mOneThird_RoundRec, top, right - mOneThird_RoundRec, bottom, mPaint);
+                canvas.drawRect(left, top + mOneThird_RoundRec, right, bottom - mOneThird_RoundRec, mPaint);
+                // 绘制完成,设置xfermnode为空
+                mPaint.setXfermode(null);
+                // 在offscreen上绘制完成后,提交绘制结果到上一个canvas显示，当前save的canvas退出stack
+                canvas.restoreToCount(sc);
+                // 重新设置style为空心
+                mPaint.setStyle(Paint.Style.STROKE);
+
+                // 根据成功或者失败绘制聚焦的圆圈
+                mPaint.setStrokeWidth(mStrokeWidth);
+                canvas.drawArc(new RectF(mFocusViewMarginToParent, mFocusViewMarginToParent,
+                        width - mFocusViewMarginToParent, height - mFocusViewMarginToParent), 0, CIRCLE_ANGLE, false, mPaint);
+                break;
+            case STATE_IDLE:
+                break;
+        }
+    }
+
+    /**
+     * init画笔
+     */
+    private void initPaint() {
+        if (mPaint == null) {
+            mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        }
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(mStrokeWidth);
+        mPaint.setAntiAlias(true);
+    }
+
+    private void setPaintColor(int color) {
+        if (mPaint != null) {
+            mPaint.setColor(color);
+        }
+    }
+}

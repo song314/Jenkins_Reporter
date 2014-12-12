@@ -1,0 +1,39 @@
+package com.pinguo.edit.sdk.camera.util;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+
+import java.io.File;
+
+/**
+ * @author Tsmile
+ */
+public class ThumbnailHolder {
+    private Bitmap mThumbnailBitmap = null;
+
+    public ThumbnailHolder() {
+
+    }
+
+    public Bitmap getThumbnailBitmap() {
+        return mThumbnailBitmap;
+    }
+
+    public void updateBitmap(Bitmap bitmap) {
+        this.mThumbnailBitmap = bitmap;
+    }
+
+    public void resume(Context context) {
+        File lastThumbnailFile = new File(context.getFilesDir(), CameraModuleUtil.LAST_THUMB_FILENAME);
+        if (lastThumbnailFile.exists()) {
+            mThumbnailBitmap = CameraModuleUtil.getLastThumbnail(lastThumbnailFile);
+        } else {
+            mThumbnailBitmap =
+                    CameraModuleUtil.getLastThumbnail(context.getContentResolver());
+        }
+    }
+
+    public void pause(Context context) {
+        mThumbnailBitmap = null;
+    }
+}

@@ -1,0 +1,54 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by pinguo on 14-7-18.
+ */
+public class GLSurfaceViewNormalRendererMethod extends PGRendererMethod {
+
+    private Bitmap mBitmap;
+    private int mShowHeight;
+    private int mShowWidth;
+
+    @Override
+    public void rendererAction() {
+
+        renderType(EM_MAKE_TYPE.RENDER_NORMAL);
+        clearImage(0);
+
+        do {
+            if (!setEffect("Effect=Normal")) {
+                break;
+            }
+
+            if (!setImageFromBitmap(0, mBitmap)) {
+                break;
+            }
+
+            if (!make()) {
+                break;
+            }
+
+            if (!this.getMakedImage2Screen(0, 0, 0, mShowWidth, mShowHeight)) {
+                break;
+            }
+
+        } while (false);
+    }
+
+    public boolean setImageFromBitmap(int index, Bitmap bitmap) {
+        int[] argbArray = new int[bitmap.getWidth() * bitmap.getHeight()];
+
+        bitmap.getPixels(argbArray, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        return setImageFromARGB(index, argbArray, bitmap.getWidth(), bitmap.getHeight());
+    }
+
+    public void setMakePhotoInfo(Bitmap bitmap, int width, int height) {
+        this.mBitmap = bitmap;
+        this.mShowWidth = width;
+        this.mShowHeight = height;
+    }
+}

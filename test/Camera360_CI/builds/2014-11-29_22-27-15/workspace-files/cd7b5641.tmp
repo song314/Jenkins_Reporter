@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+        android:background="#777777">
+
+    <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+    </us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignTop="@id/image"
+        android:layout_alignBottom="@id/image">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_centerInParent="true"
+            android:text="MIX"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:textSize="72sp"
+            android:textColor="#bbffffff"
+            android:background="@drawable/composite_sdk_common_rect_bg">
+        </TextView>
+    </RelativeLayout>
+
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/image"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical">
+        <Button
+            android:id="@+id/start_camera_btn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#666666"
+            android:textColor="#ffffff"
+            android:gravity="center"
+            android:text="调用相机">
+        </Button>
+
+        <Button
+            android:id="@+id/start_gallery_btn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#555555"
+            android:textColor="#ffffff"
+            android:gravity="center"
+            android:text="调用相册">
+        </Button>
+
+        <Button
+            android:id="@+id/copy_filter_btn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#444444"
+            android:textColor="#ffffff"
+            android:gravity="center"
+            android:text="保存滤镜数据">
+        </Button>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:gravity="center">
+
+            <CheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/org_cb" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="是否显示原图" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <include layout="@layout/progress_dialog"
+             android:layout_centerInParent="true"
+             android:id="@+id/progress_layout"/>
+
+    <ImageView
+            android:id="@+id/img_welcome"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop">
+    </ImageView>
+</RelativeLayout>

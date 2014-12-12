@@ -1,0 +1,150 @@
+package com.pinguo.edit.sdk.login.model;
+
+import android.content.Context;
+import android.text.TextUtils;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.RetryPolicy;
+import com.pinguo.Camera360Lib.utils.HttpUtils;
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.edit.sdk.login.lib.Debug;
+
+import java.util.Locale;
+import java.util.Map;
+
+/**
+ * Created by crab on 14-6-13.
+ * 登录模块配置,需要在调用的工程里面初始化该类，需要调用setInstance()初始化
+ */
+public class LoginConfig {
+    public static boolean DEBUG = Debug.DEBUG;
+    // 云相册的host
+    public static String HOST_CLOUD = DEBUG ? "https://cloudtest.camera360.com" : "https://cloud.camera360.com";
+    // 用户中心
+    public static String HOST = DEBUG ? "http://itest.camera360.com" : "https://i.camera360.com";
+
+    //email登录的地址
+    public static final String EMAIL_LOGIN_ADDR = "/api/user/login";
+    //手机登录地址
+    public static final String PHONE_LOGIN_ADDR = "/api/mobile/login";
+
+    //邮箱注册地址
+    public static final String REGISTER_EMAIL_URL = "/api/user/register";
+    //手机注册地址
+    public static final String REGISTER_PHONE_URL = "/api/mobile/register";
+    //手机验证码地址
+    public static final String PHONE_VERIFY_URL = "/api/mobile/verify";
+    //手机重新发送验证码地址
+    public static final String PHONE_SEND_VERIFY_URL = "/api/mobile/sendverifycode";
+    //手机号找回密码
+    public static final String PHONE_FIND_PASSWORD_URL = "/api/mobile/forgetpassword";
+    //手机号与邮箱进行绑定
+    public static final String PHONE_BIND_EMAIL_URL = "/api/mobile/bindingEmail";
+    //其他帐号与手机号绑定
+    public static final String PHONE_BIND_URL = "/api/mobile/binding";
+    //测试时删除手机帐号用户
+    public static final String PHONE_DELETE_URL = "/api/mobile/remove";
+    //测试环境获取手机验证码
+    public static final String PHONE_GET_VERIFY_CODE_URL = "/api/mobile/getCode";
+
+    //第三方web页面登录地址
+    public static final String SNS_LOGIN_ADDR = "/api/third/login/index";
+    //第三方web页面绑定地址
+    public static final String SNS_BIND_ADDR = "/api/third/login/binding";
+    //第3方登录回调的url
+    public static final String SNS_CALL_RESULT = "/api/third/login/callbackResult";
+    //sso登录地址
+    public static final String SNS_SSO_LOGIN_ADDR = "/api/third/login/sso";
+    //sso绑定地址
+    public static final String SNS_SSO_BIND_ADDR = "/api/third/login/bindingSso";
+    //找回密码的地址
+    public static final String URL_FIND_PASSWORD = "/api/user/forgetpassword";
+    //更新用户信息
+    public static final String URL_UPDATE_USER = "/api/user/updateInfo";
+    //邮箱绑定地址
+    public static final String URL_EMAIL_BIND = "/api/third/login/bindingEmail";
+    //检查邮箱是否可用
+    public static final String URL_EMAIL_CHECK = "/api/user/checkemail";
+    //检查手机号是否可用
+    public static final String URL_PHONE_CHECK = "/api/mobile/check";
+    //修改密码
+    public static final String URL_MODIFY_PASSWORD = "/api/user/changepassword";
+    //获取用户信息
+    public static final String URL_USER_INFO = "/api/user/info";
+    //获取地理位置信息
+    public static final String URL_LOCATION_GET = "/geo/info/";
+
+    // 接口超时值与重试次数
+    public static final int DEFAULT_TIMEOUT_MS = 15000;
+    public static final int DEFAULT_MAX_RETRIES = 0;
+    public static final int DEFAULT_BACKOFF_MULT = 0;
+
+    // 超时重试策略
+    public static RetryPolicy getRetryPolicy() {
+        return new DefaultRetryPolicy(DEFAULT_TIMEOUT_MS,
+                DEFAULT_MAX_RETRIES,
+                DEFAULT_BACKOFF_MULT);
+    }
+
+    // 接口公共参数
+    public static void prepareCommonParams(Context context, Map<String, String> params) {
+        params.put("appkey", HttpUtils.encodeUrlInputParams(LoginConfig.getInstance().getAppKey()));
+        String locate = Locale.getDefault().toString(); // 语言
+        if (!TextUtils.isEmpty(locate)) {
+            params.put("locale", HttpUtils.encodeUrlInputParams(locate));
+        }
+        User user = User.create(context);
+        User.Info userInfo = user.getInfo();
+        // 用户登录态
+        if (user.isValidate()) {
+            params.put("userId", HttpUtils.encodeUrlInputParams(userInfo.userId));
+            params.put("token", HttpUtils.encodeUrlInputParams(userInfo.token));
+        }
+        String imei = SystemUtils.getIMEI(context);
+        if (!TextUtils.isEmpty(imei)) {
+            params.put("deviceId", HttpUtils.encodeUrlInputParams(imei));
+        }
+        if (!TextUtils.isEmpty(imei)) {
+            params.put("device", HttpUtils.encodeUrlInputParams(android.os.Build.MODEL));
+        }
+        params.put("platform", HttpUtils.encodeUrlInputParams("android")); // 平台
+        params.put("appname", HttpUtils.encodeUrlInputParams("camera360"));
+        params.put("appversion", HttpUtils.encodeUrlInputParams(DeviceInfo.SOFTWARE_VERSION));
+        params.put("channel", HttpUtils.encodeUrlInputParams(LoginConfig.getInstance().getChannel())); //
+    }
+
+    private String channel = "";
+    private String appKey = "46e95ed366c9dc8a";
+
+    private static volatile LoginConfig mInstance;
+
+    public static LoginConfig getInstance() {
+        synchronized (LoginConfig.class) {
+            if (mInstance == null) {
+                mInstance = new LoginConfig();
+            }
+            return mInstance;
+        }
+    }
+
+    public void init(Context context) {
+        DeviceInfo.initDevice(context);
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
+    }
+
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setChannel(String channel) {
+        this.channel = channel;
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+}

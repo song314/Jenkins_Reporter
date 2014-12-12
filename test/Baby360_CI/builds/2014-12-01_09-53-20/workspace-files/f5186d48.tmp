@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout style="@style/OptionsItemClickable">
+
+        <ImageView
+            android:id="@+id/option_item_icon"
+            style="@style/OptionsItemIcon"
+            android:contentDescription="@string/empty_string" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_toRightOf="@+id/option_item_icon"
+            style="@style/OptionsItemText"
+            android:layout_centerVertical="true" />
+
+        <TextView
+            android:id="@+id/summary"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="50dp"
+            style="@style/OptionsItemSummaryTextStyle"
+            android:layout_centerVertical="true" />
+
+        <CheckBox
+            android:id="@+id/checkbox"
+            style="@style/CheckBoxStyle" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/image_line"
+        style="@style/TranslucentStripsWhite" />
+</RelativeLayout>
+

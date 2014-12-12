@@ -1,0 +1,567 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.PGLoginConstants;
+import com.pinguo.edit.sdk.login.StatusErrorCodeMessage;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.login.lib.util.ViewUtils;
+import com.pinguo.edit.sdk.login.model.EmailLogin;
+import com.pinguo.edit.sdk.login.model.PhoneLogin;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.login.model.UserHelper;
+import com.pinguo.edit.sdk.login.view.CheckEmailViewGroup;
+import com.pinguo.edit.sdk.login.view.DimFrameLayout;
+import com.pinguo.edit.sdk.login.view.EditTextWithPrompt;
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+/**
+ * Created by crab on 14-10-24.
+ */
+public class PGNewLoginActivity extends PGLoginBaseActivity implements View.OnClickListener,
+        EditTextWithPrompt.HideErrorPromptListener, EditTextWithPrompt.IRegisterWay {
+    private static final int REQUEST_CODE_MODIFY_PASSWORD = 1088;
+    private static final int REQUEST_CODE_FIND_PASSWORD = 1089;
+    public int mEffectPosition = PGLoginConstants.EFFECT_POSITION_DEFAULT;
+    private EditTextWithPrompt mEmailInput;
+    private EditTextWithPrompt mEmailPasswordInput;
+    private ImageView mEyeImageView;
+    private CheckEmailViewGroup mCheckEmailViewGroup;
+    private DimFrameLayout mFindPasswordParent;
+
+    private EmailLogin mEmailLoginFuture;
+    private PhoneLogin mPhoneLoginFuture;
+    private boolean mShowPassword = false;
+    private boolean mOnceFocus = false;
+    private boolean mClickEye = false;
+    //是否是大陆用户
+    private boolean mIsMainLandUser = true;
+    private int mError = PGLoginConstants.ERROR_NO;
+    private int mLoginMode = PGLoginConstants.REGISTER_WAY_UNKOWN;
+
+    //直接从注册界面跳转到登录界面进行直接登录
+    private String mPhoneNumber;
+    private String mPassword;
+    private boolean mDirectLogin;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_login_login);
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            if (intent != null) {
+                mEffectPosition = intent.getIntExtra(PGLoginConstants.CONTEXT_DATA, PGLoginConstants.EFFECT_POSITION_DEFAULT);
+                mDirectLogin = intent.getBooleanExtra(PGLoginConstants.KEY_LOGIN_REDIRECT, false);
+                mPhoneNumber = intent.getStringExtra(PGLoginConstants.KEY_PHONE_NUMBER);
+                mPassword = intent.getStringExtra(PGLoginConstants.KEY_PHONE_PASSWORD);
+            }
+        } else {
+            mEffectPosition = savedInstanceState.getInt(PGLoginConstants.CONTEXT_DATA);
+        }
+        mIsMainLandUser = SystemUtils.isMainLandUser(this);
+        initView();
+    }
+
+    @Override
+    protected void onResume() {
+        if (mDirectLogin) {
+            mDirectLogin = false;
+            loginFromPhone(mPhoneNumber, mPassword);
+        }
+        super.onResume();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(PGLoginConstants.CONTEXT_DATA, mEffectPosition);
+    }
+
+    @Override
+    public void initView() {
+        mRootView = findViewById(R.id.id_pg_login_root_view);
+        setRootViewBackground(mRootView);
+
+        TitleView headView = (TitleView) findViewById(R.id.pg_login_head);
+        headView.setTiTleText(getString(R.string.id_photo_login));
+        headView.setOnTitleViewClickListener(this);
+
+        TextView textView = (TextView) findViewById(R.id.id_show_pg_login_encounter_problem);
+        textView.setOnClickListener(this);
+
+        findViewById(R.id.id_show_pg_login_use_third_site).setOnClickListener(this);
+        mFindPasswordParent = (DimFrameLayout) findViewById(R.id.id_pg_login_find_password_parent);
+
+        mEmailInput = (EditTextWithPrompt) findViewById(R.id.id_email_edittext);
+        mEmailInput.setHideErrorPromptListener(this);
+        mEmailInput.setRegisterWayListener(this);
+
+        mEmailPasswordInput = (EditTextWithPrompt) findViewById(R.id.id_password_edittext);
+        mEmailPasswordInput.setTypeface(Typeface.DEFAULT);
+        preparePasswordListener();
+
+        mErrorTipText = (TextView) findViewById(R.id.id_pg_login_error_prompt_text);
+        hideErrorMessage();
+
+        mEyeImageView = (ImageView) findViewById(R.id.id_password_eye);
+        mEyeImageView.setOnClickListener(this);
+
+        mCheckEmailViewGroup = (CheckEmailViewGroup) findViewById(R.id.id_login_check_email_parent);
+
+//        mThirdLoginParent = (DimFrameLayout) findViewById(R.id.id_pg_login_third_parent);
+        findViewById(R.id.id_pg_login_button).setOnClickListener(this);
+        findViewById(R.id.id_pg_login_find_password_dismiss).setOnClickListener(this);
+        findViewById(R.id.id_pg_login_find_password_from_email).setOnClickListener(this);
+        findViewById(R.id.id_pg_login_find_password_from_sms).setOnClickListener(this);
+
+        if (mIsMainLandUser) {
+            //中文简体 qq,sina,kupan,facebook,twitter
+            mLoginMode = PGLoginConstants.REGISTER_WAY_UNKOWN;
+
+            if (!TextUtils.isEmpty(mPhoneNumber)) {
+                mEmailInput.setText(mPhoneNumber);
+            }
+            mEmailInput.setHint(R.string.pg_login_phone_or_email_empty_hint);
+            if (!TextUtils.isEmpty(mPassword)) {
+                mEmailPasswordInput.setText(mPassword);
+            }
+        } else {
+            mEmailInput.setHint(R.string.pg_login_phone_or_email_empty_hint);
+            //默认 facebook,twitter,qq,sina,kupan
+            mLoginMode = PGLoginConstants.REGISTER_WAY_EMAIL;
+            //修改登录遇到问题的文字提示
+            textView.setText(getString(R.string.id_photo_find_password));
+        }
+
+
+        //the last set text
+        String preAccount = UserHelper.getProperties(this, UserHelper.KEY_ACCOUNT_NAME);
+        if (!TextUtils.isEmpty(preAccount)) {
+            mEmailInput.setText(preAccount);
+            mEmailInput.setSelection(preAccount.length());
+        }
+        findViewById(R.id.hide_counter_problem_controller).setOnClickListener(this);
+    }
+
+    /**
+     * 初始化密码输入框的一些事件
+     */
+    private void preparePasswordListener() {
+        mEmailPasswordInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    if (!mOnceFocus) {
+                        mOnceFocus = true;
+                        if (getErrorTipVisibility() != View.VISIBLE) {
+                            final String text = mEmailInput.getText().toString();
+                            checkInputTextAndPrompt(text);
+                        }
+                    }
+                }
+            }
+        });
+        mEmailPasswordInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mClickEye) {
+                    mClickEye = false;
+                    return;
+                }
+
+                final String text = mEmailInput.getText().toString();
+                boolean checkPass = checkInputTextAndPrompt(text);
+                if (checkPass) {
+                    //如果当前是系统错误或者是密码错误，我们在输入的时候要隐藏掉提示
+                    if (mError == PGLoginConstants.ERROR_PASSWORD || mError == PGLoginConstants.ERROR_SYSTEM) {
+                        hideErrorPromptTextView(PGLoginConstants.ERROR_HIDE_PASSWORD);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 检测用户输入的手机号或者邮箱号是否正确
+     * 然后给用户提示
+     *
+     * @param text
+     */
+    private boolean checkInputTextAndPrompt(String text) {
+        if (TextUtils.isEmpty(text)) {
+            String errorMessage = "";
+            if (mLoginMode == PGLoginConstants.REGISTER_WAY_UNKOWN) {
+                errorMessage = getResources().getString(R.string.pg_login_phone_or_email_empty_hint);
+            } else if (mLoginMode == PGLoginConstants.REGISTER_WAY_EMAIL) {
+                errorMessage = getResources().getString(R.string.pg_login_email_empty);
+            } else {
+                errorMessage = getResources().getString(R.string.pg_login_phone_number_empty);
+            }
+            showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+            return false;
+        }
+
+        if (mLoginMode == PGLoginConstants.REGISTER_WAY_UNKOWN) {
+            boolean isEmail = SystemUtils.checkEmailFormat(text);
+            boolean isPhoneNumber = SystemUtils.checkPhoneNumber(text);
+            if (!isEmail && !isPhoneNumber) {
+                showErrorPromptTextView(getResources().getString(R.string.pg_login_phone_or_email_format_error), PGLoginConstants.ERROR_EMAIL);
+                return false;
+            }
+        } else if (mLoginMode == PGLoginConstants.REGISTER_WAY_EMAIL) {
+            boolean b = SystemUtils.checkEmailFormat(text);
+            if (!b) {
+                showErrorPromptTextView(getResources().getString(R.string.pg_login_email_format_error), PGLoginConstants.ERROR_EMAIL);
+                return false;
+            }
+        } else {
+            boolean b = SystemUtils.checkPhoneNumber(text);
+            if (!b) {
+                showErrorPromptTextView(getResources().getString(R.string.pg_login_phone_number_format_error), PGLoginConstants.ERROR_EMAIL);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void onDestroy() {
+        mCheckEmailViewGroup.cancelAllMessage();
+        if (mPhoneLoginFuture != null) {
+            mPhoneLoginFuture.cancel(true);
+        }
+        if (mEmailLoginFuture != null) {
+            mEmailLoginFuture.cancel(true);
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id) {
+            case R.id.id_show_pg_login_encounter_problem: {
+                v.setClickable(false);
+                ViewUtils.setDelayedClickable(v, true, 500);
+                hideSoftwareKeyboard(mEmailInput);
+                if (mIsMainLandUser) {
+                    mFindPasswordParent.show(true);
+                } else {
+                    gotoFindPasswordForEmail();
+                }
+                break;
+            }
+            case R.id.id_password_eye: {
+                v.setClickable(false);
+                ViewUtils.setDelayedClickable(v, true, 500);
+                mClickEye = true;
+                //如果用户根本没有输入文本，点击眼睛按钮无效
+                mShowPassword = !mShowPassword;
+                mEyeImageView.setSelected(mShowPassword);
+                CharSequence password = mEmailPasswordInput.getText();
+                mEmailPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT
+                        | (mShowPassword ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+                mEmailPasswordInput.setSelection(password.length());
+                mEmailPasswordInput.setTypeface(Typeface.DEFAULT);
+                break;
+            }
+            case R.id.id_pg_login_button: {
+                v.setClickable(false);
+                ViewUtils.setDelayedClickable(v, true, 500);
+                login(this);
+                break;
+            }
+            case R.id.id_pg_login_find_password_dismiss: {
+                mFindPasswordParent.hide(true);
+                break;
+            }
+            case R.id.id_pg_login_find_password_from_email: {
+                gotoFindPasswordForEmail();
+                mFindPasswordParent.hide(false);
+                break;
+            }
+            case R.id.id_pg_login_find_password_from_sms: {
+                gotoFindPasswordForSMS();
+                mFindPasswordParent.hide(false);
+                break;
+            }
+
+            case R.id.hide_counter_problem_controller: {
+                mFindPasswordParent.hide(true);
+                break;
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_MODIFY_PASSWORD) {
+            if (resultCode == Activity.RESULT_OK) {
+                returnResultFinish();
+            }
+        } else if (requestCode == REQUEST_CODE_FIND_PASSWORD) {
+            if (resultCode == Activity.RESULT_OK) {
+                showMessage(getString(R.string.find_password_success));
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void hideErrorPromptTextView(int hide) {
+        //如果当前显示的是email错误信息，但是你又是从password输入框输入后想隐藏输入信息
+        if (mError == PGLoginConstants.ERROR_EMAIL && hide == PGLoginConstants.ERROR_HIDE_PASSWORD) {
+            return;
+        }
+        //如果当前显示的是密码错误信息，但是你又是从email输入框输入后想隐藏输入信息
+        if (mError == PGLoginConstants.ERROR_PASSWORD && hide == PGLoginConstants.ERROR_HIDE_EMAIL) {
+            return;
+        }
+        hideErrorMessage();
+    }
+
+    @Override
+    public void showErrorPromptTextView(String text, int error) {
+        mError = error;
+        if (mError == PGLoginConstants.ERROR_EMAIL) {
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+        }
+        showErrorMessage(text);
+    }
+
+    @Override
+    public void showEmailCheckStatus(int state) {
+        mCheckEmailViewGroup.changePromptIconState(state);
+    }
+
+    /**
+     * 邮箱登录
+     */
+    private void login(final Context context) {
+        if (!SystemUtils.hasNet(context)) {
+            showMessage(getString(R.string.pg_login_network_exception));
+            return;
+        }
+        if (isErrorMessageShow()) {
+            return;
+        }
+        final String account = mEmailInput.getText().toString();
+        final String password = mEmailPasswordInput.getText().toString();
+
+        if (TextUtils.isEmpty(account)) {
+            if (!mIsMainLandUser) {
+                showErrorPromptTextView(getString(R.string.pg_login_email_empty), PGLoginConstants.ERROR_EMAIL);
+            } else {
+                showErrorPromptTextView(getString(R.string.pg_login_phone_or_email_empty_hint), PGLoginConstants.ERROR_EMAIL);
+            }
+            return;
+        }
+        boolean isEmail = false;
+        boolean isPhoneNumber = false;
+        if (mIsMainLandUser) {
+            isEmail = SystemUtils.checkEmailFormat(account);
+            isPhoneNumber = SystemUtils.checkPhoneNumber(account);
+        } else {
+            isEmail = SystemUtils.checkEmailFormat(account);
+        }
+        if (!isEmail && !isPhoneNumber) {
+            if (!mIsMainLandUser) {
+                showErrorPromptTextView(getString(R.string.pg_login_email_format_error), PGLoginConstants.ERROR_EMAIL);
+            } else {
+                showErrorPromptTextView(getString(R.string.pg_login_phone_or_email_format_error), PGLoginConstants.ERROR_EMAIL);
+            }
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            showErrorPromptTextView(getString(R.string.pg_login_password_empty), PGLoginConstants.ERROR_PASSWORD);
+            return;
+        }
+        hideSoftwareKeyboard(mEmailInput);
+        if (mEmailLoginFuture != null) {
+            mEmailLoginFuture.cancel(true);
+        }
+        if (mPhoneLoginFuture != null) {
+            mPhoneLoginFuture.cancel(true);
+        }
+        if (isEmail) {
+            loginFromEmail(account, password);
+        }
+        if (isPhoneNumber) {
+            loginFromPhone(account, password);
+        }
+    }
+
+    private void loginSuccess() {
+        User user = User.create(this);
+        User.Info info = user.getInfo();
+        int forgetPassword = info.forgetPass;
+        if (forgetPassword == 1) {
+            Intent intent = new Intent(this, PGNewModifyPasswordActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_MODIFY_PASSWORD);
+        } else {
+            returnResultFinish();
+        }
+    }
+
+    private void returnResultFinish() {
+        sendBroadcast(new Intent(PGLoginConstants.ACTION_LOGIN_SUCCESS));
+        Intent data = new Intent();
+        data.putExtra(PGLoginConstants.CONTEXT_DATA, mEffectPosition);
+        setResult(RESULT_OK, data);
+//        finish();
+    }
+
+    /**
+     * 跳转到通过邮箱找回密码界面
+     */
+    private void gotoFindPasswordForEmail() {
+        Intent intent = new Intent(this, PGEmailFindPasswordActivity.class);
+        String email = mEmailInput.getText().toString();
+        boolean isEmail = SystemUtils.checkEmailFormat(email);
+        if (isEmail) {
+            intent.putExtra(PGLoginConstants.KEY_EMAIL, email);
+        }
+        startActivityForResult(intent, REQUEST_CODE_FIND_PASSWORD);
+    }
+
+    /**
+     * 跳转到手机找回密码解码,如果修改成功则直接返回
+     */
+    private void gotoFindPasswordForSMS() {
+        Intent intent = new Intent(this, PGPhoneFindPasswordActivity.class);
+        String phoneNumber = mEmailInput.getText().toString();
+        boolean isPhoneNumber = SystemUtils.checkPhoneNumber(phoneNumber);
+        if (isPhoneNumber) {
+            intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+        }
+        startActivityForResult(intent, REQUEST_CODE_MODIFY_PASSWORD);
+    }
+
+    /**
+     * 邮箱登录
+     *
+     * @param email
+     * @param password
+     */
+    private void loginFromEmail(String email, String password) {
+        mEmailLoginFuture = new EmailLogin(this, email, password);
+        showDialog();
+        mEmailLoginFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                loginSuccess();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                int status = 0;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    status = fault.getStatus();
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGNewLoginActivity.this, fault.getStatus());
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_login_fail);
+                    showMessage(errorMessage);
+                } else {
+                    if (status == 10511) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+                    } else if (status == 10510) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_PASSWORD);
+                    } else {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_SYSTEM);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 手机登录
+     *
+     * @param phone
+     * @param password
+     */
+    private void loginFromPhone(String phone, String password) {
+        if (mPhoneLoginFuture != null) {
+            mPhoneLoginFuture.cancel(true);
+        }
+        mPhoneLoginFuture = new PhoneLogin(this, phone, password);
+        showDialog();
+        mPhoneLoginFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                loginSuccess();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                int status = 0;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    status = fault.getStatus();
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGNewLoginActivity.this, fault.getStatus());
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_login_fail);
+                    showMessage(errorMessage);
+                } else {
+                    if (status == 10511) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+                    } else if (status == 10510) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_PASSWORD);
+                    } else {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_SYSTEM);
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public int getRegisterWay() {
+        return mLoginMode;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mFindPasswordParent.getVisibility() == View.VISIBLE) {
+            mFindPasswordParent.hide(true);
+            return;
+        }
+        super.onBackPressed();
+    }
+}

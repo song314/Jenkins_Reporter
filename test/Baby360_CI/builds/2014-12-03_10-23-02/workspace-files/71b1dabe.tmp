@@ -1,0 +1,276 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.content.Context;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * A type of <code>CameraPreference</code> whose number of possible values
+ * is limited.
+ */
+public class ListPreference implements Cloneable {
+    private static final String TAG = ListPreference.class.getSimpleName();
+
+    PGCameraPreferences PGCameraPreferences = null;
+
+    private String mTitle = null;
+    private final String mKey;
+    private String mValue;
+    protected String mDefault;
+    protected String[] mDefaultValues;
+    private Object[] mEntries;
+    private String[] mEntryValues;
+
+    private boolean mEnable = true;
+    private boolean mLoaded = false;
+
+    public ListPreference(String key, String title) {
+        mTitle = title;
+        mKey = key;
+        PGCameraPreferences = PGCameraPreferences.get();
+    }
+
+    public String getKey() {
+        return mKey;
+    }
+
+    public String getTitle() {
+        return this.mTitle;
+    }
+
+    public void setTitle(String newTitle) {
+        this.mTitle = newTitle;
+    }
+
+    public Object[] getEntries() {
+        return mEntries;
+    }
+
+    public String[] getEntryValues() {
+        return mEntryValues;
+    }
+
+    public void setEntries(Object entries[]) {
+        mEntries = entries == null ? new Object[0] : entries;
+    }
+
+    public void setEntryValues(String values[]) {
+        mEntryValues = values == null ? new String[0] : values;
+    }
+
+    public void setDefaultValues(String[] defaultValues) {
+        mDefaultValues = defaultValues == null ? new String[0] : defaultValues;
+    }
+
+    public void reloadValue() {
+        mLoaded = false;
+    }
+
+    public boolean isEnabled() {
+        return mEnable;
+    }
+
+    public String getValue() {
+        //这里采用内存缓存机制，不会每次都读写文件
+        if (!mLoaded) {
+            PGCameraPreferences preferences = PGCameraPreferences.get();
+            if (preferences != null) {
+                mValue = preferences.getString(mKey, mDefault);
+                GLogger.i("sssss", "getValue mkey = " + mKey + " mValue = " + mValue);
+            } else {
+                GLogger.e(TAG, "PGCameraPreferences is null!!");
+            }
+            mLoaded = true;
+        }
+        return mValue;
+    }
+
+    public void setEnable(boolean enable) {
+        this.mEnable = enable;
+    }
+
+    public void setValue(String value) {
+        if (findIndexOfValue(value) < 0) {
+            throw new IllegalArgumentException("value error, key=" + mKey + ",value=" + value);
+        }
+        mValue = value;
+        PGCameraPreferences preferences = PGCameraPreferences.get();
+        if (preferences != null) {
+            preferences.putString(mKey, value);
+        }
+    }
+
+    public void setValueByIndex(int index) {
+        setValue(String.valueOf(mEntryValues[index]));
+    }
+
+    /**
+     * Integer -> 对应的String资源<br/>
+     * 其他     ->
+     *
+     * @return
+     */
+    public Object getEntry() {
+        return mEntries[findIndexOfValue(getValue())];
+    }
+
+    public String getEntry(Context context) {
+        Object entry = mEntries[findIndexOfValue(getValue())];
+        String entryString = "";
+        if (entry instanceof String) {
+            entryString = (String) entry;
+            return entryString;
+        }
+
+        if (entry instanceof Integer) {
+            entryString = context.getString((Integer) entry);
+            return entryString;
+        }
+
+        return entryString;
+    }
+
+    public void setValueIndex(int index) {
+        setValue(mEntryValues[index].toString());
+    }
+
+    public int findIndexOfValue(String value) {
+        for (int i = 0, n = mEntryValues.length;
+             i < n;
+             ++i) {
+            if (CameraModuleUtil.objectEquals(mEntryValues[i], value)) {
+                return i;
+            } else {
+                try {
+//                    CMLogger.e(TAG, Float.valueOf(mEntryValues[i]) + " : " + Float.valueOf(value));
+                    if (Float.parseFloat(mEntryValues[i]) == Float.parseFloat(value)) {
+//                        CMLogger.e(TAG, Float.valueOf(mEntryValues[i]) + " : " + Float.valueOf(value) + " find it ......");
+                        return i;
+                    }
+                } catch (Exception e) {
+//                    e.printStackTrace();
+                }
+            }
+        }
+        return -1;
+    }
+
+    public void filterUnsupported(List<String> supported) {
+        ArrayList<String> entries = new ArrayList<String>();
+        ArrayList<String> entryValues = new ArrayList<String>();
+        for (int i = 0, len = mEntryValues.length;
+             i < len;
+             i++) {
+            if (supported.indexOf(mEntryValues[i].toString()) >= 0) {
+                entries.add((String) mEntries[i]);
+                entryValues.add(mEntryValues[i]);
+            }
+        }
+        int size = entries.size();
+        mEntries = entries.toArray(new String[size]);
+        mEntryValues = entryValues.toArray(new String[size]);
+    }
+
+    @Override
+    public String toString() {
+        return "ListPreference{" +
+                "PGCameraPreferences=" + PGCameraPreferences +
+                ", mTitle='" + mTitle + '\'' +
+                ", mKey='" + mKey + '\'' +
+                ", mValue='" + mValue + '\'' +
+                ", mDefault='" + mDefault + '\'' +
+                ", mDefaultValues=" + Arrays.toString(mDefaultValues) +
+                ", mEntries=" + Arrays.toString(mEntries) +
+                ", mEntryValues=" + Arrays.toString(mEntryValues) +
+                ", mEnable=" + mEnable +
+                ", mLoaded=" + mLoaded +
+                '}';
+    }
+
+    /**
+     * 过滤相同值的，比如照片尺寸
+     */
+    public void filterDuplicated() {
+        ArrayList<CharSequence> entries = new ArrayList<CharSequence>();
+        ArrayList<CharSequence> entryValues = new ArrayList<CharSequence>();
+        for (int i = 0, len = mEntryValues.length;
+             i < len;
+             i++) {
+            if (!entries.contains(mEntries[i])) {
+                entries.add((CharSequence) mEntries[i]);
+                entryValues.add(mEntryValues[i]);
+            }
+        }
+        int size = entries.size();
+        mEntries = entries.toArray(new CharSequence[size]);
+        mEntryValues = entryValues.toArray(new String[size]);
+    }
+
+    public void setDefault() {
+        mValue = mDefault = findSupportedDefaultValue();
+    }
+
+    public void setDefault(String def) {
+        mValue = mDefault = def;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        ListPreference obj = (ListPreference) super.clone();
+        if (mDefaultValues != null) {
+            obj.mDefaultValues = mDefaultValues.clone();
+        }
+
+        if (mEntries != null) {
+            obj.mEntries = mEntries.clone();
+        }
+
+        if (mEntryValues != null) {
+            obj.mEntryValues = mEntryValues.clone();
+        }
+
+        return obj;
+    }
+
+    // Find the first value in mDefaultValues which is supported.
+    private String findSupportedDefaultValue() {
+        for (int i = 0;
+             i < mDefaultValues.length;
+             i++) {
+            for (int j = 0;
+                 j < mEntryValues.length;
+                 j++) {
+                // Note that mDefaultValues[i] may be null (if unspecified
+                // in the xml file).
+                if (mEntryValues[j].equals(mDefaultValues[i])) {
+                    return mDefaultValues[i].toString();
+                }
+            }
+        }
+        return null;
+    }
+
+    public int getCurrValueIndex() {
+        return CameraModuleUtil.searchAuto(getEntryValues(), getValue());
+    }
+}

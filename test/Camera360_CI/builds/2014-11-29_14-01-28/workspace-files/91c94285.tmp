@@ -1,0 +1,65 @@
+package com.pinguo.edit.sdk.edit;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+
+/**
+ * Created by taoli on 14-6-10.
+ */
+public class CompositeDataReceiver extends BroadcastReceiver {
+
+    public static final int EVENT_UPDATE_COMPOSITE_EFFECT = 0x00000001;
+    public static final int EVENT_USE_COMPOSITE_EFFECT = 0x00000002;
+
+    public static final String ACTION_UPDATE_COMPOSITE_EFFECT = "update_composite_effect";
+    public static final String ACTION_USE_COMPOSITE_EFFECT = "use_composite_effect";
+
+    private ICompositeDataObserver mObserver;
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        if (null != mObserver) {
+            mObserver.onCompositeDataReceived(intent);
+        }
+    }
+
+    public void registerCallback(Context context, int events, ICompositeDataObserver observer) {
+        IntentFilter intentFilter = new IntentFilter();
+
+        if ((events & EVENT_UPDATE_COMPOSITE_EFFECT) != 0) {
+            intentFilter.addAction(ACTION_UPDATE_COMPOSITE_EFFECT);
+        }
+
+        if ((events & EVENT_USE_COMPOSITE_EFFECT) != 0) {
+            intentFilter.addAction(ACTION_USE_COMPOSITE_EFFECT);
+        }
+
+        context.registerReceiver(this, intentFilter);
+        mObserver = observer;
+    }
+
+    public void unregisterCallback(Context context) {
+        context.unregisterReceiver(this);
+    }
+
+    public static void notifyDataChange(Context context, int events, Object... param) {
+        if ((events & EVENT_UPDATE_COMPOSITE_EFFECT) != 0) {
+            Intent intent = new Intent();
+            intent.setAction(ACTION_UPDATE_COMPOSITE_EFFECT);
+            context.sendBroadcast(intent);
+        }
+
+        if ((events & EVENT_USE_COMPOSITE_EFFECT) != 0) {
+            Intent intent = new Intent();
+            intent.setAction(ACTION_USE_COMPOSITE_EFFECT);
+            context.sendBroadcast(intent);
+        }
+    }
+
+    public interface ICompositeDataObserver {
+        void onCompositeDataReceived(Intent intent);
+    }
+}

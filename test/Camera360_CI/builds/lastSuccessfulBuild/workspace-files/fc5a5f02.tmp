@@ -1,0 +1,59 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.androidsdk.PGColorBuffer;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by pinguo on 14-7-7.
+ */
+public class GetGLSurfaceViewBitmapRendererMethod extends PGRendererMethod {
+
+    private final static String TAG = GetGLSurfaceViewBitmapRendererMethod.class.getSimpleName();
+    private EffectGroupRendererMethod.RendererMethodActionListener mRendererMethodActionListener;
+
+    private int mShowBitmapWidth;
+    private int mShowBitmapHeight;
+
+
+    @Override
+    public void rendererAction() {
+        GLogger.i("error", "rendererAction");
+        PGColorBuffer pgColorBuffer = this.getMakedImage2Buffer();
+        GLogger.i("error", "pgColorBuffer:" + pgColorBuffer);
+        if (pgColorBuffer == null) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG, "pgColorBuffer is null");
+            return;
+        }
+        Bitmap bitmap = Bitmap.createBitmap(pgColorBuffer.getColorBuffer(), pgColorBuffer.getImageWidth(), pgColorBuffer.getImageHeight(), Bitmap.Config.ARGB_8888);
+        GLogger.i("error", "bitmap:" + bitmap);
+        if (mRendererMethodActionListener != null) {
+            mRendererMethodActionListener.success(bitmap);
+        }
+
+        if (!this.getMakedImage2Screen(0, 0, 0, mShowBitmapWidth, mShowBitmapHeight)) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG, "getMakedImage2Screen is fail");
+            return;
+        }
+    }
+
+    public void setWidthHeight(int width, int height) {
+        this.mShowBitmapHeight = height;
+        this.mShowBitmapWidth = width;
+    }
+
+    public void setRendererMethodActionListener(EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener) {
+        this.mRendererMethodActionListener = rendererMethodActionListener;
+    }
+
+}

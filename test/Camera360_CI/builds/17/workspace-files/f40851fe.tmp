@@ -1,0 +1,90 @@
+package com.pinguo.edit.sdk.filter.square.page.list;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by zhongzheng on 14-11-4.
+ */
+public class ListItemView extends FrameLayout {
+    private static final String TAG = ListItemView.class.getSimpleName();
+    private TextView mName;
+    private TextView mAuthor;
+    private ImageView mIcon;
+
+    public ListItemView(Context context) {
+        super(context);
+        initView(context);
+    }
+
+    public ListItemView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        initView(context);
+    }
+
+    public ListItemView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        initView(context);
+    }
+
+    private void initView(Context context) {
+
+        View root = LayoutInflater.from(context).inflate(R.layout.
+                composite_sdk_filter_square_list_item, this);
+        mName = (TextView) root.findViewById(R.id.name);
+        mIcon = (ImageView) root.findViewById(R.id.icon);
+        mAuthor = (TextView) root.findViewById(R.id.author);
+    }
+
+    public ImageView getIcon() {
+        return mIcon;
+    }
+
+    public void setIconForImageUrl(String imageUrl){
+        ImageLoaderView imageLoaderView = (ImageLoaderView)mIcon;
+        imageLoaderView.getOptionsBuilder().displayer(new FadeInBitmapDisplayer(400));
+        imageLoaderView.setImageUrl(imageUrl);
+    }
+
+    public String getName() {
+        return String.valueOf(mName.getText());
+    }
+
+    public void setName(String name) {
+        if(name != null && !name.isEmpty()){
+            mName.setText(name);
+        }
+    }
+
+    public String getAuthor() {
+        return String.valueOf(mAuthor.getText());
+    }
+
+    public void setAuthor(String author) {
+        if(author != null && !author.isEmpty()){
+            mAuthor.setText(author);
+        }
+    }
+
+    public void setAllItemEnable(boolean enable) {
+        if (!enable) {
+            this.setClickable(enable);
+            this.setEnabled(enable);
+//            mTitle.setTextColor(Color.parseColor("#abb2ba"));
+            mIcon.setAlpha(150);
+//            mSummary.setTextColor(Color.parseColor("#abb2ba"));
+        }
+    }
+}

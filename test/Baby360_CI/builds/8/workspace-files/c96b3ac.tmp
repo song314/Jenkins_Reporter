@@ -1,0 +1,91 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+
+/**
+ * Created by huowaa on 14-7-1.
+ */
+public class EnhanceSkin extends Effect {
+    private static final String TAG = EnhanceSkin.class.getSimpleName();
+
+    public static final String EFFECT_KEY_PORTRAINT_SKIN_FULL = "Portrait_Skin_Full";
+
+    public static final String PARAM_KEY_STRONG = "Strong"; // 美肤力度,取值 0~1,默认0
+
+    public EnhanceSkin() {
+        this.type = Type.EnhanceSkin.name();
+        this.key = EnhanceSkin.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.ENHANCE_SKIN_CMD.toCharArray());
+
+        this.icon = "composite_sdk_skin_normal";
+        this.name = "composite_sdk_skin";
+
+        param = new Param();
+        ParamFloatItem strong = new ParamFloatItem(PARAM_KEY_STRONG, EFFECT_KEY_PORTRAINT_SKIN_FULL, 0f, 1f, 0.01f, 0f, 0f);
+        param.addParamItem(strong);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        EnhanceSkin skin = null;
+
+        try {
+            skin = (EnhanceSkin) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != skin)
+            return skin;
+        else
+            return new EnhanceSkin();
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", type);
+            jsonObject.put("packName", "");
+            jsonObject.put("name", "");
+            if (null != param) {
+                ParamFloatItem item = (ParamFloatItem) param.getParamItemList().get(0);
+                if (item.value == item.defaultValue) {
+                    return null;
+                }
+
+                jsonObject.put("value", Math.round(item.value / item.step));
+                jsonObject.put("minValue", Math.round(item.min));
+                jsonObject.put("type", 1);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

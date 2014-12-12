@@ -1,0 +1,210 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Point;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.RelativeLayout;
+
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * 正方形显示预览
+ *
+ * @author Tsmile
+ */
+public class PreviewTouchLayout extends RelativeLayout implements Rotatable, GestureDetector.OnGestureListener {
+
+    private View mTouchView;
+    private GestureDetector mGestureDetector;
+    private GestureDetector.OnGestureListener mGestureListener;
+    private RectF frameRect;
+    private RectF scaleFrameRect;
+    private SizeInfo screenSize;
+    private SizeInfo previewSize;
+    private float topMenuHeight;
+
+    private PreviewFrameView mFrameView;
+
+    public PreviewTouchLayout(Context context) {
+        super(context);
+    }
+
+    public PreviewTouchLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public PreviewTouchLayout(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public void setGestureListener(GestureDetector.OnGestureListener gestureListener) {
+        mGestureListener = gestureListener;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        mTouchView = findViewById(
+                ResourceHelper.getId(getContext(), "touch_view"));
+        mTouchView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (null != mGestureDetector) {
+                    return mGestureDetector.onTouchEvent(event);
+                }
+
+                return false;
+            }
+        });
+
+        mGestureDetector = new GestureDetector(getContext(), this);
+
+        mFrameView = (PreviewFrameView) findViewById(
+                ResourceHelper.getId(getContext(), "camera_preview_frame_view"));
+    }
+
+    public void setAllSize(SizeInfo screenSize, SizeInfo previewSize,
+                           float topHeight, float bottomHeight, float ratio) {
+        this.screenSize = screenSize;
+        this.previewSize = previewSize;
+        this.topMenuHeight = topHeight;
+        frameRect = new RectF();
+
+        float sideLength = previewSize.getWidth();
+        float left = (screenSize.getWidth() - sideLength) / 2;
+        float right = left + sideLength;
+
+        float screenHeightWithOutTopAndBottom = screenSize.getHeight() - topHeight - bottomHeight;
+        float sideHeight = sideLength / ratio;
+
+        float displayTop;
+        if (sideHeight > screenHeightWithOutTopAndBottom) {
+            if (sideHeight - screenHeightWithOutTopAndBottom < topMenuHeight) {
+                displayTop = topHeight - (sideHeight - screenHeightWithOutTopAndBottom) / 2;
+            } else {
+                displayTop = (screenSize.getHeight() - sideHeight) / 2;
+            }
+        } else {
+            displayTop = topHeight + (screenHeightWithOutTopAndBottom - sideHeight) / 2;
+        }
+
+        float displayBottom = displayTop + sideHeight;
+
+        float previewTop;
+        if (previewSize.getHeight() > screenHeightWithOutTopAndBottom) {
+            if (previewSize.getHeight() - screenHeightWithOutTopAndBottom < topMenuHeight) {
+                previewTop = topHeight - (previewSize.getHeight() - screenHeightWithOutTopAndBottom) / 2;
+            } else {
+                previewTop = (screenSize.getHeight() - previewSize.getHeight()) / 2;
+            }
+        } else {
+            previewTop = topHeight;
+        }
+
+        float cropTop = 0;
+        if (previewTop < displayTop) {
+            cropTop = displayTop - previewTop;
+        }
+
+        float cropBottom = cropTop + sideHeight;
+        frameRect.set(left, displayTop, right, displayBottom);
+
+        scaleFrameRect = new RectF();
+        scaleFrameRect.set(0, cropTop / previewSize.getHeight(), 1, cropBottom / previewSize.getHeight());
+        mFrameView.setFrameRect(frameRect);
+    }
+
+    public RectF getFinalPicScaleFrameRect() {
+        return scaleFrameRect;
+    }
+
+    public Point getTouchViewLeftPoint() {
+
+        if (this.mTouchView == null || screenSize == null || previewSize == null) {
+            return new Point(0, 0);
+        }
+
+        int left = this.mTouchView.getLeft();
+        int top = this.mTouchView.getTop();
+        if (frameRect.top < topMenuHeight) {
+            top -= (topMenuHeight - frameRect.top);
+        }
+        if (frameRect.left > 0) {
+            left -= frameRect.left;
+        }
+        CMLogger.d("cx", "screenSize w:" + screenSize.getWidth() + ",h:" + screenSize.getHeight());
+        CMLogger.d("cx", "previewSize w:" + previewSize.getWidth() + ",h:" + previewSize.getHeight());
+        CMLogger.d("cx", "top:" + top + ",left:" + left);
+        return new Point(left, top);
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        if (frameRect != null && !frameRect.contains(e.getX(), e.getY())) {
+            return false;
+        }
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onDown(e);
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+        if (null == mGestureListener) {
+            return;
+        }
+
+        mGestureListener.onShowPress(e);
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onSingleTapUp(e);
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onScroll(e1, e2, distanceX, distanceY);
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+        if (null == mGestureListener) {
+            return;
+        }
+
+        mGestureListener.onLongPress(e);
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (null == mGestureListener) {
+            return false;
+        }
+
+        return mGestureListener.onFling(e1, e2, velocityX, velocityY);
+    }
+}

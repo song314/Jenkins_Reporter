@@ -1,0 +1,15 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/composite_sdk_beauty_main_random_composite_width"
+    android:layout_height="@dimen/composite_sdk_beauty_main_bottom_composite_height"
+    android:minHeight="@dimen/composite_sdk_beauty_main_bottom_composite_height"
+    android:minWidth="@dimen/composite_sdk_beauty_main_random_composite_width"
+    android:background="#f3383b3e">
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/composite_sdk_random_magic"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="18dp"/>
+
+</RelativeLayout>

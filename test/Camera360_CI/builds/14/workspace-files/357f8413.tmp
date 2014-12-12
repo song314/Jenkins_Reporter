@@ -1,0 +1,75 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+/**
+ * Created by pinguo on 14-6-25.
+ */
+public class GLSurfaceViewAdvanceRendererMethod extends GLSurfaceViewCompositeRendererMethod {
+
+    private final static String TAG = GLSurfaceViewAdvanceRendererMethod.class.getSimpleName();
+
+    private boolean hasInit;
+    private String makeType;
+
+//    private MakePhotoModel[] initModelArray;
+    private MakePhotoModel[] makeModelArray;
+
+    public void init(){
+        hasInit = true;
+    }
+
+    public void setMakeType(String makeType){
+        this.makeType = makeType;
+
+//        initModelArray = new MakePhotoModel[mEffectModelArray.length];
+        makeModelArray = new MakePhotoModel[mEffectModelArray.length];
+        for(int i=0; i<mEffectModelArray.length; i++){
+            if(mEffectModelArray[i]!=null){
+                if(mEffectModelArray[i].getEffect().type.equals(makeType)){
+                    makeModelArray[i] = mEffectModelArray[i];
+                }
+            }
+        }
+    }
+
+//    @Override
+//    protected boolean setMakeEffectInfo(MakePhotoModel[] effectModelArray){
+//        if(hasInit){
+//            hasInit = false;
+//
+//            boolean result = super.setMakeEffectInfo(initModelArray);
+//            if(result){
+//                if(!this.setResultImageToInput(0)){
+//                    if(mRendererMethodActionListener!=null){
+//                        mRendererMethodActionListener.fail();
+//                    }
+//                    GLogger.i(TAG, "setResultImageToInput fail");
+//                    return false;
+//
+//                }
+//                return true;
+//            }else{
+//                return false;
+//            }
+//        }else{
+//
+//            return super.setMakeEffectInfo(makeModelArray);
+//        }
+//    }
+
+    protected void clearAllImage(){
+        if(hasInit){
+            super.clearAllImage();
+        }
+    }
+
+    protected boolean prepare(){
+        return true;
+    }
+
+    protected boolean setPhotoInfo(){
+        if(hasInit){
+           return super.setPhotoInfo();
+        }
+        return true;
+    }
+}

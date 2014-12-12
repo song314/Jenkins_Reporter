@@ -1,0 +1,117 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+
+/**
+ * Created by huowaa on 14-7-1.
+ */
+public class AdvanceVignette extends Effect {
+    private static final String TAG = AdvanceVignette.class.getSimpleName();
+
+    public static final String PARAM_KEY_VIGNETTE_RANGE = "vignetteRange"; // 影晕范围,默认为0.9,范围 : 0~1
+    public static final String PARAM_KEY_VIGNETTE_STRONG = "vignetteStrong"; // 影晕程度,默认0,范围 0~1  (影晕的主要调节项目)
+    public static final String PARAM_KEY_CENTER_STRONG = "centerStrong"; // 中间亮的程度,默认0,范围 0~1
+
+    public static final String EFFECT_KEY_LIGHTZ_VIGNETTE = "LightZ_Vignette";
+
+    public AdvanceVignette() {
+        this.type = Type.AdvanceVignette.name();
+        this.key = AdvanceVignette.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.ADVANCE_VIGNETTE_CMD.toCharArray());
+
+        // param
+        param = new Param();
+        ParamFloatItem vignetteRange = new ParamFloatItem(PARAM_KEY_VIGNETTE_RANGE, EFFECT_KEY_LIGHTZ_VIGNETTE,
+                0f, 1f, 0.01f, 0.9f, 0.9f);
+
+        ParamFloatItem vignetteStrong = new ParamFloatItem(PARAM_KEY_VIGNETTE_STRONG, EFFECT_KEY_LIGHTZ_VIGNETTE,
+                0f, 1f, 0.01f, 0f, 0f);
+        vignetteStrong.icon = "composite_sdk_advance_param_vignette_strong";
+        vignetteStrong.name = "composite_sdk_vignette_strong";
+
+        ParamFloatItem centerStrong = new ParamFloatItem(PARAM_KEY_CENTER_STRONG, EFFECT_KEY_LIGHTZ_VIGNETTE,
+                0f, 1f, 0.01f, 0f, 0f);
+        centerStrong.icon = "composite_sdk_advance_param_vignette_center_strong";
+        centerStrong.name = "composite_sdk_vignette_center_strong";
+
+        param.addParamItem(vignetteRange);
+        param.addParamItem(vignetteStrong);
+        param.addParamItem(centerStrong);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        AdvanceVignette vignette = null;
+
+        try {
+            vignette = (AdvanceVignette) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != vignette) {
+            return vignette;
+        } else {
+            return new AdvanceVignette();
+        }
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        if (null != param) {
+            List<ParamItem> paramItemList = param.getParamItemList();
+            for (ParamItem item : paramItemList) {
+                if (item.key.equals(PARAM_KEY_VIGNETTE_RANGE)) {
+                    continue;
+                }
+
+                if (item instanceof ParamFloatItem) {
+                    if (((ParamFloatItem) item).value
+                            == ((ParamFloatItem) item).defaultValue) {
+                        continue;
+                    }
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("key", item.key);
+                        jsonObject.put("packName", "");
+                        jsonObject.put("name", "");
+                        jsonObject.put("value", Math.round(((ParamFloatItem) item).value / ((ParamFloatItem) item).step));
+                        jsonObject.put("minValue", Math.round(((ParamFloatItem) item).min));
+                        jsonObject.put("type", 1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    list.add(jsonObject);
+                }
+            }
+        }
+
+        return list;
+    }
+}

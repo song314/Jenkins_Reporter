@@ -1,0 +1,148 @@
+package com.pinguo.edit.sdk.lib;
+
+import android.annotation.TargetApi;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.hardware.Camera;
+import android.os.Build;
+import android.os.Debug.MemoryInfo;
+import android.os.Environment;
+import android.os.StatFs;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+
+import java.io.File;
+import java.util.Random;
+
+/**
+ * 设备信息工具类
+ *
+ * @author lizhipeng
+ * @version 1.0
+ */
+public class DeviceInfo {
+
+    /**
+     * 检查是否有SD卡
+     *
+     * @param context
+     * @return
+     * @author lizhipeng
+     */
+    public static boolean hasSDCard(Context context) {
+        String state = Environment.getExternalStorageState();
+        if (state.equals(Environment.MEDIA_MOUNTED)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 检查SD卡是否挂载
+     * 注：同上，仅去除不必要的参数
+     *
+     * @return
+     * @author tangzhen
+     */
+    public static boolean hasSDCard() {
+        return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
+    }
+
+    public static boolean isMemoryEnough(Context context) {
+        int myProcessID = android.os.Process.myPid();
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        MemoryInfo[] info = manager.getProcessMemoryInfo(new int[]{myProcessID});
+
+        int memoryLimit = manager.getMemoryClass() * 1024;
+        int curMemory = info[0].getTotalSharedDirty();
+
+        Log.v("Test", "Is memory enough:" + curMemory + "/" + memoryLimit);
+
+        return memoryLimit > curMemory;
+    }
+
+    public static final int SDCARD_AVAILABLE = 0;
+    public static final int SDCARD_TOTAL = 1;
+    public static final int SDCARD_USED = 2;
+
+    public static long getSDCardSize(int type) {
+        File path = Environment.getExternalStorageDirectory();
+        StatFs stat = new StatFs(path.getPath());
+
+        long retSize = 0;
+        long blockSize = stat.getBlockSize();
+        switch (type) {
+            case SDCARD_AVAILABLE: {
+                long availableBlocks = stat.getAvailableBlocks();
+                retSize = availableBlocks * blockSize;
+                break;
+            }
+            case SDCARD_TOTAL: {
+                long totalBlocks = stat.getBlockCount();
+                retSize = totalBlocks * blockSize;
+                break;
+            }
+            case SDCARD_USED: {
+                long totalBlocks = stat.getBlockCount();
+                long availableBlocks = stat.getAvailableBlocks();
+                retSize = (totalBlocks - availableBlocks) * blockSize;
+                break;
+            }
+            default:
+                break;
+        }
+
+        return retSize;
+    }
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public static boolean isFrontCameraSupported() {
+        if (Build.VERSION.SDK_INT > 8 && Camera.getNumberOfCameras() > 1) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 如果没有Telephone 模块，会返回一个随机数
+     *
+     * @param context
+     */
+    public static long getSnrFromIMEI(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String snrNumber = null;
+        if (tm != null) {//没有Telephone 的设备 TelePhonyManager 会为null
+            //手机IMEI码结构说明 
+            //手机IMEI码由15-17位数字组成。 
+            //第一部分 TAC，Type Allocation Code，类型分配码，由8位数字组成（早期是6位），是区分手机品牌和型号的编码，该代码由GSMA及其授权机构分配。其中TAC码前两位又是分配机构标识（Reporting Body Identifier），是授权IMEI码分配机构的代码，如01为美国CTIA，35为英国BABT，86为中国TAF。 
+            //第二部分 FAC，Final Assembly Code，最终装配地代码，由2位数字构成，仅在早期TAC码为6位的手机中存在，所以TAC和FAC码合计一共8位数字。FAC码用于生产商内部区分生产地代码。 
+            //第三部分 SNR，Serial Number，序列号，由第9位开始的6位数字组成，区分每部手机的生产序列号。 
+            //第四部分 CD，Check Digit，验证码，由前14位数字通过Luhn算法计算得出。 
+            //第五部分 SVN，Software Version Number，软件版本号，区分同型号手机出厂时使用的不同软件版本，仅在部分品牌的部分机型中存在。 
+            //一般来说，由IMEI码中的TAC部分就可以得出手机的型号，但也有个别品牌不同型号的手机共用一个TAC码。同时，由
+            //于一个TAC最多只能对应6位数字序列号，即100万台手机，所以诺基亚N95、苹果iPhone等热门机型有多个TAC号段。 本站查询IMEI码仅需要输入前15位，软件版本号不需要输入。
+            snrNumber = tm.getDeviceId();
+        } else {
+            snrNumber = null;
+        }
+
+        long deviceNumber = -1;
+        if (snrNumber != null) {
+            try {
+                //截取SNR部分，此字段分别较为平均
+                if (snrNumber.length() >= 14) {
+                    snrNumber = snrNumber.substring(9, 14);
+                }
+                deviceNumber = Long.parseLong(snrNumber);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (deviceNumber == -1) {
+            deviceNumber = new Random().nextLong();
+        }
+        return deviceNumber;
+    }
+}

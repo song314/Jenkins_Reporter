@@ -1,0 +1,39 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.widget.RelativeLayout;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by taoli on 14-7-19.
+ */
+public class AdjustContainerViewGroup extends RelativeLayout {
+    public AdjustContainerViewGroup(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        SizeInfo sizeInfo = CameraModuleUtil.getDisplaySize();
+        Context context = getContext();
+        float topHeight = context.getResources().getDimension(
+                ResourceHelper.getDimen(context, "composite_sdk_beauty_main_top_height"));
+        float bottomHeight = context.getResources().getDimension(
+                ResourceHelper.getDimen(context, "composite_sdk_beauty_main_bottom_composite_height"));
+        float menuHeight = context.getResources().getDimension(
+                ResourceHelper.getDimen(context, "composite_sdk_beauty_main_bottom_menu_height"));
+
+        float showHeight = sizeInfo.getHeight() - topHeight - bottomHeight - menuHeight;
+
+        if (showHeight > sizeInfo.getWidth()) {
+            showHeight = sizeInfo.getWidth();
+        }
+
+        int newHeightMeasureSpec = MeasureSpec.makeMeasureSpec(
+                Math.round(showHeight), MeasureSpec.EXACTLY);
+        super.onMeasure(widthMeasureSpec, newHeightMeasureSpec);
+    }
+}

@@ -1,0 +1,21 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.shop;
+
+import com.google.gson.Gson;
+
+import java.io.Serializable;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Requirement;
+
+/**
+ * 安装包需求项
+ * Created by huowaa on 13-11-11.
+ */
+public class PackRequirement extends Requirement implements Serializable {
+    public boolean preferPregen = false;//是否默认从服务器做图
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
+}

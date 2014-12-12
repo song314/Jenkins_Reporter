@@ -1,0 +1,338 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.PGLoginConstants;
+import com.pinguo.edit.sdk.login.StatusErrorCodeMessage;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.lib.util.ViewUtils;
+import com.pinguo.edit.sdk.login.model.PhoneSendVerifyCode;
+import com.pinguo.edit.sdk.login.model.PhoneVerify;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.login.view.EditTextWithPrompt;
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+/**
+ * Created by crab on 14-10-27.
+ */
+public class PGPhoneVerifyActivity extends PGLoginBaseActivity implements View.OnClickListener {
+    private TextView mVerifyPromptText;
+    private Button mVerifyCodeResendText;
+    private EditTextWithPrompt mVerifyNumber;
+
+    private String mPhoneNumber;
+    private String mPhonePassword;
+
+    private PhoneVerify mPhoneVerifyFuture;
+    private PhoneSendVerifyCode mPhoneSendVerifyCodeFuture;
+    private boolean mStartProgress = true;
+
+    private static final int REQUEST_CODE_MODIFY_PASSWORD = 1088;
+
+    private static final int ONE_MINUTE = 60;
+    private static final int MESSAGE_PROGRESS = 0;
+    private static final int MESSAGE_PROGRESS_OVER = 1;
+
+    private int mCountDown = ONE_MINUTE;
+
+    private CountThread mCountDownThread;
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            int what = msg.what;
+            switch (what) {
+                case MESSAGE_PROGRESS: {
+                    if (mVerifyCodeResendText.isEnabled()) {
+                        mVerifyCodeResendText.setEnabled(false);
+                    }
+                    mCountDown--;
+                    mVerifyCodeResendText.setText(mCountDown + "s");
+                    break;
+                }
+                case MESSAGE_PROGRESS_OVER: {
+                    mCountDown = ONE_MINUTE;
+                    mVerifyCodeResendText.setEnabled(true);
+                    mVerifyCodeResendText.setText(R.string.pg_login_phone_resend_verify_code);
+                    break;
+                }
+            }
+        }
+    };
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_login_phone_veryfy);
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            if (intent != null) {
+                mPhoneNumber = intent.getStringExtra(PGLoginConstants.KEY_PHONE_NUMBER);
+                mPhonePassword = intent.getStringExtra(PGLoginConstants.KEY_PHONE_PASSWORD);
+                mStartProgress = intent.getBooleanExtra(PGLoginConstants.KEY_REGET_VERIFY_CODE, true);
+            }
+        } else {
+            mPhoneNumber = savedInstanceState.getString(PGLoginConstants.KEY_PHONE_NUMBER);
+            mPhonePassword = savedInstanceState.getString(PGLoginConstants.KEY_PHONE_PASSWORD);
+        }
+        initView();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mStartProgress) {
+            mStartProgress = false;
+            if (mCountDownThread != null) {
+                mCountDownThread.setRunning(false);
+            }
+            mCountDownThread = new CountThread();
+            mCountDownThread.start();
+        }
+    }
+
+    @Override
+    public void initView() {
+        mRootView = findViewById(R.id.id_phone_verify_root_view);
+        setRootViewBackground(mRootView);
+        TitleView headView = (TitleView) findViewById(R.id.pg_login_head);
+        headView.setTiTleText(getString(R.string.input_verify_code_title));
+        headView.setOnTitleViewClickListener(this);
+
+        mVerifyPromptText = (TextView) findViewById(R.id.id_phone_number_verify_prompt);
+        String promptTxt = getString(R.string.pg_login_sms_verification_code_has_send, mPhoneNumber);
+        mVerifyPromptText.setText(promptTxt);
+
+        mVerifyNumber = (EditTextWithPrompt) findViewById(R.id.id_phone_verify_number);
+
+        findViewById(R.id.id_phone_number_verify_btn).setOnClickListener(this);
+        mVerifyCodeResendText = (Button) findViewById(R.id.id_phone_verify_number_resend);
+        mVerifyCodeResendText.setOnClickListener(this);
+
+        mErrorTipText = (TextView) findViewById(R.id.id_pg_login_error_prompt_text);
+        hideErrorMessage();
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(PGLoginConstants.KEY_PHONE_NUMBER, mPhoneNumber);
+        outState.putString(PGLoginConstants.KEY_PHONE_PASSWORD, mPhonePassword);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mCountDownThread != null) {
+            mCountDownThread.setRunning(false);
+        }
+        hideSoftwareKeyboard(mVerifyNumber);
+        if (mPhoneVerifyFuture != null) {
+            mPhoneVerifyFuture.cancel(true);
+        }
+        if (mPhoneSendVerifyCodeFuture != null) {
+            mPhoneSendVerifyCodeFuture.cancel(true);
+        }
+        //移除为完成的消息
+        mHandler.removeMessages(MESSAGE_PROGRESS);
+        mHandler.removeMessages(MESSAGE_PROGRESS_OVER);
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        v.setClickable(false);
+        ViewUtils.setDelayedClickable(v, true, 500);
+        int id = v.getId();
+        switch (id) {
+            case R.id.id_phone_number_verify_btn: {
+                hideSoftwareKeyboard(mVerifyNumber);
+                String verifyCode = mVerifyNumber.getText().toString();
+                if (TextUtils.isEmpty(verifyCode)) {
+                    showMessage(getString(R.string.pg_login_phone_verify_code_empty));
+                    return;
+                }
+                submitVerify(verifyCode);
+                break;
+            }
+            case R.id.id_phone_verify_number_resend:
+                reGetVerifyCode();
+                break;
+        }
+    }
+
+    private void createVerifyErrorDialog() {
+        showAlertDialog(R.string.pg_login_phone_verify_error, null);
+    }
+
+    private void createVerifyCodeExpiredDialog() {
+        showAlertDialog(R.string.pg_login_phone_verify_code_expired, null);
+    }
+
+    private void createVerifyFrequentDialog() {
+        showAlertDialog(R.string.status_errorcode10543, null);
+    }
+
+    /**
+     * 提交手机验证码
+     *
+     * @param verifyCode
+     */
+    private void submitVerify(String verifyCode) {
+        if (mPhoneVerifyFuture != null) {
+            mPhoneVerifyFuture.cancel(true);
+        }
+        showDialog();
+        mPhoneVerifyFuture = new PhoneVerify(this, mPhoneNumber, verifyCode);
+        mPhoneVerifyFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                User user = User.create(PGPhoneVerifyActivity.this);
+                User.Info info = user.getInfo();
+                int forgetPassword = info.forgetPass;
+                if (forgetPassword == 1) {
+                    Intent intent = new Intent(PGPhoneVerifyActivity.this, PGNewModifyPasswordActivity.class);
+                    startActivityForResult(intent, REQUEST_CODE_MODIFY_PASSWORD);
+                } else {
+                    setResult(RESULT_OK, null);
+                    finish();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    int status = fault.getStatus();
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGPhoneVerifyActivity.this, status);
+                    //验证码错误
+                    if (status == 10537) {
+                        createVerifyErrorDialog();
+                        return;
+                    }
+                    //验证码过期
+                    if (status == 10539) {
+                        createVerifyCodeExpiredDialog();
+                        return;
+                    }
+                    //验证码请求过于频繁
+                    if (status == 10543) {
+                        createVerifyFrequentDialog();
+                        return;
+                    }
+                    if (status == 10540) {
+                        showVerifyNumberLimitDialog();
+                        return;
+                    }
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    showMessage(getString(R.string.pg_login_network_exception));
+                } else {
+                    showErrorMessage(errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 从新获取手机验证码
+     */
+    private void reGetVerifyCode() {
+        if (mPhoneSendVerifyCodeFuture != null) {
+            mPhoneSendVerifyCodeFuture.cancel(true);
+        }
+        mPhoneSendVerifyCodeFuture = new PhoneSendVerifyCode(this, mPhoneNumber);
+        showDialog();
+        mPhoneSendVerifyCodeFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                if (mCountDownThread != null) {
+                    mCountDownThread.setRunning(false);
+                }
+                mCountDownThread = new CountThread();
+                mCountDownThread.start();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    int status = fault.getStatus();
+                    if (status == 10543) {
+                        createVerifyFrequentDialog();
+                        return;
+                    }
+                    //超过每天发送短信验证码数量限制
+                    if (status == 10540) {
+                        showVerifyNumberLimitDialog();
+                        return;
+                    }
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGPhoneVerifyActivity.this, status);
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_login_network_exception);
+                }
+                showMessage(errorMessage);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_MODIFY_PASSWORD) {
+            if (resultCode == Activity.RESULT_OK) {
+                setResult(RESULT_OK, data);
+                finish();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private class CountThread extends Thread {
+        private volatile boolean mRunning = false;
+
+        public CountThread() {
+            mRunning = true;
+        }
+
+        public void setRunning(boolean running) {
+            mRunning = running;
+        }
+
+        @Override
+        public void run() {
+            long startPoint = 0L;
+            long start = 0L;
+            start = startPoint = System.currentTimeMillis();
+            mHandler.sendEmptyMessage(MESSAGE_PROGRESS);
+            while (mRunning) {
+                long end = System.currentTimeMillis();
+                if (end - start > 1000L) {
+                    start = end;
+                    mHandler.sendEmptyMessage(MESSAGE_PROGRESS);
+                }
+                if (end - startPoint > 1000L * ONE_MINUTE) {
+                    break;
+                }
+            }
+            mHandler.sendEmptyMessage(MESSAGE_PROGRESS_OVER);
+        }
+    }
+}

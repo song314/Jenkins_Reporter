@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<build>
+  <actions>
+    <hudson.model.CauseAction>
+      <causes>
+        <hudson.model.Cause_-UserIdCause>
+          <userId>android-tangsong</userId>
+        </hudson.model.Cause_-UserIdCause>
+      </causes>
+    </hudson.model.CauseAction>
+    <hudson.plugins.git.util.BuildData plugin="git@2.2.4">
+      <buildsByBranchName/>
+      <remoteUrls>
+        <string>https://github.com/PGClient/Android-Common-Effect-SDK.git</string>
+      </remoteUrls>
+    </hudson.plugins.git.util.BuildData>
+  </actions>
+  <number>1</number>
+  <startTime>1415783290733</startTime>
+  <result>FAILURE</result>
+  <duration>611450</duration>
+  <charset>UTF-8</charset>
+  <keepLog>false</keepLog>
+  <builtOn></builtOn>
+  <workspace>/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace</workspace>
+  <hudsonVersion>1.572</hudsonVersion>
+  <scm class="hudson.scm.NullChangeLogParser"/>
+  <culprits class="com.google.common.collect.EmptyImmutableSortedSet"/>
+</build>

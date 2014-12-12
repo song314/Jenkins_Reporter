@@ -1,0 +1,186 @@
+package com.pinguo.mix.api.share;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class FilterInfoBean extends BaseBean<FilterInfoBean> {
+
+    private String sharpen;
+    private String HDREnhance;
+    private String vignetteStrong;
+    private String centerStrong;
+    private String EffectName;
+    private String EffectPackageName;
+    private String EffectOpacity;
+    private String SkinEnhance;
+    private String LightingOpacity;
+    private String LightingName;
+    private String LightingPackageName;
+    private String Highlight;
+    private String Shadow;
+    private String Saturation;
+    private String Contrast;
+    private String Exposure;
+    private String Hue;
+    private String Temperature;
+    private String Vibrance;
+
+    @Override
+    protected boolean isValid(FilterInfoBean obj) {
+        return true;
+    }
+
+    public String getSharpen() {
+        return sharpen;
+    }
+
+    public void setSharpen(String sharpen) {
+        this.sharpen = sharpen;
+    }
+
+    public String getHDREnhance() {
+        return HDREnhance;
+    }
+
+    public void setHDREnhance(String HDREnhance) {
+        this.HDREnhance = HDREnhance;
+    }
+
+    public String getVignetteStrong() {
+        return vignetteStrong;
+    }
+
+    public void setVignetteStrong(String vignetteStrong) {
+        this.vignetteStrong = vignetteStrong;
+    }
+
+    public String getCenterStrong() {
+        return centerStrong;
+    }
+
+    public void setCenterStrong(String centerStrong) {
+        this.centerStrong = centerStrong;
+    }
+
+    public String getEffectName() {
+        return EffectName;
+    }
+
+    public void setEffectName(String effectName) {
+        EffectName = effectName;
+    }
+
+    public String getEffectPackageName() {
+        return EffectPackageName;
+    }
+
+    public void setEffectPackageName(String effectPackageName) {
+        EffectPackageName = effectPackageName;
+    }
+
+    public String getEffectOpacity() {
+        return EffectOpacity;
+    }
+
+    public void setEffectOpacity(String effectOpacity) {
+        EffectOpacity = effectOpacity;
+    }
+
+    public String getSkinEnhance() {
+        return SkinEnhance;
+    }
+
+    public void setSkinEnhance(String skinEnhance) {
+        SkinEnhance = skinEnhance;
+    }
+
+    public String getLightingOpacity() {
+        return LightingOpacity;
+    }
+
+    public void setLightingOpacity(String lightingOpacity) {
+        LightingOpacity = lightingOpacity;
+    }
+
+    public String getLightingName() {
+        return LightingName;
+    }
+
+    public void setLightingName(String lightingName) {
+        LightingName = lightingName;
+    }
+
+    public String getLightingPackageName() {
+        return LightingPackageName;
+    }
+
+    public void setLightingPackageName(String lightingPackageName) {
+        LightingPackageName = lightingPackageName;
+    }
+
+    public String getHighlight() {
+        return Highlight;
+    }
+
+    public void setHighlight(String highlight) {
+        Highlight = highlight;
+    }
+
+    public String getShadow() {
+        return Shadow;
+    }
+
+    public void setShadow(String shadow) {
+        Shadow = shadow;
+    }
+
+    public String getSaturation() {
+        return Saturation;
+    }
+
+    public void setSaturation(String saturation) {
+        Saturation = saturation;
+    }
+
+    public String getContrast() {
+        return Contrast;
+    }
+
+    public void setContrast(String contrast) {
+        Contrast = contrast;
+    }
+
+    public String getExposure() {
+        return Exposure;
+    }
+
+    public void setExposure(String exposure) {
+        Exposure = exposure;
+    }
+
+    public String getHue() {
+        return Hue;
+    }
+
+    public void setHue(String hue) {
+        Hue = hue;
+    }
+
+    public String getTemperature() {
+        return Temperature;
+    }
+
+    public void setTemperature(String temperature) {
+        Temperature = temperature;
+    }
+
+    public String getVibrance() {
+        return Vibrance;
+    }
+
+    public void setVibrance(String vibrance) {
+        Vibrance = vibrance;
+    }
+}

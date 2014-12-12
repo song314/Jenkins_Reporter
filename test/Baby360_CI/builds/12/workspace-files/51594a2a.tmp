@@ -1,0 +1,204 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+
+/**
+ * Created by huowaa on 14-7-1.
+ */
+public class AdvanceHSL extends Effect {
+    private static final String TAG = AdvanceHSL.class.getSimpleName();
+
+    public static final String PARAM_KEY_HIGHLIGHT = "Highlight"; // 高光,默认值:0,范围:-100~100
+    public static final String PARAM_KEY_SHADOW = "Shadow"; // 阴影,默认值:0,范围:-100~100
+    public static final String PARAM_KEY_HUE_RED = "Hue_Red"; // 色相,饱和,亮度,范围都是 -100~100,默认值为0
+    public static final String PARAM_KEY_HUE_ORANGE = "Hue_Orange";
+    public static final String PARAM_KEY_HUE_YELLOW = "Hue_Yellow";
+    public static final String PARAM_KEY_HUE_GREEN = "Hue_Green";
+    public static final String PARAM_KEY_HUE_CYAN = "Hue_Cyan";
+    public static final String PARAM_KEY_HUE_BLUE = "Hue_Blue";
+    public static final String PARAM_KEY_HUE_PURPLE = "Hue_Purple";
+    public static final String PARAM_KEY_HUE_MAGENTA = "Hue_Magenta";
+
+    public static final String PARAM_KEY_HIGHLIGHT_COLOR = "HighlightColor";
+    public static final String PARAM_KEY_SHADOW_COLOR = "ShadowColor";
+    public static final String PARAM_KEY_MIDDLE_COLOR = "MiddleColor";
+
+    public static final String EFFECT_KEY_LIGHTZ_HSL = "LightZ_HSL";
+
+    public AdvanceHSL() {
+        this.type = Type.AdvanceHSL.name();
+        this.key = AdvanceHSL.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.ADVANCE_HSL_CMD.toCharArray()) ;
+
+        // param
+        param = new Param();
+        ParamFloatItem highlight = new ParamFloatItem(PARAM_KEY_HIGHLIGHT, EFFECT_KEY_LIGHTZ_HSL, -100f, 100f, 1f, 0f, 0f);
+        highlight.name = "composite_sdk_highlight";
+        highlight.icon = "composite_sdk_advance_param_highlight";
+
+        ParamFloatItem shadow = new ParamFloatItem(PARAM_KEY_SHADOW, EFFECT_KEY_LIGHTZ_HSL, -100f, 100f, 1f, 0f, 0f);
+        shadow.name = "composite_sdk_shadow";
+        shadow.icon = "composite_sdk_advance_param_shadow";
+
+        ParamVecItem red = new ParamVecItem(PARAM_KEY_HUE_RED, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_red");
+        ParamVecItem orange = new ParamVecItem(PARAM_KEY_HUE_ORANGE, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_orange");
+        ParamVecItem yellow = new ParamVecItem(PARAM_KEY_HUE_YELLOW, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_yellow");
+        ParamVecItem green = new ParamVecItem(PARAM_KEY_HUE_GREEN, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_green");
+        ParamVecItem cyan = new ParamVecItem(PARAM_KEY_HUE_CYAN, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_cyan");
+        ParamVecItem blue = new ParamVecItem(PARAM_KEY_HUE_BLUE, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_blue");
+        ParamVecItem purple = new ParamVecItem(PARAM_KEY_HUE_PURPLE, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_purple");
+        ParamVecItem magenta = new ParamVecItem(PARAM_KEY_HUE_MAGENTA, EFFECT_KEY_LIGHTZ_HSL, "0,0,0", "0,0,0", "composite_sdk_hsl_color_magenta");
+
+        ParamVecItem highlightColor = new ParamVecItem(PARAM_KEY_HIGHLIGHT_COLOR, EFFECT_KEY_LIGHTZ_HSL, "0, 0, 0, 0", "0, 0, 0, 0", "composite_sdk_hsl_highlight_color");
+        highlightColor.icon = "composite_sdk_hsl_balance_highlight";
+
+        ParamVecItem shadowColor = new ParamVecItem(PARAM_KEY_SHADOW_COLOR, EFFECT_KEY_LIGHTZ_HSL, "0, 0, 0, 1", "0, 0, 0, 1", "composite_sdk_hsl_shadow_color");
+        shadowColor.icon = "composite_sdk_hsl_balance_shadowlight";
+
+        ParamVecItem middleColor = new ParamVecItem(PARAM_KEY_MIDDLE_COLOR, EFFECT_KEY_LIGHTZ_HSL, "0, 0, 0, 1", "0, 0, 0, 1", "composite_sdk_hsl_middle_color");
+        middleColor.icon = "composite_sdk_hsl_balance_midtone";
+
+        param.addParamItem(highlight);
+        param.addParamItem(shadow);
+        param.addParamItem(red);
+        param.addParamItem(orange);
+        param.addParamItem(yellow);
+        param.addParamItem(green);
+        param.addParamItem(cyan);
+        param.addParamItem(blue);
+        param.addParamItem(purple);
+        param.addParamItem(magenta);
+        param.addParamItem(shadowColor);
+        param.addParamItem(middleColor);
+        param.addParamItem(highlightColor);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    private void upgradeParam(Param param) {
+        int hasParamItem = 0;
+        for (ParamItem paramItem:param.getParamItemList()) {
+            if (paramItem.key.equals(PARAM_KEY_HIGHLIGHT_COLOR)) {
+                hasParamItem |= 0x1;
+            }
+
+            if (paramItem.key.equals(PARAM_KEY_SHADOW_COLOR)) {
+                hasParamItem |= 0x2;
+            }
+
+            if (paramItem.key.equals(PARAM_KEY_MIDDLE_COLOR)) {
+                hasParamItem |= 0x4;
+            }
+        }
+
+        if (0 == (hasParamItem & 0x2)) {
+            ParamVecItem shadowColor = new ParamVecItem(
+                    PARAM_KEY_SHADOW_COLOR, EFFECT_KEY_LIGHTZ_HSL,
+                    "0, 0, 0, 1", "0, 0, 0, 1", "composite_sdk_hsl_shadow_color");
+            param.addParamItem(shadowColor);
+            shadowColor.icon = "composite_sdk_hsl_balance_shadowlight";
+            GLogger.i(TAG, "Upgrade param shadow color!");
+        }
+
+        if (0 == (hasParamItem & 0x4)) {
+            ParamVecItem middleColor = new ParamVecItem(
+                    PARAM_KEY_MIDDLE_COLOR, EFFECT_KEY_LIGHTZ_HSL,
+                    "0, 0, 0, 1", "0, 0, 0, 1", "composite_sdk_hsl_middle_color");
+            param.addParamItem(middleColor);
+            middleColor.icon = "composite_sdk_hsl_balance_midtone";
+            GLogger.i(TAG, "Upgrade param middle color!");
+        }
+
+        if (0 == (hasParamItem & 0x1)) {
+            ParamVecItem highlightColor = new ParamVecItem(
+                    PARAM_KEY_HIGHLIGHT_COLOR, EFFECT_KEY_LIGHTZ_HSL,
+                    "0, 0, 0, 1", "0, 0, 0, 1", "composite_sdk_hsl_highlight_color");
+            param.addParamItem(highlightColor);
+            highlightColor.icon = "composite_sdk_hsl_balance_highlight";
+            GLogger.i(TAG, "Upgrade param highlight color!");
+        }
+    }
+
+    @Override
+    public void buildParamByParamStr() {
+        param = Param.loadFromJsonStr(paramStr);
+        if ( null == param ) {
+            param = new Param();
+        } else {
+            upgradeParam(param);
+            paramStr = param.toString();
+        }
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        AdvanceHSL hsl = null;
+
+        try {
+            hsl = (AdvanceHSL) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != hsl )
+            return hsl;
+        else
+            return new AdvanceHSL();
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        if (null != param) {
+            List<ParamItem> paramItemList = param.getParamItemList();
+            for (ParamItem item:paramItemList) {
+                if (item instanceof ParamFloatItem) {
+                    if (((ParamFloatItem) item).value
+                            == ((ParamFloatItem) item).defaultValue) {
+                        continue;
+                    }
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("key", item.key);
+                        jsonObject.put("packName", "");
+                        jsonObject.put("name", "");
+                        jsonObject.put("value", Math.round(((ParamFloatItem) item).value / ((ParamFloatItem) item).step));
+                        jsonObject.put("minValue", Math.round(((ParamFloatItem) item).min));
+                        jsonObject.put("type", 1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    list.add(jsonObject);
+                }
+            }
+        }
+
+        return list;
+    }
+}

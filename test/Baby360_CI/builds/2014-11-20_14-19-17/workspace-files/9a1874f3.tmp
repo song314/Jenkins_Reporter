@@ -1,0 +1,119 @@
+package us.pinguo.sdk;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.KeyEvent;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.intent.IntentBeautyController;
+import com.pinguo.mix.StatisticManager;
+
+/**
+ * Created by pinguo on 14-6-6.
+ */
+public class BeautyActivity extends Activity{
+
+    private BeautyController mBeautyController;
+    private boolean mIsFromOtherApp;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mIsFromOtherApp = getIntent().getBooleanExtra(ConstantUtil.FROM_OTHER_APP, false);
+
+        setContentView(getContentViewId());
+        mBeautyController = getController(savedInstanceState);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mBeautyController.onResume();
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mBeautyController.onPause();
+        StatisticManager.destroy(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mBeautyController.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mBeautyController.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (null != mBeautyController) {
+            mBeautyController.onDestroy();
+            mBeautyController = null;
+        }
+        super.onDestroy();
+    }
+
+    protected int getContentViewId() {
+        if (mIsFromOtherApp) {
+            return ResourceHelper.getLayout(
+                    getApplicationContext(), "composite_sdk_effect_intent_beauty_main");
+        }
+        return ResourceHelper.getLayout(
+                getApplicationContext(), "composite_sdk_effect_beauty_main");
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        GLogger.i("BeautyActivity", "onSaveInstanceState");
+        if (null != mBeautyController) {
+            mBeautyController.onSaveInstanceState(outState);
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        GLogger.i("BeautyActivity", "onRestoreInstanceState");
+        if (null != mBeautyController) {
+            mBeautyController.onRestoreInstanceState(savedInstanceState);
+        }
+    }
+
+    protected BeautyController getController(Bundle savedInstanceState) {
+        if (mIsFromOtherApp) {
+            return new IntentBeautyController(this, savedInstanceState);
+        }
+        return new BeautyController(this, savedInstanceState);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mBeautyController.onActivityResult(requestCode,resultCode,data);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
+            if (mBeautyController.onKeyDown(keyCode, event)) {
+                return true;
+            }
+
+            mBeautyController.quit(this);
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+}

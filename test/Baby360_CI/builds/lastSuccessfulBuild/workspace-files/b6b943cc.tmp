@@ -1,0 +1,149 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.shop;
+
+import android.text.TextUtils;
+import android.util.Pair;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by huowaa on 13-11-7.
+ * 为了能被Gson解析，Product不能是抽象的
+ */
+public class Product implements Serializable, Cloneable {
+    private final static String TAG = Product.class.getSimpleName();
+
+    public String productId;
+    public String guid;
+    public String name;
+    public String description;
+    public String icon;
+    public String detail;
+    public String[] imageList;
+    public String[] imageList2;
+    public String[] pregen;
+    public String[] pregen2;
+    public int price;
+    public int totalPrice;
+    public int coin;
+    public int purchaseType;
+    public int promoteType;   //1、限免；2、会员专享；3、折扣；4、免费
+    public int recommendType; //1、新上架；2、热门；3、正常、4、已下架
+    public String categoryId;
+    public int itemCount;
+    public int index;
+    public String opTime;
+    public String expireTime;
+    public int purchaseHistory;
+    public String downloadPath;
+    public PackRequirement requirements;
+    public int installation;  //0:未安装，1：已安装
+    public long installTime;
+
+    public int installProgress;//安装进度，供UI使用
+
+    public int version;//商品版本号
+
+    private transient Map<Pair<Integer, Integer>, String> mPregenMap = null;
+    private transient Map<Pair<Integer, Integer>, String> mPregenMap2 = null;
+
+    @Override
+    public Object clone() {
+
+        Product product = null;
+        try {
+            product = (Product) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        return product;
+    }
+
+    /**
+     * @param imgIdx    演示图index
+     * @param effectIdx 特效index
+     * @param flag      服务器返回的pregen后缀，目前只支持1（长图），2（短图）
+     * @return
+     */
+    public String getPregen(int imgIdx, int effectIdx, int flag) {
+        if (null == mPregenMap || null == mPregenMap2) {
+            loadPregenMaps();
+        }
+
+        Map<Pair<Integer, Integer>, String> pregenMap;
+        if (flag == 1) {
+            pregenMap = mPregenMap;
+        } else if (flag == 2) {
+            pregenMap = mPregenMap2;
+        } else {
+            GLogger.e(TAG, "Param error: flag is " + flag);
+            return "";
+        }
+
+        if (null == pregenMap) {
+            return "";
+        }
+
+        String url = pregenMap.get(new Pair<Integer, Integer>(imgIdx, effectIdx));
+        if (null == url) {
+            url = "";
+        }
+
+        return url;
+    }
+
+    private void loadPregenMap() {
+        if (null == pregen) {
+            GLogger.e(TAG, "Pregen object is null, exit load pregen map");
+            return;
+        }
+
+        mPregenMap = new HashMap<Pair<Integer, Integer>, String>();
+        for (String str : pregen) {
+            String[] arr = str.split("::");
+            if (null != arr && arr.length == 2) {
+                String keyStr = arr[0];
+                String value = arr[1];
+
+                String[] keyArr = keyStr.split("-");
+                if (null != keyArr && keyArr.length == 2) {
+                    int imgIdx = TextUtils.isEmpty(keyArr[0]) ? 0 : Integer.valueOf(keyArr[0]);
+                    int effectIdx = TextUtils.isEmpty(keyArr[1]) ? 0 : Integer.valueOf(keyArr[1]);
+                    mPregenMap.put(new Pair<Integer, Integer>(imgIdx, effectIdx), value);
+                }
+            }
+        }
+    }
+
+    private void loadPregenMap2() {
+        if (null == pregen2) {
+            GLogger.e(TAG, "Pregen object is null, exit load pregen map");
+            return;
+        }
+
+        mPregenMap2 = new HashMap<Pair<Integer, Integer>, String>();
+        for (String str : pregen2) {
+            String[] arr = str.split("::");
+            if (null != arr && arr.length == 2) {
+                String keyStr = arr[0];
+                String value = arr[1];
+
+                String[] keyArr = keyStr.split("-");
+                if (null != keyArr && keyArr.length == 2) {
+                    int imgIdx = Integer.valueOf(keyArr[0]);
+                    int effectIdx = Integer.valueOf(keyArr[1]);
+                    mPregenMap2.put(new Pair<Integer, Integer>(imgIdx, effectIdx), value);
+                }
+            }
+        }
+    }
+
+    private void loadPregenMaps() {
+        loadPregenMap();
+        loadPregenMap2();
+    }
+}

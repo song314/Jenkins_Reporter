@@ -1,0 +1,48 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.edit.sdk.utils.ToolUtils;
+
+/**
+ * Created by pinguo on 14-6-28.
+ */
+public class GLSurfaceViewCompositeForPathRendererMethod extends GLSurfaceViewCompositeRendererMethod {
+
+    private String mPath;
+    private int mBitmapHeight;
+
+    private OnRendererActionListener mOnRendererActionListener;
+
+    @Override
+    public void rendererAction() {
+        if(mBitmap==null){
+            mBitmap = ToolUtils.getBitmap(mPath,mBitmapHeight);
+            if (null == mBitmap) {
+                return;
+            }
+
+            if (mOnRendererActionListener != null) {
+                mOnRendererActionListener.loadBitmap(mBitmap);
+            }
+        }
+        super.rendererAction();
+    }
+
+    public void setPath(String path){
+        this.mPath = path;
+    }
+
+    public void setBitmapHeight(int bitmapHeight){
+        this.mBitmapHeight = bitmapHeight;
+    }
+
+    public void setOnRendererActionListener(OnRendererActionListener onRendererActionListener) {
+        this.mOnRendererActionListener = onRendererActionListener;
+    }
+
+    public static interface OnRendererActionListener {
+
+        public void loadBitmap(Bitmap bitmap);
+    }
+}

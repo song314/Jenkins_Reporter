@@ -1,0 +1,33 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+
+/**
+ * Created by taoli on 14-5-14.
+ */
+public class SquareImageLoaderView extends ImageLoaderView {
+
+    public SquareImageLoaderView(Context context) {
+        super(context);
+    }
+
+    public SquareImageLoaderView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+
+        if (heightSize != widthSize) {
+            int newWidthMeasureSpec = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY);
+            int newHeightMeasureSpec = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY);
+            super.onMeasure(newWidthMeasureSpec, newHeightMeasureSpec);
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+}

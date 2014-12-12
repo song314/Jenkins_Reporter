@@ -1,0 +1,317 @@
+package us.pinguo.android.effect.group.sdk.group;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.widget.CompositeSDKDialog;
+import com.pinguo.mix.StatisticManager;
+
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeForPathRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectSaveManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+
+/**
+ * Created by pinguo on 14-7-24.
+ */
+public class CompositeSaveDialog extends Dialog {
+
+    private final ImageLoaderView mAfterImageLoaderView;
+    private final ImageLoaderView mBeforeImageLoaderView;
+    private Bitmap mOldBitmap;
+    private boolean mUserHint = false;
+    private Context mContext;
+    private View mQuitView;
+    private View mSaveView;
+    private EditText mNameEditText;
+    private Bitmap mNowBitmap;
+    private String mCompositeName;
+    private Activity mActivity;
+    private GLSurfaceViewCompositeForPathRendererMethod mRendererMethod;
+    private View mProgressLayout;
+    private boolean mIsNameChanged = false;
+
+    private EffectSaveManager.SaveCallback mSaveCallback;
+
+    public CompositeSaveDialog(Activity activity, String path,
+                               Bitmap nowBitmap, Bitmap oldBitmap,
+                               String compositeName,
+                               GLSurfaceViewCompositeForPathRendererMethod rendererMethod,
+                               EffectSaveManager.SaveCallback callback) {
+
+        super(activity, ResourceHelper.getStyle(activity.getApplicationContext(), "CompositeSDKThemeDialog"));
+        mContext = activity.getApplicationContext();
+        mNowBitmap = nowBitmap;
+        mOldBitmap = oldBitmap;
+        mCompositeName = compositeName;
+        mRendererMethod = rendererMethod;
+        mActivity = activity;
+        mSaveCallback = callback;
+        setContentView(ResourceHelper.getLayout(mContext, "composite_sdk_group_save_view"));
+
+        mBeforeImageLoaderView = (ImageLoaderView) findViewById(ResourceHelper.getId(mContext, "before_photo"));
+        mBeforeImageLoaderView.setImageBitmap(oldBitmap);
+
+        mAfterImageLoaderView = (ImageLoaderView) findViewById(ResourceHelper.getId(mContext, "after_photo"));
+        mAfterImageLoaderView.setImageBitmap(nowBitmap);
+
+        mQuitView = findViewById(ResourceHelper.getId(mContext, "quit"));
+        mQuitView.setOnClickListener(mOnClickListener);
+
+        mSaveView = findViewById(ResourceHelper.getId(mContext, "save"));
+        mSaveView.setOnClickListener(mOnClickListener);
+
+        mProgressLayout = findViewById(ResourceHelper.getId(mContext, "progress_layout"));
+
+        mNameEditText = (EditText) findViewById(ResourceHelper.getId(mContext, "name_edit"));
+        mNameEditText.setText(compositeName);
+        if (compositeName == null || compositeName.equals("")) {
+            mNameEditText.setHint(PhotoSaveController.getCompositeName());
+            mUserHint = true;
+        }
+
+        mNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                mIsNameChanged = true;
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int leftRightMargin = Math.round(mContext.getResources().getDimension(ResourceHelper.getDimen(mContext, "composite_sdk_save_layout_margin")) * 2);
+        int centerMargin = Math.round(mContext.getResources().getDimension(ResourceHelper.getDimen(mContext, "composite_sdk_save_photo_margin")) * 2);
+        int showPhotoSize = (displayMetrics.widthPixels - leftRightMargin - centerMargin) / 2;
+
+//        View beforeAfterPhotoLayout = findViewById(ResourceHelper.getId(mContext, "before_after_photo"));
+        ViewGroup.LayoutParams beforeLayoutParams = mBeforeImageLoaderView.getLayoutParams();
+        beforeLayoutParams.height = showPhotoSize;
+        mBeforeImageLoaderView.setLayoutParams(beforeLayoutParams);
+
+        ViewGroup.LayoutParams afterLayoutParams = mAfterImageLoaderView.getLayoutParams();
+        afterLayoutParams.height = showPhotoSize;
+        mAfterImageLoaderView.setLayoutParams(afterLayoutParams);
+    }
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        WindowManager m = (WindowManager) getContext()
+                .getSystemService(Context.WINDOW_SERVICE);
+        Display d = m.getDefaultDisplay();
+        WindowManager.LayoutParams p = getWindow().getAttributes();
+        p.width = d.getWidth();
+//        getWindow().setGravity(Gravity.BOTTOM);
+        getWindow().setWindowAnimations(ResourceHelper.getStyle(mContext, "CompositeSDKPopupDialog"));
+        getWindow().setAttributes(p);
+    }
+
+    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mQuitView == v) {
+                dismiss();
+
+            } else if (mSaveView == v) {
+                String effectName = mNameEditText.getText().toString();
+                if (effectName.length() == 0) {
+                    if (mUserHint) {
+                        effectName = mNameEditText.getHint().toString();
+                        if (effectName.length() == 0) {
+                            Toast.makeText(mContext.getApplicationContext(), ResourceHelper.getString(
+                                    mContext, "composite_sdk_effect_name_is_cannot_null"), Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    } else {
+                        Toast.makeText(mContext.getApplicationContext(), ResourceHelper.getString(
+                                mContext, "composite_sdk_effect_name_is_cannot_null"), Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+
+                final String checkedEffectName = effectName;
+                final String[] conflictResult = checkNameConflict(effectName, mContext, mIsNameChanged);
+                if (null != conflictResult) {
+                    if (CONFLICT_TYPE_OVERRIDE.equals(conflictResult[0])) {
+                        mProgressLayout.setVisibility(View.VISIBLE);
+                        StatisticManager.onEvent(mActivity,
+                                StatisticManager.KEY_ACTION_SAVE_FILTER);
+                        EffectSaveManager.saveEffectWithActivityFinish(effectName,
+                            conflictResult[1], "",
+                            mRendererMethod.getMakePhotoModelArray(),
+                            mNowBitmap, mActivity, mFilterSaveCallback);
+                    } else {
+                        showConflictDialog(mActivity,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    String compositeKey = conflictResult[1];
+                                    mProgressLayout.setVisibility(View.VISIBLE);
+                                    StatisticManager.onEvent(mActivity,
+                                            StatisticManager.KEY_ACTION_SAVE_FILTER);
+                                    EffectSaveManager.saveEffectWithActivityFinish(checkedEffectName,
+                                            compositeKey, "",
+                                            mRendererMethod.getMakePhotoModelArray(),
+                                            mNowBitmap, mActivity, mFilterSaveCallback);
+                                }
+                            }, null);
+                    }
+                } else {
+                    mProgressLayout.setVisibility(View.VISIBLE);
+                    StatisticManager.onEvent(mActivity,
+                            StatisticManager.KEY_ACTION_SAVE_FILTER);
+                    EffectSaveManager.saveEffectWithActivityFinish(effectName,
+                            null, ""    ,
+                            mRendererMethod.getMakePhotoModelArray(),
+                            mNowBitmap, mActivity, mFilterSaveCallback);
+                }
+            }
+        }
+    };
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if (mProgressLayout.getVisibility() == View.VISIBLE) {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private static final String CONFLICT_TYPE_RANDOM = "conflict_random";
+    private static final String CONFLICT_TYPE_OVERRIDE = "conflict_override";
+    private static final String CONFLICT_TYPE_CHANGED = "conflict_changed";
+
+    private String[] checkNameConflict(String effectName, Context context, boolean isNameChanged) {
+        EffectModel effectModel = EffectModel.getInstance().init(context);
+        List<EffectType> effectTypeList = effectModel.getEffectTypeList(Effect.Type.Composite);
+        if (effectTypeList.size() != 0) {
+            List<CompositeEffect> compositeList = effectTypeList.get(0).compositeEffects;
+            if (compositeList != null) {
+                for (int i = 0; i < compositeList.size(); i++) {
+
+                    final CompositeEffect compositeEffect = compositeList.get(i);
+                    if (effectName.equals(compositeEffect.name)) {
+                        // 随机滤镜检测重复
+                        if (compositeEffect.isDefault == 3 && !isNameChanged) {
+                            return new String[] {CONFLICT_TYPE_RANDOM, compositeEffect.key};
+                        } else {
+                            // 若用户生成名称为原图的滤镜，不覆盖原图，创建新滤镜
+                            if (compositeEffect.key.endsWith("None")) {
+                                return null;
+                            }
+
+                            if (isNameChanged) {
+                                return new String[] {CONFLICT_TYPE_CHANGED, compositeEffect.key};
+                            }
+
+                            return new String[] {CONFLICT_TYPE_OVERRIDE, compositeEffect.key};
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private void showConflictDialog(Context context,
+                                    final View.OnClickListener positiveListener,
+                                    final View.OnClickListener negativeListener) {
+        final CompositeSDKDialog dialog = new CompositeSDKDialog(context);
+
+        dialog.setMessage(ResourceHelper.getString(context, "composite_sdk_save_name_conflict"));
+        dialog.setPositiveBtn(0, ResourceHelper.getString(context, "composite_sdk_ok"),
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        if (null != positiveListener) {
+                            positiveListener.onClick(v);
+                        }
+                    }
+                });
+        dialog.setNegativeBtn(0, ResourceHelper.getString(mContext, "composite_sdk_quit"),
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        if (null != negativeListener) {
+                            negativeListener.onClick(v);
+                        }
+                    }
+                });
+        dialog.show();
+    }
+
+    private EffectSaveManager.SaveCallback mFilterSaveCallback
+            = new EffectSaveManager.SaveCallback() {
+        @Override
+        public void onSaveFinished(String effectJsonInfo, String name) {
+            if (null == mActivity) {
+                return;
+            }
+
+            if (mActivity.isFinishing()) {
+                return;
+            }
+
+            dismiss();
+
+            if (null != mSaveCallback) {
+                mSaveCallback.onSaveFinished(effectJsonInfo, name);
+            }
+        }
+    };
+
+    @Override
+    public void dismiss() {
+        super.dismiss();
+
+        if (null != mNowBitmap) {
+            mNowBitmap.recycle();
+            mNowBitmap = null;
+        }
+
+        if (null != mOldBitmap) {
+            mOldBitmap.recycle();
+            mOldBitmap = null;
+        }
+
+        mAfterImageLoaderView.setImageBitmap(null);
+        mBeforeImageLoaderView.setImageBitmap(null);
+    }
+}

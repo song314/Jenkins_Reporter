@@ -1,0 +1,53 @@
+package com.pinguo.edit.sdk.login.lib.util;
+
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+/**
+ * Created by liubo on 8/9/13.
+ */
+public class MD5 {
+    private static final String SECRET = "9a495ab446e95ed366c9dc8ad646b8f0";
+
+    private MD5() {
+    }
+
+    private static final char HEX_DIGITS[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+    /**
+     * md5加密算法，对密码进行两次md5加密
+     *
+     * @param password
+     * @return md5加密后的密码
+     */
+    public final static String password_md5(String password) {
+        String strResult = "";
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            md5.update(password.getBytes("UTF-8"));
+            byte[] bzpassword_1 = md5.digest();
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < bzpassword_1.length; ++i) {
+                sb.append(String.format("%02x", bzpassword_1[i]));
+            }
+            md5.update(sb.toString().getBytes("UTF-8"));
+            sb = new StringBuffer();
+            byte[] bzpassword_2 = md5.digest();
+            for (int i = 0; i < bzpassword_2.length; ++i) {
+                sb.append(String.format("%02x", bzpassword_2[i]));
+            }
+            strResult = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return strResult;
+    }
+
+
+}

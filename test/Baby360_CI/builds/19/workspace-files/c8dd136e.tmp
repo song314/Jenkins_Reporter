@@ -1,0 +1,114 @@
+/*******************************************************************************
+ * Copyright 2011-2014 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+package com.pinguo.edit.sdk.filter.square.page.list;
+
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
+
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.fragment.FilterDetails;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * @author zhongzheng
+ */
+public class FilterListFragment extends Fragment {
+    private FilterListController mController;
+    private PullToRefreshListView mPullRefreshListView;
+    private ListView mListView;
+
+    public static FilterListFragment newInstance(int num) {
+        FilterListFragment f = new FilterListFragment();
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putInt("num", num);
+        f.setArguments(args);
+        return f;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mController = new FilterListController(getActivity());
+        mController.onCreate(getArguments());
+        mController.setRefreshFinishListener(new FilterListController.OnFilterDataReVListener() {
+            @Override
+            public void onDataRev() {
+                if (null != mPullRefreshListView) {
+                    mPullRefreshListView.onRefreshComplete();
+                }
+            }
+        });
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.
+                composite_sdk_filter_square_list, container, false);
+        mPullRefreshListView = (PullToRefreshListView) rootView.findViewById(
+                ResourceHelper.getId(getActivity(), "filter_list"));
+        mPullRefreshListView.setVisibility(View.VISIBLE);
+        mPullRefreshListView.setMode(PullToRefreshBase.Mode.BOTH);
+
+        mListView = mPullRefreshListView.getRefreshableView();
+        mListView.setAdapter(mController.getListAdapter());
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                changeFragment(position - 1);
+            }
+        });
+        mPullRefreshListView.setOnRefreshListener(mController.getRefreshFinishListener());
+        mPullRefreshListView.setOnLastItemVisibleListener(mController.getOnLastItemListener());
+        return rootView;
+    }
+
+    private void changeFragment(int pos) {
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        FragmentTransaction ft = fragmentManager.beginTransaction();
+        ft.add(R.id.view, FilterDetails.newInstance(pos, mController.getModel()));
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mController.onStart();
+    }
+}
+
+//                ImageLoader.getInstance().loadImage(data.getEditEtag(), new SimpleImageLoadingListener(){
+//
+//                    @Override
+//                    public void onLoadingComplete(String imageUri, View view,
+//                                                  Bitmap loadedImage) {
+//                        super.onLoadingComplete(imageUri, view, loadedImage);
+//                        FilterData data = mCurGetFilterList.get(i);
+//                        EffectSaveManager.saveEffectWithActivityFinish(data.getFilterName(),data.getId(),
+//                        "aaa",data.,loadedImage,getActivity(),null);
+//                        }
+//                });

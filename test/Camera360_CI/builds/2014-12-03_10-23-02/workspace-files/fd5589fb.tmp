@@ -1,0 +1,255 @@
+package com.pinguo.edit.sdk.login.view;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.EditText;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.PGLoginConstants;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+
+
+/**
+ * Created by crab on 14-5-16.
+ * 只适合显示一行的文本，所有要设置 android:singleLine="true"
+ */
+public class EditTextWithPrompt extends EditText {
+    public static interface HideErrorPromptListener {
+        public void hideErrorPromptTextView(int hide);
+
+        public void showErrorPromptTextView(String message, int error);
+
+        public void showEmailCheckStatus(int state);
+    }
+
+    public static interface IRegisterWay {
+        public int getRegisterWay();
+    }
+
+    public static interface ICheckInput {
+        public void checkInputText(String text);
+    }
+
+    private HideErrorPromptListener mHideErrorPromptListener;
+    private String mPromptText = null;
+    private boolean mDrawPromptText = false;
+    private boolean mViewShowPrompt = true;
+
+    private Rect mRect;
+    //当前注册的方式
+    private int mRegisterWay = PGLoginConstants.REGISTER_WAY_UNKOWN;
+    private IRegisterWay mRegisterWayListener;
+    private ICheckInput mCheckInputListener;
+    private Paint mLinePaint;
+
+    private static final String[] MATCH_EMAIL = {
+            "gmail.com", "yahoo.com", "msn.com", "hotmail.com",
+            "163.com", "126.com", "sina.com", "sohu.com",
+            "tom.com", "163.net", "qq.com", "aol.com",
+            "263.net", "live.com", "ask.com", "0355.net",
+            "3721.net", "yeah.net", "sogou.com", "citiz.com",
+            "21cn.com", "aim.com", "mail.com", "walla.com",
+            "chinaren.com", "56.com", "hongkong.com", "hknet.com",
+            "netvigator.com", "dnet.net.id", "hn.vnn.vn", "hcm.fpt.vn",
+            "hcm.vnn.vn", "sinos.net", "netzero.net", "twcny.rr.com",
+            "comcast.net", "warwick.net", "cs.com", "verizon.net",
+            "candel.co.jp", "vsnl.com", "wilnetonline.net", "cal3.vsnl.net.in",
+            "rediffmail.com", "sancharnet.in", "prodigy.net.mx", "wannado.fr",
+            "mindspring.com", "excite.com", "libero.it", "pacific.net.sg",
+            "cyber.net.pk", "webmail.co.za", "xtra.co.nz", "eim.ae",
+            "superonline.com", "yemen.net.ye", "bigpond.com", "otenet.gr",
+            "cyber.net.pk", "zamnet.zm", "amet.com.ar", "sotelgui.net.gn",
+            "citechco.net", "terra.es", "iway.na", "ntc.net.np",
+            "mynet.com", "indigo.ie", "nesma.net.sa", "mail.mn",
+            "tiscali.co.uk", "caron.se", "vodamail.co.za", "eunet.at",
+            "spark.net.gr", "swiszcz.com"};
+
+    public EditTextWithPrompt(Context context) {
+        super(context);
+        init();
+    }
+
+    public EditTextWithPrompt(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.EditTextWithPrompt, defStyle, 0);
+        mViewShowPrompt = a.getBoolean(R.styleable.EditTextWithPrompt_showPrompt, true);
+        a.recycle();
+        init();
+    }
+
+    public EditTextWithPrompt(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.EditTextWithPrompt, 0, 0);
+        mViewShowPrompt = a.getBoolean(R.styleable.EditTextWithPrompt_showPrompt, true);
+        a.recycle();
+        init();
+    }
+
+    private void init() {
+        if (mViewShowPrompt) {
+            addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (mHideErrorPromptListener != null) {
+                        mHideErrorPromptListener.hideErrorPromptTextView(PGLoginConstants.ERROR_HIDE_EMAIL);
+                        mHideErrorPromptListener.showEmailCheckStatus(CheckEmailViewGroup.STATE_HIDE);
+                    }
+                    String text = s.toString();
+                    if (TextUtils.isEmpty(text)) {
+                        mPromptText = null;
+                    } else {
+                        if (mRegisterWayListener != null) {
+                            mRegisterWay = mRegisterWayListener.getRegisterWay();
+                        }
+                        if (mRegisterWay == PGLoginConstants.REGISTER_WAY_PHONE) {
+                            mPromptText = null;
+                            return;
+                        }
+                        int index = text.indexOf("@");
+                        if (index > 0) {
+                            String pre = text.substring(0, index);
+                            String suffix = null;
+                            if (index + 1 != text.length()) {
+                                suffix = text.substring(index + 1);
+                            }
+                            if (TextUtils.isEmpty(suffix)) {
+                                mPromptText = null;
+                            } else {
+                                boolean match = false;
+                                for (int i = 0;
+                                     i < MATCH_EMAIL.length;
+                                     i++) {
+                                    //suffix.toLowerCase()
+                                    if (MATCH_EMAIL[i].startsWith(suffix)) {
+                                        mPromptText = pre + "@" + MATCH_EMAIL[i];
+                                        match = true;
+                                        break;
+                                    }
+                                }
+                                if (!match) {
+                                    mPromptText = null;
+                                }
+                            }
+                        } else {
+                            mPromptText = null;
+                        }
+                    }
+                }
+            });
+            setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    mDrawPromptText = hasFocus;
+                    if (mPromptText != null) {
+                        setText(mPromptText);
+                    }
+                    if (mHideErrorPromptListener != null) {
+                        if (hasFocus) {
+                        } else {
+                            if (mRegisterWayListener != null) {
+                                mRegisterWay = mRegisterWayListener.getRegisterWay();
+                            }
+                            final String text = getText().toString();
+                            if (TextUtils.isEmpty(text)) {
+                                String errorMessage = "";
+                                if (mRegisterWay == PGLoginConstants.REGISTER_WAY_UNKOWN) {
+                                    errorMessage = getResources().getString(R.string.pg_login_phone_or_email_empty_hint);
+                                } else if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+                                    errorMessage = getResources().getString(R.string.pg_login_email_empty);
+                                } else {
+                                    errorMessage = getResources().getString(R.string.pg_login_phone_number_empty);
+                                }
+                                mHideErrorPromptListener.showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+                                mHideErrorPromptListener.showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                                return;
+                            }
+                            if (mRegisterWay == PGLoginConstants.REGISTER_WAY_UNKOWN) {
+                                boolean isEmail = SystemUtils.checkEmailFormat(text);
+                                boolean isPhoneNumber = SystemUtils.checkPhoneNumber(text);
+                                if (!isEmail && !isPhoneNumber) {
+                                    mHideErrorPromptListener.showErrorPromptTextView(getResources().getString(R.string.pg_login_phone_or_email_format_error), PGLoginConstants.ERROR_EMAIL);
+                                    mHideErrorPromptListener.showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                                    return;
+                                }
+                            } else if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+                                boolean b = SystemUtils.checkEmailFormat(text);
+                                if (!b) {
+                                    mHideErrorPromptListener.showErrorPromptTextView(getResources().getString(R.string.pg_login_email_format_error), PGLoginConstants.ERROR_EMAIL);
+                                    mHideErrorPromptListener.showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                                    return;
+                                }
+                            } else {
+                                boolean b = SystemUtils.checkPhoneNumber(text);
+                                if (!b) {
+                                    mHideErrorPromptListener.showErrorPromptTextView(getResources().getString(R.string.pg_login_phone_number_format_error), PGLoginConstants.ERROR_EMAIL);
+                                    mHideErrorPromptListener.showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                                    return;
+                                }
+                            }
+                            if (mCheckInputListener != null) {
+                                mCheckInputListener.checkInputText(text);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        setBackgroundColor(Color.TRANSPARENT);
+        setTextColor(0xFF999FA5);
+        setHintTextColor(0xFFdbdbdb);
+        setPadding(getPaddingLeft(), 0, getPaddingRight(), 0);
+        mLinePaint = new Paint();
+        mLinePaint.setStyle(Paint.Style.STROKE);
+        mLinePaint.setColor(0xFFDADFE2);
+        mRect = new Rect();
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (!TextUtils.isEmpty(mPromptText) && mDrawPromptText) {
+            Rect rect = mRect;
+            getLineBounds(0, rect);
+            Paint textPaint = new Paint(getPaint());
+            textPaint.setColor(0xFF999FA5);
+            canvas.drawText(mPromptText, rect.left, getBaseline(), textPaint);
+        }
+        Paint paint = mLinePaint;
+        Rect rect = mRect;
+        getLineBounds(0, rect);
+        canvas.drawLine(rect.left - getPaddingLeft(), getHeight() - 1, rect.right + getPaddingRight(), getHeight() - 1, paint);
+        super.onDraw(canvas);
+    }
+
+    public void setHideErrorPromptListener(HideErrorPromptListener listener) {
+        this.mHideErrorPromptListener = listener;
+    }
+
+    public void setRegisterWayListener(IRegisterWay listener) {
+        mRegisterWayListener = listener;
+    }
+
+    public void setCheckInutListener(ICheckInput listener) {
+        mCheckInputListener = listener;
+    }
+
+}

@@ -1,0 +1,73 @@
+package com.pinguo.edit.sdk.edit;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.widget.ImageView;
+
+/**
+ * Created by taoli on 14-6-26.
+ */
+public class CropMask extends ImageView {
+    private int mWidth;
+    private int mHeight;
+    private int mLeft;
+    private int mTop;
+    private int mBottom;
+
+    private Paint mMaskPaint;
+    private Paint mBorderPaint;
+
+    public CropMask(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        mMaskPaint = new Paint();
+        mMaskPaint.setColor(0x99000000);
+
+        mBorderPaint = new Paint();
+        mBorderPaint.setColor(Color.WHITE);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        mWidth = getMeasuredWidth();
+        mHeight = getMeasuredHeight();
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+        mLeft = getLeft();
+        mTop = getTop();
+        mBottom = getBottom();
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        int rectTopTop = mTop;
+        int rectTopBottom = mTop + (mHeight - mWidth) / 2;
+
+        int rectBottomTop = mTop + (mHeight - mWidth) / 2 + mWidth;
+        int rectBottomBottom = mBottom;
+
+        canvas.drawRect(0, rectTopBottom, mWidth, rectTopBottom + 1, mBorderPaint);
+        canvas.drawRect(0, rectTopBottom, 1, rectBottomTop, mBorderPaint);
+        canvas.drawRect(mWidth - 1, rectTopBottom, mWidth, rectBottomTop, mBorderPaint);
+        canvas.drawRect(0, rectBottomTop - 1, mWidth, rectBottomTop, mBorderPaint);
+
+        canvas.drawRect(0, rectTopTop, mWidth, rectTopBottom, mMaskPaint);
+        canvas.drawRect(0, rectBottomTop, mWidth, rectBottomBottom, mMaskPaint);
+    }
+
+    public RectF getRectF() {
+        return new RectF(mLeft, mTop + (mHeight - mWidth) / 2, mLeft + mWidth, mTop + (mHeight - mWidth) / 2 + mWidth);
+    }
+}

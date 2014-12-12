@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/id_personal_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <!-- **************顶部标题***************** -->
+    <include
+        layout="@layout/composite_sdk_login_head_view"
+        android:id="@+id/pg_login_head" />
+    <!-- 个人信息内容容器-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/id_personal_information_face_parent"
+            android:layout_gravity="center">
+            <!-- 用户头像-->
+            <com.pinguo.edit.sdk.option.view.RoundImageView
+                android:layout_marginTop="@dimen/login_person_info_icon_top"
+                android:id="@+id/id_personal_information_face"
+                android:layout_gravity="center"
+                android:layout_width="@dimen/login_person_info_icon_height"
+                android:layout_height="@dimen/login_person_info_icon_height"
+                android:layout_alignParentTop="true" />
+
+            <TextView
+                android:layout_below="@id/id_personal_information_face"
+                android:layout_marginTop="@dimen/login_person_info_modify_icon_text_top"
+                android:textSize="@dimen/login_person_info_modify_icon_text_size"
+                android:textColor="#ffffff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="头像设置" />
+        </LinearLayout>
+        <!-- 用户昵称-->
+        <TextView
+            android:layout_marginTop="@dimen/login_person_info_nick_name_intro_text_top"
+            android:textSize="@dimen/login_person_info_nick_name_intro_text_size"
+            android:textColor="#959697"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="昵称" />
+
+        <TextView
+            android:textSize="@dimen/login_person_info_nick_name_text_size"
+            android:layout_marginTop="@dimen/login_person_info_nick_name_text_top"
+            android:textColor="#ffffff"
+            android:id="@+id/personal_nick_name"
+            android:layout_width="match_parent"
+            android:gravity="center_vertical"
+            android:layout_height="@dimen/login_person_info_nick_name_text_height"
+            android:background="#919da7" />
+
+        <Button
+            android:id="@+id/confirm_button"
+            android:layout_width="@dimen/option_button_width"
+            android:layout_height="@dimen/option_button_height"
+            android:layout_marginTop="@dimen/login_person_info_quit_button_top"
+            android:textSize="@dimen/option_button_text_size"
+            android:background="@drawable/composite_sdk_option_button_select"
+            android:text="@string/person_info_confirm"
+            android:layout_gravity="center" />
+    </LinearLayout>
+</LinearLayout>

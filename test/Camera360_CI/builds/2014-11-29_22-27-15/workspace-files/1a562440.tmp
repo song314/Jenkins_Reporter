@@ -1,0 +1,199 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.PGLoginConstants;
+import com.pinguo.edit.sdk.login.StatusErrorCodeMessage;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.login.lib.util.ViewUtils;
+import com.pinguo.edit.sdk.login.model.PhoneFindPassword;
+import com.pinguo.edit.sdk.login.view.EditTextWithPrompt;
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+/**
+ * Created by crab on 14-10-28.
+ */
+public class PGPhoneFindPasswordActivity extends PGLoginBaseActivity implements TitleView.OnTitleViewClickListener, View.OnClickListener {
+    private static final int REQUEST_CODE = 1000;
+    private EditTextWithPrompt mPhoneNumberInput;
+    private String mPhoneNumber;
+    private PhoneFindPassword mPhoneFindPasswordFuture;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_login_phone_find_password);
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            if (intent != null) {
+                mPhoneNumber = intent.getStringExtra(PGLoginConstants.KEY_PHONE_NUMBER);
+            }
+        } else {
+            mPhoneNumber = savedInstanceState.getString(PGLoginConstants.KEY_PHONE_NUMBER);
+        }
+        initView();
+    }
+
+    @Override
+    public void initView() {
+        mRootView = findViewById(R.id.id_phone_find_password_root_view);
+        setRootViewBackground(mRootView);
+        TitleView titleView = (TitleView) findViewById(R.id.pg_login_head);
+        titleView.setTiTleText(R.string.pg_login_phone_input_number);
+        titleView.setOnTitleViewClickListener(this);
+        mPhoneNumberInput = (EditTextWithPrompt) findViewById(R.id.id_phone_findpassword_input_text);
+        if (!TextUtils.isEmpty(mPhoneNumber)) {
+            mPhoneNumberInput.setText(mPhoneNumber);
+        }
+        mErrorTipText = (TextView) findViewById(R.id.id_phone_find_password_error_prompt_text);
+        hideErrorMessage();
+
+        mPhoneNumberInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                hideErrorMessage();
+            }
+        });
+        findViewById(R.id.id_phone_findpassword_btn).setOnClickListener(this);
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(PGLoginConstants.KEY_PHONE_NUMBER, mPhoneNumber);
+    }
+
+    @Override
+    protected void onDestroy() {
+        hideSoftwareKeyboard(mPhoneNumberInput);
+        if (mPhoneFindPasswordFuture != null) {
+            mPhoneFindPasswordFuture.cancel(true);
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        v.setClickable(false);
+        ViewUtils.setDelayedClickable(v, true, 500);
+        switch (id) {
+            case R.id.id_phone_findpassword_btn: {
+                phoneFindPassword();
+                break;
+            }
+        }
+    }
+
+    private void phoneFindPassword() {
+        hideSoftwareKeyboard(mPhoneNumberInput);
+
+        if (!SystemUtils.hasNet(this)) {
+            showMessage(getString(R.string.pg_login_network_exception));
+            return;
+        }
+        final String phoneNumber = mPhoneNumberInput.getText().toString();
+
+        if (TextUtils.isEmpty(phoneNumber)) {
+            showErrorMessage(getString(R.string.pg_login_phone_number_empty));
+            return;
+        }
+        boolean b = SystemUtils.checkPhoneNumber(phoneNumber);
+        if (!b) {
+            showErrorMessage(getString(R.string.pg_login_phone_number_format_error));
+            return;
+        }
+        if (mPhoneFindPasswordFuture != null) {
+            mPhoneFindPasswordFuture.cancel(true);
+        }
+        mPhoneFindPasswordFuture = new PhoneFindPassword(this, phoneNumber);
+        showDialog();
+        mPhoneFindPasswordFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                gotoVerifyPage();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    //TODO 测试代码
+//                    if(fault.getStatus()==10544){
+//                        gotoVerifyPage();
+//                        return;
+//                    }
+                    //帐号不存在
+                    if (fault.getStatus() == 10536) {
+                        createPhoneUserNotExistDialog();
+                        return;
+                    }
+                    //用户两次发送验证码时间间隔太短
+                    if (fault.getStatus() == 10543) {
+                        gotoVerifyPage();
+                        return;
+                    }
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGPhoneFindPasswordActivity.this, fault.getStatus());
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_login_network_exception);
+                    //系统异常提示
+                    showMessage(errorMessage);
+                } else {
+                    showErrorMessage(errorMessage);
+                }
+            }
+        });
+
+    }
+
+    /**
+     * 跳转到短信验证页面
+     */
+    private void gotoVerifyPage() {
+        String phoneNumber = mPhoneNumberInput.getText().toString();
+        Intent intent = new Intent(this, PGPhoneVerifyActivity.class);
+        intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+        startActivityForResult(intent, REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                setResult(RESULT_OK, data);
+                finish();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void createPhoneUserNotExistDialog() {
+        showAlertDialog(R.string.pg_login_phone_number_not_exist, null);
+    }
+
+}

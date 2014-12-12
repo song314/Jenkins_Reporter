@@ -1,0 +1,134 @@
+/*
+ *                                                                                         
+ * Copyright (c)2010-2012  Pinguo Company
+ *                 品果科技                            版权所有 2010-2012
+ * 
+ * PROPRIETARY RIGHTS of Pinguo Company are involved in the
+ * subject matter of this material.  All manufacturing, reproduction, use,
+ * and sales rights pertaining to this subject matter are governed by the
+ * license agreement.  The recipient of this software implicitly accepts   
+ * the terms of the license.
+ * 本软件文档资料是品果公司的资产,任何人士阅读和使用本资料必须获得
+ * 相应的书面授权,承担保密责任和接受相应的法律约束.
+ * 
+ * Author:
+ * Date:2012-10-22 下午1:37:29 
+ * 
+ */
+
+package com.pinguo.edit.sdk.option;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * 特效List.
+ *
+ * @author lizhipeng
+ */
+public class OptionsSavePathAdapter extends BaseAdapter {
+
+    private List mList;
+    private Context mContext;
+    private LayoutInflater mLayoutInflater;
+
+    public OptionsSavePathAdapter(Context context, List list) {
+        mContext = context;
+        mList = list;
+        mLayoutInflater = LayoutInflater.from(mContext);
+    }
+
+    /**
+     * Get parent context.
+     *
+     * @return Context
+     */
+    public Context getContext() {
+        return mContext;
+    }
+
+    @Override
+    public int getCount() {
+        return mList.size();
+    }
+
+    @Override
+    public Object getItem(int pPosition) {
+        return mList.get(pPosition);
+    }
+
+    @Override
+    public long getItemId(int pPosition) {
+        return pPosition;
+    }
+
+    /**
+     * Get content list.
+     *
+     * @return List
+     */
+    public List getList() {
+        return mList;
+    }
+
+    /**
+     * Set content list.
+     *
+     * @param list Content list
+     */
+    public void setList(List list) {
+        mList = list;
+    }
+
+    /**
+     * Get layout inflater.
+     *
+     * @return LayoutInflater
+     */
+    public LayoutInflater getLayoutInflater() {
+        return mLayoutInflater;
+    }
+
+    private static class Holder {
+        TextView tvTitle;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        Holder holder;
+        if (convertView == null) {
+            convertView = getLayoutInflater().inflate(R.layout.options_save_path_item, null);
+            holder = new Holder();
+            holder.tvTitle = (TextView) convertView.findViewById(R.id.tv_options_save_path);
+            convertView.setTag(holder);
+        } else {
+            holder = (Holder) convertView.getTag();
+        }
+
+        bindData(holder, position);
+        return convertView;
+    }
+
+    /**
+     * Bind list data with specific position.
+     *
+     * @param holder   Cached data
+     * @param position Position on the GridView
+     */
+    private void bindData(Holder holder, int position) {
+
+        HashMap<String, Object> map = (HashMap<String, Object>) getList().get(position);
+        holder.tvTitle.setText((String) map.get("name"));
+
+    }
+
+}

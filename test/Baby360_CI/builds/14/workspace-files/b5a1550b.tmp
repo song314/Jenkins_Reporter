@@ -1,0 +1,50 @@
+package com.pinguo.edit.sdk.filter.square.view;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by hlf on 14-11-28.
+ */
+public class HeadZoomMultipleListView extends LinearLayout {
+
+    protected ViewGroup mHeadParentView;
+    protected View mNeckParentView;
+
+    public HeadZoomMultipleListView(Context context) {
+        super(context);
+
+        init(context);
+    }
+
+    public HeadZoomMultipleListView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        init(context);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+    }
+
+    protected void init(Context context) {
+
+        LayoutInflater.from(context).inflate(R.layout.composite_sdk_head_zoom_multiple_listview, this, true);
+        mHeadParentView = (ViewGroup) findViewById(R.id.head);
+        mNeckParentView = (ViewGroup) findViewById(R.id.neck);
+
+    }
+
+    public void addHeadView(View view) {
+        mHeadParentView.addView(view);
+    }
+
+}

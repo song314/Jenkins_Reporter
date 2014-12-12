@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:editViewPrompt="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/id_pg_register_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        layout="@layout/composite_sdk_login_head_view"
+        android:id="@+id/pg_login_head" />
+
+    <TextView
+        android:textColor="@color/login_bottom_node_normal"
+        android:text="@string/pg_auth_part"
+        android:textSize="@dimen/pg_login_node_text_size"
+        android:lineSpacingExtra="@dimen/pg_login_home_account_text_line_gap"
+        android:id="@+id/id_pg_auth_agree"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/pg_login_home_bottom_note_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_below="@id/pg_login_head"
+        android:layout_marginTop="@dimen/pg_login_head_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/pg_login_page_padding"
+        android:layout_marginRight="@dimen/pg_login_page_padding"
+        android:orientation="vertical">
+
+        <com.pinguo.edit.sdk.login.view.CheckEmailViewGroup
+            android:id="@+id/id_login_check_email_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.pinguo.edit.sdk.login.view.EditTextWithPrompt
+                android:id="@+id/id_email_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pg_login_input_height"
+                android:hint="@string/id_pg_login_register_phone_hint_text"
+                android:singleLine="true"
+                android:textSize="@dimen/pg_login_input_text_size" />
+
+            <ImageView
+                android:id="@+id/id_email_edittext_prompt_ic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/composite_sdk_login_loading"
+                android:visibility="invisible" />
+
+        </com.pinguo.edit.sdk.login.view.CheckEmailViewGroup>
+
+        <com.pinguo.edit.sdk.login.view.EyeWithEditTextGroupView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/pg_login_input_password_top">
+
+            <com.pinguo.edit.sdk.login.view.EditTextWithPrompt
+                editViewPrompt:showPrompt="false"
+                android:id="@+id/id_password_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/pg_login_input_height"
+                android:hint="@string/id_login_password_hint_text"
+                android:inputType="textPassword"
+                android:maxLength="63"
+                android:singleLine="true"
+                android:textSize="@dimen/pg_login_input_text_size" />
+
+            <ImageView
+                android:id="@+id/id_password_eye"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="center"
+                android:src="@drawable/composite_sdk_login_eye" />
+        </com.pinguo.edit.sdk.login.view.EyeWithEditTextGroupView>
+
+        <TextView
+            android:id="@+id/id_pg_login_error_prompt_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/pg_login_error_prompt_text_top"
+            android:gravity="right"
+            android:singleLine="true"
+            android:textColor="@color/color_pg_login_error_tip"
+            android:textSize="@dimen/pg_login_error_prompt_text_size" />
+
+        <Button
+            android:id="@+id/id_pg_register_button"
+            android:layout_width="@dimen/pg_login_button_width"
+            android:layout_gravity="center"
+            android:layout_height="@dimen/pg_login_button_height"
+            android:layout_marginTop="@dimen/pg_login_button_top"
+            android:background="@drawable/pg_register_btn_background"
+            android:gravity="center"
+            android:text="@string/composite_sdk_login_register"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/pg_login_button_text_size" />
+
+        <TextView
+            android:id="@+id/id_pg_register_way_btn"
+            android:layout_marginTop="@dimen/pg_login_register_way_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pg_login_user_phone_register_text"
+            android:textColor="@drawable/color_login_encounter_problem"
+            android:textSize="@dimen/pg_encounter_text_size" />
+
+        <Button
+            android:visibility="gone"
+            android:id="@+id/delete_register_user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/pg_login_delete_phone_user" />
+
+        <Button
+            android:visibility="gone"
+            android:id="@+id/get_phone_verify_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/pg_login_get_verify_code" />
+    </LinearLayout>
+
+</RelativeLayout>

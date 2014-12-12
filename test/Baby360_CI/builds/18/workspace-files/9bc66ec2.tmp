@@ -1,0 +1,60 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class TiltShiftCircle extends TiltShift{
+    private static final String TAG = TiltShiftCircle.class.getSimpleName();
+
+    public static final String EFFECT_KEY_BLUR = "TiltShiftCircle_BBlur";
+    public static final String EFFECT_KEY_SINGLE = "TiltShiftCircle_Single";
+    public static final String EFFECT_KEY_MASK = "TiltShiftCircle_Mask";
+
+    public static final String PARAM_KEY_CIRCLE_PARAM = "tiltShiftCircleParam";
+    public static final String PARAM_KEY_CIRCLE_STRONG_PARAM = "Strong";
+
+    public TiltShiftCircle() {
+        this.type = Type.TiltShift.name();
+        this.key = TiltShiftCircle.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.TILT_SHIFT_CIRCLE_CMD.toCharArray());
+
+        this.maskCmd = Effect.TILT_SHIFT_CIRCLE_MASK_CMD;
+        this.blurCmd = Effect.TILT_SHIFT_CIRCLE_BLUR_CMD;
+        this.singleCmd = Effect.TILT_SHIFT_CIRCLE_SINGLE_CMD;
+
+        param = new Param();
+        ParamVecItem blurItem = new ParamVecItem(PARAM_KEY_CIRCLE_PARAM, EFFECT_KEY_BLUR, "0.5,0.5,0.15,0.35", "0.5,0.5,0.15,0.35");
+        ParamVecItem singleItem = new ParamVecItem(PARAM_KEY_CIRCLE_PARAM, EFFECT_KEY_SINGLE, "0.5,0.5,0.15,0.05", "0.5,0.5,0.15,0.05");
+        ParamVecItem maskItem = new ParamVecItem(PARAM_KEY_CIRCLE_PARAM, EFFECT_KEY_MASK, "0.5,0.5,0.15,0.35", "0.5,0.5,0.15,0.35");
+        ParamFloatItem strongItem = new ParamFloatItem(PARAM_KEY_CIRCLE_STRONG_PARAM, EFFECT_KEY_BLUR, 0.3f, 1.5f, 0.1f, 1.0f, 1.0f);
+
+        param.addParamItem(blurItem);
+        param.addParamItem(singleItem);
+        param.addParamItem(maskItem);
+        param.addParamItem(strongItem);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        TiltShiftCircle base = null;
+
+        try {
+            base = (TiltShiftCircle) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != base )
+            return base;
+        else
+            return new TiltShiftCircle();
+    }
+}

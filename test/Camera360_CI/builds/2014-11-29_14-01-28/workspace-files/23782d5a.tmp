@@ -1,0 +1,88 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.app.Activity;
+import android.content.Context;
+import android.hardware.SensorManager;
+import android.view.OrientationEventListener;
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by geniuslt on 13-10-12.
+ */
+public class PGOrientationEventListener extends OrientationEventListener {
+
+    private List<Rotatable> mRotaters = null;
+    private Activity mActivity = null;
+    private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+
+    /* The degrees of the device rotated clockwise from its natural orientation.
+     private int mOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+     The orientation compensation for icons and thumbnails. Ex: if the value
+     is 90, the UI components should be rotated 90 degrees counter-clockwise.*/
+    private int mOrientationCompensation = 0;
+
+    public PGOrientationEventListener(Context context) {
+        super(context, SensorManager.SENSOR_DELAY_UI);
+        mRotaters = new ArrayList<Rotatable>();
+        mActivity = (Activity) context;
+    }
+
+    public void register(Rotatable rotater) {
+        mRotaters.add(rotater);
+    }
+
+    public void unregister(Rotatable rotater) {
+        mRotaters.remove(rotater);
+    }
+
+    /**
+     * This filed is for some device , the method onOrientationChanged may
+     * still runs even we call disable(). Such as Galaxy Camera
+     */
+    private boolean mDisabled = true;
+
+    @Override
+    public void disable() {
+        mDisabled = true;
+        super.disable();
+    }
+
+    @Override
+    public void enable() {
+        super.enable();
+        mDisabled = false;
+    }
+
+    @Override
+    public void onOrientationChanged(int orientation) {
+        if (orientation == ORIENTATION_UNKNOWN || mDisabled) {
+            return;
+        }
+
+        mOrientation = SystemUtils.roundOrientation(orientation, mOrientation);
+
+        // When the screen is unlocked, display rotation may change. Always
+        // calculate the up-to-date orientationCompensation.
+        int orientationCompensation = (mOrientation + SystemUtils
+                .getDisplayRotation(mActivity)) % 360;
+        if (mOrientationCompensation != orientationCompensation) {
+            mOrientationCompensation = orientationCompensation;
+            //TODO disable rotation when auto rotate is disabled in phone setting
+            setOrientationIndicator(mOrientationCompensation, false);
+        }
+    }
+
+    public void setOrientationIndicator(int orientation, boolean needAnimation) {
+        if (null == mRotaters) {
+            return;
+        }
+
+        for (Rotatable rotater : mRotaters) {
+            rotater.setOrientation(orientation, needAnimation);
+        }
+    }
+}

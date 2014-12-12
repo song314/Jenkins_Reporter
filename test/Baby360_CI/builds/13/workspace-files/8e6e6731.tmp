@@ -1,0 +1,370 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+import android.content.Context;
+import android.util.Pair;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.LocaleSupport;
+
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.texture.Texture;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public class Effect extends LocaleSupport<Effect> implements Comparable<Effect>, Cloneable, IEffect{
+    private static final String TAG = Effect.class.getSimpleName();
+
+    /**
+     * 特效分类：增强（Hdr, Skin），滤镜、光影、边框、高级调整，移轴等
+     */
+    public enum Type {
+        TiltShift,      //移轴
+        EnhanceSkin,    //人像增强
+        EnhanceHdr,     //层次增强(HDR)
+        Sharpen,        //锐化 (Effect=FastSharpen)
+        Filter,         //特效
+        AdvanceBase,    //LightRoom 基础(Effect=LightZ_Base)
+        AdvanceHSL,     //LightRoom HSL(Effect=LightZ_HSL)
+        AdvanceVignette,  //LightRoom 影晕(Effect=LightZ_Vignette)
+        Lighting,       //光影
+        Frame,          //边框
+
+        Composite,      //组合特效
+        CompositeLib    //组合特效库
+    }
+
+    public static final String ENHANCE_HDR_CMD = "Enhance_AutoLevel|Effect=RGB2HSV|Effect=HDR_Light_L;Shadow=0;Highlight=0|Effect=HSV2RGB";
+    public static final String ENHANCE_SKIN_CMD = "Portrait_Skin_Full;Curve0=<A>127=150</A>;Strong=0.5;whiteLevel=0";
+    public static final String ADVANCE_BASE_CMD = "LightZ_Base;Temperature=0;Hue=0;Exposure=0;Contrast=0;Vibrance=0;Saturation=0;Curve=<R>0=0</R><G>0=0</G><B>0=0</B><A>0=0</A>;ColorBalance=0,0,0,0,0,0,0,0,0,1";
+    public static final String ADVANCE_HSL_CMD = "LightZ_HSL";
+    public static final String ADVANCE_VIGNETTE_CMD = "LightZ_Vignette;vignetteRange=0.9;vignetteStrong=0;centerStrong=0";
+    public static final String SHARPEN_CMD = "FastSharpen_AutoFit";
+    public static final String TILT_SHIFT_CIRCLE_CMD = "TiltShiftCircle_Fast;guassFrame=<PyramidLevel>2</PyramidLevel><StandLength>400</StandLength><StandAmount>5</StandAmount>;tiltShiftCircleParam=0.5,0.5,0.1,0.3";
+    public static final String TILT_SHIFT_LINE_CMD = "TiltShiftLine_Fast;guassFrame=<PyramidLevel>2</PyramidLevel><StandLength>400</StandLength><StandAmount>5</StandAmount>;tiltShiftLineParam1=0.5,0.5;tiltShiftLineParam2=0.0,0.1,0.2";
+    public static final String TILT_SHIFT_CIRCLE_MASK_CMD = "TiltShiftCircle_Mask";
+    public static final String TILT_SHIFT_CIRCLE_BLUR_CMD = "TiltShiftCircle_BBlur";
+    public static final String TILT_SHIFT_CIRCLE_SINGLE_CMD = "TiltShiftCircle_Single";
+    public static final String TILT_SHIFT_LINE_MASK_CMD = "TiltShiftLine_Mask";
+    public static final String TILT_SHIFT_LINE_BLUR_CMD = "TiltShiftLine_BBlur";
+    public static final String TILT_SHIFT_LINE_SINGLE_CMD = "TiltShiftLine_Single";
+
+    @Expose
+    public String key = "";
+    @Expose
+    public String type = ""; // Filter/Lighting/Frame/AdvanceBase...，大小写敏感
+    public String locale = "";
+    @Expose
+    public String name = "";
+    public String description = "";
+    public int version;
+    public String requirementStr = "";
+    public String icon = "";
+    public int realRender;
+    public String preCmdStr = "";
+    public String gpuCmdStr = "";
+    public String cpuCmd = "";
+    public String textureStr = "";
+    public String typeKey = "";
+    public int idxInType;
+    @Expose
+    public String packKey = "";
+    public int idxInPack;
+    public int installation;
+    public long installTime;
+    public int isNew;
+    public String paramStr = ""; // 参数json串，设置key和取值范围
+    public int timeLevel; // 耗时等级，默认为0，表明特效的耗时程度
+    public String color = "";
+
+    @Expose
+    public Param param = null; // 参数对象，对于Filter、Lighting、Frame是根据paramStr生成，其余是内置
+
+    private Map<Pair<String, String>, ParamItem> paramMap = null; // 参数映射表，根据paramKey+effectKey快速映射到一个ParamItem对象
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Effect)) return false;
+
+        Effect effect = (Effect) o;
+
+        if (idxInPack != effect.idxInPack) return false;
+        if (idxInType != effect.idxInType) return false;
+        if (installTime != effect.installTime) return false;
+        if (installation != effect.installation) return false;
+        if (isNew != effect.isNew) return false;
+        if (version != effect.version) return false;
+        if (!key.equals(effect.key)) return false;
+        if (!locale.equals(effect.locale)) return false;
+        if (!name.equals(effect.name)) return false;
+        if (!type.equals(effect.type)) return false;
+        if (!packKey.equals(effect.packKey)) return false;
+        if (!typeKey.equals(effect.typeKey)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = key.hashCode();
+        result = 31 * result + locale.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + version;
+        result = 31 * result + typeKey.hashCode();
+        result = 31 * result + idxInType;
+        result = 31 * result + packKey.hashCode();
+        result = 31 * result + idxInPack;
+        result = 31 * result + installation;
+        result = 31 * result + (int) (installTime ^ (installTime >>> 32));
+        result = 31 * result + isNew;
+        return result;
+    }
+
+    @Override
+    public Effect getLocaleObject(Locale locale) {
+        int idx = getIndex(locale);
+        String locStr = getLocaleString(locale);
+
+        String[] nameArr = name.split(LOCAL_SEPERATOR);
+        String name = this.name;
+        if (null != nameArr && nameArr.length > 0) {
+            if (idx < nameArr.length) {
+                name = nameArr[idx];
+            } else {
+                name = nameArr[0];
+            }
+        }
+
+        String[] desArr = description.split(LOCAL_SEPERATOR);
+        String description = this.description;
+        if (null != desArr && desArr.length > 0) {
+            if (idx < desArr.length) {
+                description = desArr[idx];
+            } else {
+                description = desArr[0];
+            }
+        }
+
+        Effect effect = null;
+        try {
+            effect = (Effect) clone();
+            effect.locale = locStr;
+            effect.name = name;
+            effect.description = description;
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            GLogger.e(TAG, "Clone effect object fail!");
+        }
+
+        return effect;
+    }
+
+    @Override
+    public int compareTo(Effect another) {
+        // 1. 先比较安装时间，时间越大越靠前
+        // 2. 若安装时间相等，比较idxInType，idx越小越靠前
+
+        long timeDiff = another.installTime - installTime;
+        if (timeDiff < 0)
+            return -1;
+        else if (timeDiff > 0)
+            return 1;
+        else
+            return idxInType - another.idxInType;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+
+        Effect clonedEffect = (Effect) super.clone();
+        if (null != this.param) {
+            clonedEffect.param = (Param) this.param.clone();
+            clonedEffect.paramMap = new HashMap<Pair<String, String>, ParamItem>();
+
+            for (List<ParamItem> itemList : clonedEffect.param.items.values()) {
+                for (ParamItem item : itemList) {
+                    clonedEffect.paramMap.put(new Pair<String, String>(item.key, item.effectKey), item);
+                }
+            }
+        }
+
+        return clonedEffect;
+    }
+
+    public String[] getPreCmds() {
+        if ( preCmdStr.isEmpty() ) {
+            return new String[]{};
+        }
+
+        String[] preCmds = preCmdStr.split("\\$");
+        for (int i = 0; i < preCmds.length; i++) {
+            preCmds[i] = preCmds[i].trim();
+        }
+        return preCmds;
+    }
+
+    public String[] getGpuCmds() {
+        if ( gpuCmdStr.isEmpty() ) {
+            return new String[]{};
+        }
+
+        String[] gpuCmds = gpuCmdStr.split("\\$");
+
+        for (int i = 0; i < gpuCmds.length; i++) {
+            gpuCmds[i] =  gpuCmds[i].trim();
+        }
+
+        return gpuCmds;
+    }
+
+    @Override
+    public Texture getTexture() {
+        Texture texture = null;
+
+        if (textureStr.isEmpty()) {
+            return texture;
+        }
+
+        try {
+            Gson gson = new Gson();
+            java.lang.reflect.Type type = new TypeToken<Texture>() {}.getType();
+            texture = gson.fromJson(textureStr, type);
+            texture.textureDir = EffectModel.getInstance().getEffectInstalledDir(this.type).getAbsolutePath() + File.separator + "texture" + File.separator + texture.textureDir;
+        } catch (RuntimeException e) {
+            GLogger.e(TAG, "Construct Texture object with texture string fail! string: " + textureStr);
+            GLogger.e(TAG, e);
+        }
+
+        return texture;
+    }
+
+    @Override
+    public Requirement getRequirement() {
+
+        if (requirementStr.isEmpty()) {
+            return new Requirement();
+        }
+
+        Requirement requirement = null;
+        try {
+            Gson gson = new Gson();
+            java.lang.reflect.Type type = new TypeToken<Requirement>() {}.getType();
+            requirement = gson.fromJson(requirementStr, type);
+        } catch (RuntimeException e) {
+            GLogger.e(TAG, "Construct Requirement object with requirement string fail! string: " + requirementStr);
+            GLogger.e(TAG, e);
+        }
+
+        if (null != requirement) {
+            return requirement;
+        }  else {
+            return new Requirement();
+        }
+    }
+
+    @Override
+    public Param getParam(boolean forceBuild) {
+
+        boolean needBuild = forceBuild || ( null == param || null == paramMap);
+
+        if ( needBuild ) {
+            buildParamByParamStr();
+        }
+
+        return param;
+    }
+
+    @Override
+    public Param getParam() {
+        return getParam(false);
+    }
+
+    /**
+     * 根据paramStr构建param对象和param map
+     */
+    public void buildParamByParamStr() {
+        param = Param.loadFromJsonStr(paramStr);
+        if ( null == param ) {
+            param = new Param();
+        }
+        buildParamMap(param);
+    }
+
+    @Override
+    public ParamItem getParamItem(String paramKey, String effectKey) {
+        if ( null == paramMap ) {
+            buildParamByParamStr();
+        }
+        return paramMap.get(new Pair<String, String>(paramKey, effectKey));
+    }
+
+    //根据Param对象构建paramMap对象
+    public Map<Pair<String, String>, ParamItem> buildParamMap(Param param) {
+        if ( null == param || null == param.items) {
+            paramMap = new HashMap<Pair<String, String>, ParamItem>();
+            return paramMap;
+        }
+
+        // clear
+        if ( null == paramMap ) {
+            paramMap = new HashMap<Pair<String, String>, ParamItem>();
+        } else {
+            paramMap.clear();
+        }
+
+        // build
+        for ( List<ParamItem> itemList : param.items.values() ) {
+            for ( ParamItem item : itemList ) {
+                paramMap.put(new Pair<String, String>(item.key, item.effectKey), item);
+            }
+        }
+
+        return paramMap;
+    }
+
+
+    public void setFloatParamValue(String paramKey, String effectKey, float value) {
+        if ( null == paramMap ) {
+            buildParamByParamStr();
+        }
+
+        ParamItem paramItem = paramMap.get(new Pair<String, String>(paramKey, effectKey));
+        if ( paramItem instanceof ParamFloatItem ) {
+            ParamFloatItem floatItem = (ParamFloatItem) paramItem;
+            floatItem.value = value;
+        }
+    }
+
+    public boolean haveGPUCmd() {
+        return !(gpuCmdStr == null || "".equals(gpuCmdStr));
+    }
+
+    public boolean havePreCmd() {
+        return realRender != 0 && preCmdStr != null && !"".equals(preCmdStr);
+    }
+
+    public boolean haveCpuCmd() {
+        return !(cpuCmd == null || "".equals(cpuCmd));
+    }
+
+    public List<JSONObject> getEffectInfo(Context context) {
+        return null;
+    }
+}

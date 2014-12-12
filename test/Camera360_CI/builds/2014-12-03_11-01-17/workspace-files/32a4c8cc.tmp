@@ -1,0 +1,260 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.util.Base64;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+/**
+ * Created by taoli on 14-8-12.
+ */
+public class AESEncrypt {
+    private static final String TAG = AESEncrypt.class.getSimpleName();
+
+    private static final String UTF8 = "UTF-8";
+
+    static {
+        System.loadLibrary("encrypt_utils");
+    }
+
+    public static void main(String[] args) {
+
+        if (args.length < 2) {
+            GLogger.d(TAG, "Missing parameters: use AESEncrypt stringToEncode key");
+            return;
+        }
+
+        String encodeFilePath = args[0];
+        String key = args[1];
+        GLogger.d(TAG, "encodeFilePath=" + encodeFilePath + ", key=" + key + "\n");
+
+        String stringToEncode = read(encodeFilePath);
+
+        GLogger.d(TAG, "stringToEncode=" + stringToEncode + "\n");
+        byte[] result = encrypt(stringToEncode, key);
+        String hexResult = parseByte2HexStr(result);
+        GLogger.d(TAG, "base64ToAes=" + hexResult + "\n");
+
+        String outPath = encodeFilePath + "_encrypt";
+        write(outPath, hexResult);
+    }
+
+    private static String read(String filePath) {
+        String fileContent = "";
+        try {
+            File f = new File(filePath);
+            if (f.isFile() && f.exists()) {
+                InputStreamReader read = new InputStreamReader(new FileInputStream(f), UTF8);
+                BufferedReader reader = new BufferedReader(read);
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    fileContent += line;
+                }
+                read.close();
+            }
+        } catch (Exception e) {
+            GLogger.e(TAG, "Failed to read from file");
+            e.printStackTrace();
+        }
+        return fileContent;
+    }
+
+    private static void write(String path, String content) {
+        try {
+            File f = new File(path);
+            if (!f.exists()) {
+                f.createNewFile();
+            }
+            OutputStreamWriter write = new OutputStreamWriter(new FileOutputStream(f), UTF8);
+            BufferedWriter writer = new BufferedWriter(write);
+            writer.write(content);
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            GLogger.e(TAG, "write error happens");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Encodes a String in AES-256 with a given key
+     *
+     * @param stringToEncode
+     * @param keyString
+     * @return String Base64 and AES encoded String
+     */
+    public static byte[] encrypt(String stringToEncode, String keyString) throws NullPointerException {
+        // encrypt to base64 first
+        stringToEncode = Base64.encodeToString(stringToEncode.getBytes(), Base64.NO_WRAP);
+        GLogger.d(TAG, "11111111 encodeToBase64=" + stringToEncode.length() + "\n");
+
+        if (keyString.length() == 0 || keyString == null) {
+            throw new NullPointerException("Please give Password");
+        }
+
+        if (stringToEncode.length() == 0 || stringToEncode == null) {
+            throw new NullPointerException("Please give text");
+        }
+
+        try {
+            SecretKeySpec skeySpec = getKey(keyString);
+            byte[] clearText = stringToEncode.getBytes(UTF8);
+
+            // IMPORTANT TO GET SAME RESULTS ON iOS and ANDROID
+            final byte[] iv = new byte[16];
+            Arrays.fill(iv, (byte) 0x00);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+            // Cipher is not thread safe
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivParameterSpec);
+
+            return cipher.doFinal(clearText);
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Decodes a String using AES-256 and Base64
+     *
+     * @param encrypedPwdBytes
+     * @param password
+     * @return desoded String
+     */
+    public static String decrypt(byte[] encrypedPwdBytes, String password) throws NullPointerException {
+
+        if (password.length() == 0 || password == null) {
+            throw new NullPointerException("Please give Password");
+        }
+
+        try {
+            SecretKey key = getKey(password);
+
+            // IMPORTANT TO GET SAME RESULTS ON iOS and ANDROID
+            final byte[] iv = new byte[16];
+            Arrays.fill(iv, (byte) 0x00);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+            // cipher is not thread safe
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
+            byte[] decrypedValueBytes = (cipher.doFinal(encrypedPwdBytes));
+
+            String decrypedValue = new String(decrypedValueBytes);
+
+            // base64 decrypt
+            decrypedValue = new String(Base64.decode(decrypedValue, Base64.NO_WRAP));
+
+            return decrypedValue;
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    /**
+     * Generates a SecretKeySpec for given password
+     *
+     * @param password
+     * @return SecretKeySpec
+     * @throws java.io.UnsupportedEncodingException
+     */
+    private static SecretKeySpec getKey(String password) throws UnsupportedEncodingException {
+
+        // You can change it to 128 if you wish
+        int keyLength = 256;
+        byte[] keyBytes = new byte[keyLength / 8];
+        // explicitly fill with zeros
+        Arrays.fill(keyBytes, (byte) 0x0);
+
+        // if password is shorter then key length, it will be zero-padded
+        // to key length
+        byte[] passwordBytes = password.getBytes(UTF8);
+        int length = passwordBytes.length < keyBytes.length ? passwordBytes.length : keyBytes.length;
+        System.arraycopy(passwordBytes, 0, keyBytes, 0, length);
+        SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+        return key;
+    }
+
+    public static String parseByte2HexStr(byte buf[]) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0;
+             i < buf.length;
+             i++) {
+            String hex = Integer.toHexString(buf[i] & 0xFF);
+            if (hex.length() == 1) {
+                hex = '0' + hex;
+            }
+            sb.append(hex.toUpperCase());
+        }
+
+        return sb.toString();
+    }
+
+    public static byte[] parseHexStr2Byte(String hexStr) {
+        if (hexStr.length() < 1) {
+            return null;
+        }
+
+        byte[] result = new byte[hexStr.length() / 2];
+        for (int i = 0;
+             i < hexStr.length() / 2;
+             i++) {
+            int high = Integer.parseInt(hexStr.substring(i * 2, i * 2 + 1), 16);
+            int low = Integer.parseInt(hexStr.substring(i * 2 + 1, i * 2 + 2), 16);
+            result[i] = (byte) (high * 16 + low);
+        }
+
+        return result;
+    }
+
+    public static native String getPassword();
+}

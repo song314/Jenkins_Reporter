@@ -1,0 +1,161 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import android.content.Context;
+import com.pinguo.Camera360Lib.log.GLogger;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.Product;
+
+import java.io.File;
+import java.util.*;
+
+/**
+ * Created by huowaa on 14-5-23.
+ */
+public class EffectModel implements IEffectModel{
+    private static final String TAG = EffectModel.class.getSimpleName();
+
+    private static EffectModel sInstance;
+    private boolean mInitialized = false;
+    private IEffectResourceManager mEffectResourceManager;
+    private EffectDict mEffectDict;
+
+    private EffectModel() {}
+
+    public static synchronized EffectModel getInstance() {
+        if (null == sInstance)
+        {
+            sInstance = new EffectModel();
+        }
+        return sInstance;
+    }
+
+    @Override
+    public synchronized EffectModel init(Context context)
+    {
+        if (mInitialized) {
+            GLogger.d(TAG, "EffectModel already initialized");
+            return this;
+        }
+
+        mEffectResourceManager = new EffectResourceManager(context, this);
+        mEffectResourceManager.init();
+        loadEffectDict();
+        mInitialized = true;
+
+        return this;
+    }
+
+    @Override
+    public synchronized void destroy() {
+        mEffectResourceManager.destroy();
+        invalidEffectDict(false);
+        mInitialized = false;
+    }
+
+    @Override
+    public List<CompositeEffect> getCompositeEffectsByTags(String[] tags) {
+        // param check
+        if ( null == tags || 0 == tags.length ) {
+            GLogger.e(TAG, "tags array is empty");
+            return new ArrayList<CompositeEffect>();
+        }
+
+        // 去重
+        Set<String> tagSet = new HashSet<String>();
+        Collections.addAll(tagSet, tags);
+        String[] filteredTags = tagSet.toArray(new String[]{});
+
+        return mEffectResourceManager.getCompositeEffectsByTags(filteredTags);
+    }
+
+    @Override
+    public List<CompositeEffect> getCompositeEffectsByRandom(int count) {
+        // param check
+        if ( 0 == count ) {
+            GLogger.e(TAG, "count is 0");
+        }
+
+        return mEffectResourceManager.getCompositeEffectsByRandom(count);
+    }
+
+    /**
+     * 设置EffectResourceManager，为设置Mock对象设计
+     */
+    public void setEffectResourceManager(IEffectResourceManager effectResourceManager) {
+        this.mEffectResourceManager = effectResourceManager;
+    }
+
+    public synchronized void loadEffectDict() {
+        GLogger.i(TAG, "Load effect dict");
+        mEffectDict = mEffectResourceManager.loadEffectDict(Locale.getDefault());
+    }
+
+    @Override
+    public List<EffectType> getEffectTypeList(Effect.Type type) {
+        return mEffectDict.getEffectTypeList(type);
+    }
+
+    @Override
+    public Effect getEffectByKey(String key) {
+        return mEffectDict.getEffectMap().get(key);
+    }
+
+    public List<Effect> getEffectList(Effect.Type type) {
+        return mEffectDict.getEffectList(type);
+    }
+
+    @Override
+    public List<Effect> getEffectsByPackKey(String guid) {
+        if (null == mEffectDict) {
+            loadEffectDict();
+        }
+
+        List<Effect> effects = new ArrayList<Effect>();
+        if (null != mEffectDict) {
+            for (Effect effect : mEffectDict.getEffectMap().values()) {
+                if (null != effect.packKey && effect.packKey.equals(guid))
+                    effects.add(effect);
+            }
+        }
+
+        return effects;
+    }
+
+    @Override
+    public File getEffectInstalledDir(String type) {
+        return mEffectResourceManager.getEffectInstalledDir(type);
+    }
+
+    @Override
+    public boolean install(Product product, Callback progressCallback) {
+        return mEffectResourceManager.install(product, progressCallback);
+    }
+
+    @Override
+    public boolean uninstall(EffectPackage effectPackage, Callback progressCallback) {
+        return mEffectResourceManager.uninstall(effectPackage, progressCallback);
+    }
+
+    @Override
+    public synchronized void invalidEffectDict(boolean rebuild) {
+        GLogger.i(TAG, "Invalid effect dict");
+        mEffectDict = null;
+
+        if (rebuild) {
+            loadEffectDict();
+        }
+    }
+
+    @Override
+    public void save(CompositeEffect compositeEffect, Callback callback) {
+        mEffectResourceManager.save(compositeEffect, callback);
+    }
+
+    @Override
+    public void remove(CompositeEffect compositeEffect) {
+        mEffectResourceManager.remove(compositeEffect);
+    }
+}

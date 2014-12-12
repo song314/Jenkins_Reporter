@@ -1,0 +1,105 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.Scroller;
+
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+public class PreviewFrameView extends View {
+    private Paint backPaint = null;
+    private Rect cRect = new Rect();
+    private RectF frameRect;
+    private Scroller mTopRectScroller;
+    private Scroller mBottomRectScroller;
+
+    public PreviewFrameView(Context context) {
+        super(context);
+        init();
+    }
+
+    public PreviewFrameView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public PreviewFrameView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private RectF getFrameRect() {
+        return frameRect;
+    }
+
+    public void setFrameRect(RectF rectF) {
+        CMLogger.d("cx", "PreviewFrameView view:" + frameRect);
+        setVisibility(View.VISIBLE);
+        if (null != frameRect) {
+            mTopRectScroller.startScroll(
+                    0, Math.round(frameRect.top),
+                    0, Math.round(rectF.top - frameRect.top), 200);
+            mBottomRectScroller.startScroll(
+                    0, Math.round(frameRect.bottom),
+                    0, Math.round(rectF.bottom - frameRect.bottom), 200);
+        }
+
+        this.frameRect = rectF;
+        invalidate();
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        RectF rect = getFrameRect();
+        if (rect == null) {
+            super.onDraw(canvas);
+            return;
+        }
+
+        float top = rect.top;
+        boolean needInvalidate = false;
+
+        if (mTopRectScroller.computeScrollOffset()) {
+            top = mTopRectScroller.getCurrY();
+            needInvalidate = true;
+        }
+
+        float bottom = rect.bottom;
+        if (mBottomRectScroller.computeScrollOffset()) {
+            bottom = mBottomRectScroller.getCurrY();
+            needInvalidate = true;
+        }
+
+        canvas.getClipBounds(cRect);
+        Path path = new Path();
+        path.addRect(cRect.left, cRect.top, cRect.right, cRect.bottom, Path.Direction.CW);
+
+        path.addRect(rect.left, top, rect.right, bottom, Path.Direction.CCW);
+        canvas.drawPath(path, backPaint);
+
+        super.onDraw(canvas);
+        if (!needInvalidate) {
+            return;
+        }
+
+        invalidate();
+    }
+
+    private void init() {
+        backPaint = new Paint();
+        backPaint.setColor(Color.BLACK);
+        backPaint.setAntiAlias(true);
+        backPaint.setStyle(Paint.Style.FILL);
+
+        mTopRectScroller = new Scroller(getContext(), new DecelerateInterpolator());
+        mBottomRectScroller = new Scroller(getContext(), new DecelerateInterpolator());
+    }
+}

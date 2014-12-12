@@ -1,0 +1,64 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+/**
+ * Created by liubo on 7/5/13.
+ * notes: 这个类里面的东西仅仅和相机有关
+ */
+public final class CameraPrefKeys {
+    private CameraPrefKeys() {
+
+    }
+
+    public static final String KEY_FIRST_OPEN_CAMERA = "key_camera_first_open";
+
+    /**
+     * 相机ID
+     */
+    public static final String KEY_CAMERA_ID = "key_camera_id";
+
+    /**
+     * 相机图片尺寸
+     */
+    public static final String KEY_CAMERA_PICTURE_SIZE = "key_camera_picture_size";
+
+    /**
+     * 闪光灯
+     */
+    public static final String KEY_CAMERA_FLASH_MODE = "key_camera_flashmode";
+
+    /**
+     * 聚焦模式
+     */
+    public static final String KEY_CAMERA_FOCUS_MODE = "key_camera_focusmode";
+
+    /**
+     * 是否做了取景方向矫正,Boolean,默认false
+     */
+    public static final String KEY_CAMERA_DISPLAY_REDRESS_ENABLE = "key_camera_display_redress_enable";
+
+    /**
+     * 取景方向矫正值,int
+     */
+    public static final String KEY_CAMERA_DISPLAY_REDRESS_VALUE = "key_camera_display_redress_value";
+
+    /**
+     * 是否做了照片方向矫正,boolean,默认false
+     */
+    public static final String KEY_CAMERA_JPEG_REDRESS_ENABLE = "key_camera_jpeg_redress_enable";
+
+    /**
+     * 照片是否含有镜像，true：有镜像,false无镜像,默认false
+     */
+    public static final String KEY_CAMERA_JPEG_REDRESS_MIRROR = "key_camera_jpeg_redress_mirror";
+
+    /**
+     * 照片的角度
+     */
+    public static final String KEY_CAMERA_JPEG_REDRESS_ORIENTATION = "key_camera_jpeg_redress_orientation";
+
+    /**
+     * 画幅
+     */
+    public static final String KEY_PREVIEW_FRAME = "key_preview_frame";
+
+}

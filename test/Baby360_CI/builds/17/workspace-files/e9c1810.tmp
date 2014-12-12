@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="composite_sdk_rating_msg">Like us? Please rate us 5 starts in Google Play</string>
+    <string name="composite_sdk_complete">Finish</string>
+
+    <string name="composite_sdk_app_name">MIX</string>
+
+    <!-- 1.3 -->
+    <string name="composite_sdk_hottest">最热</string>
+    <string name="composite_sdk_newest">最新</string>
+
+
+    <!-- camera module begin-->
+    <string name="composite_sdk_is_quit">"Your current edits won't be saved if you return now."</string>
+    <string name="composite_sdk_continue_edit">NO</string>
+    <string name="composite_sdk_abandon_edit">OK</string>
+    <string name="composite_sdk_confirm">OK</string>
+    <string name="composite_sdk_cancel">NO</string>
+    <string name="composite_sdk_cannot_connect_camera">"相机无法启动, 请稍候重试或重新启动手机"</string>
+
+    <string name="composite_sdk_quit_photo">退出后会丢失照片,是否需要退出?</string>
+
+    <string name="composite_sdk_pref_camera_flashmode_title">闪光模式</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_auto">自动</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_on">开</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_off">关</string>
+    <string name="composite_sdk_pref_camera_flashmode_entry_torch">手电筒</string>
+
+    <string name="composite_sdk_no_storage_to_take_picture">无法拍照，请插入存储卡或者更换照片存储路径</string>
+    <string name="composite_sdk_operation_too_fast">您操作太快啦</string>
+
+    <string name="composite_sdk_pref_camera_picturesize_title">照片尺寸</string>
+    <!-- camera module end-->
+
+    <!--gallery module start-->
+    <string name="composite_sdk_unit_mm">mm</string>
+    <string name="composite_sdk_loading">Loading\u2026</string>
+    <string name="composite_sdk_album_title">Album</string>
+    <string name="composite_sdk_empty_album">O images available.</string>
+    <string name="composite_sdk_sync_album_error">Couldn\'t download the photos in this album. Retry later.</string>
+    <string name="composite_sdk_details_ms">%1$02d:%2$02d</string>
+    <string name="composite_sdk_details_hms">%1$d:%2$02d:%3$02d</string>
+    <!--gallery module end-->
+
+    <string name="composite_sdk_filter">FILTERS</string>
+    <string name="composite_sdk_light">TEXTURE</string>
+    <string name="composite_sdk_frame">FRAME</string>
+    <string name="composite_sdk_base">ADJUST</string>
+    <string name="composite_sdk_tiltshit">APERTURE</string>
+    <string name="composite_sdk_details">ADJUST</string>
+    <string name="composite_sdk_colors">COLORS</string>
+
+    <string name="composite_sdk_advance_adjust">MIX</string>
+
+    <string name="composite_sdk_adjust">MIX</string>
+
+    <string name="composite_sdk_effect_photo_edit">EDIT</string>
+    <string name="composite_sdk_quit">Cancel</string>
+    <string name="composite_sdk_crop_quit">Cancel</string>
+    <string name="composite_sdk_ok">Confirm</string>
+
+    <string name="composite_sdk_exposure">EXPOSURE</string>
+    <string name="composite_sdk_contrast">CONTRAST</string>
+    <string name="composite_sdk_vibrance">VIBRANCE</string>
+    <string name="composite_sdk_saturation">SATURATION</string>
+    <string name="composite_sdk_highlight">HIGHLIGHTS</string>
+    <string name="composite_sdk_shadow">SHADOWS</string>
+    <string name="composite_sdk_sharpness">SHARPEN</string>
+    <string name="composite_sdk_tilt_shift">APERTURE</string>
+    <string name="composite_sdk_vignette_strong">VIGNETTE</string>
+    <string name="composite_sdk_vignette_center_strong">CENTER LIGHT</string>
+
+    <!-- AdvanceBase相关参数名 -->
+    <string name="composite_sdk_advance_base_param_temperature">TEMPERATURE</string>
+    <string name="composite_sdk_advance_base_param_hue">TONE</string>
+    <string name="composite_sdk_advance_base_param_exposure">EXPOSURE</string>
+    <string name="composite_sdk_advance_base_param_contrast">CONTRAST</string>
+    <string name="composite_sdk_advance_base_param_vibrance">VIBRANCE</string>
+    <string name="composite_sdk_advance_base_param_saturation">SATURATION</string>
+    <string name="composite_sdk_advance_base_param_curve">曲线</string>
+    <string name="composite_sdk_advance_base_param_color_balance">色彩平衡</string>
+
+    <string name="composite_sdk_mix">随机</string>
+
+    <string name="composite_sdk_hsl1">HUE</string>
+    <string name="composite_sdk_hsl2">""</string>
+    <string name="composite_sdk_brightness">BRIGHTNESS</string>
+
+    <string name="composite_sdk_hsl_cyan1">CYAN</string>
+    <string name="composite_sdk_hsl_cyan2"></string>
+    <string name="composite_sdk_hsl_magenta">MAGENTA</string>
+    <string name="composite_sdk_hsl_yellow1">YELLOW</string>
+    <string name="composite_sdk_hsl_yellow2"></string>
+
+    <string name="composite_sdk_rotateStraighten">ROTATE</string>
+    <string name="composite_sdk_hdr">LEVEL</string>
+    <string name="composite_sdk_skin">SKIN</string>
+
+    <string name="composite_sdk_hsl_color_red">RED</string>
+    <string name="composite_sdk_hsl_color_orange">ORANGE</string>
+    <string name="composite_sdk_hsl_color_yellow">YELLOW</string>
+    <string name="composite_sdk_hsl_color_green">GREEN</string>
+    <string name="composite_sdk_hsl_color_cyan">CYAN</string>
+    <string name="composite_sdk_hsl_color_blue">BLUE</string>
+    <string name="composite_sdk_hsl_color_purple">VIOLET</string>
+    <string name="composite_sdk_hsl_color_magenta">MAGENTA</string>
+
+    <string name="composite_sdk_hsl_highlight_color">HIGHLIGHT</string>
+    <string name="composite_sdk_hsl_shadow_color">SHADOWLIGHT</string>
+    <string name="composite_sdk_hsl_middle_color">MIDTONE</string>
+
+    <string name="composite_sdk_is_save_composite">是否保存滤镜风格?</string>
+    <string name="composite_sdk_effect_name_is_cannot_null">Please name your own formula</string>
+    <string name="composite_sdk_least_select_one_effect">至少选择一个滤镜效果</string>
+
+    <string name="composite_sdk_crop_title">CROP</string>
+
+    <string name="composite_sdk_send_photo">Save photo</string>
+    <string name="composite_sdk_save_composite_effect">Save formula</string>
+
+    <string name="composite_sdk_save_composite_style">FORMULA</string>
+    <string name="composite_sdk_save_before_photo">BEFORE</string>
+    <string name="composite_sdk_save_after_photo">AFTER</string>
+    <string name="composite_sdk_composite_effect_name">NAME OF FORMULA</string>
+    <string name="composite_sdk_composite_add_des">添加描述</string>
+
+    <string name="composite_sdk_tilt_shift_close">CLOSE</string>
+    <string name="composite_sdk_tilt_shift_circle">CIRCLE</string>
+    <string name="composite_sdk_tilt_shift_direct">LINE</string>
+    <string name="composite_sdk_share">SHARE</string>
+
+    <string name="composite_sdk_save_name_conflict">Formula already exists.
+        Do you want to replace it?</string>
+    <string name="composite_sdk_share_to_instagram">Instagram</string>
+    <string name="composite_sdk_jump_to_instagram">"@Mix4Ins"</string>
+
+    <string name="composite_sdk_saved_to_gallery">Saved to gallery</string>
+    <string name="composite_sdk_save">Save</string>
+
+    <string name="tips_forcequit">Oops, there was an unexpected error. Please click \'Submit\' to report the error. Thank you! </string>
+    <string name="menu_report">Submit</string>
+    <string name="composite_sdk_guide_page_1_desc_1">The photo editor that lets you</string>
+    <string name="composite_sdk_guide_page_1_desc_2">save your creative process</string>
+
+    <string name="composite_sdk_guide_page_2_desc">Full Editing Freedom</string>
+    <string name="composite_sdk_guide_page_3_desc">DSLR-Style Blurring Effect</string>
+    <string name="composite_sdk_guide_page_4_desc">Design and Save Your Own Filters</string>
+    <string name="composite_sdk_guide_page_5_desc">High Resolution Output</string>
+
+    <string name="composite_sdk_guide_page_start">Start Mixing</string>
+    <string name="composite_sdk_at_user">"@LITTLEYIYE"</string>
+    <string name="composite_sdk_install_prefix">"Please download "</string>
+    <string name="composite_sdk_discoloration">TINT</string>
+    <string name="composite_sdk_hsl_mode_absolute">ABSOLUTE</string>
+    <string name="composite_sdk_hsl_mode_relative">RELATIVE</string>
+    <string name="composite_sdk_crop_not_supported">Photo in this ratio cannot be cropped</string>
+    <string name="composite_sdk_crop_failed">Crop failed</string>
+    <string name="composite_sdk_hsl_discoloration_red">R</string>
+    <string name="composite_sdk_hsl_discoloration_green">G</string>
+    <string name="composite_sdk_hsl_discoloration_blue">B</string>
+    <string name="composite_sdk_hsl_discoloration_cyan">C</string>
+    <string name="composite_sdk_hsl_discoloration_magenta">M</string>
+    <string name="composite_sdk_hsl_discoloration_yellow">Y</string>
+    <string name="composite_sdk_quit_advance_dialog_title">Return without saving?</string>
+    <string name="composite_sdk_crop_load_failed">Load unsuccessful. Please select a different photo</string>
+    <string name="composite_sdk_rating_confirm">Rate</string>
+    <string name="composite_sdk_rating_cancel">Cancel</string>
+    <string name="composite_sdk_filter_use">Use formula</string>
+    <string name="composite_sdk_filter_param_title">PARAMETERS</string>
+    <string name="composite_sdk_burst_mode_off">Burst mode off</string>
+    <string name="composite_sdk_burst_mode_on">Burst mode on</string>
+    <string name="composite_sdk_share_filter_title">My signature filter "%1$s" designed in MIX.</string>
+    <string name="composite_sdk_share_filter_content">I designed my own filter "%1$s" in MIX. Download MIX to create your own filter now!</string>
+    <string name="composite_sdk_share_process_title">Checkout my amazing photo created in MIX!</string>
+    <string name="composite_sdk_share_process_content">I created an amazing photo in MIX. Checkout the behind the scene magic here!</string>
+    <string name="composite_sdk_version_update">Update</string>
+    <string name="composite_sdk_version_update_later">Later</string>
+    <string name="composite_sdk_version_update_ignore">Ignore</string>
+    <string name="composite_sdk_share_picture_succeed">Sharing successful.</string>
+    <string name="composite_sdk_share_picture_failed">Sharing failed. Please retry.</string>
+    <string name="composite_sdk_new_version">New</string>
+    <string name="composite_sdk_showup">" update"</string>
+    <string name="composite_sdk_sharing_process">Sharing...</string>
+    <string name="composite_sdk_sharing_filter">Sharing...</string>
+    <string name="composite_save_photo_failed">Save photo failed</string>
+    <string name="composite_sdk_save_filter_failed">Save formula failed</string>
+    <string name="composite_sdk_capture_mode_long">4:3</string>
+    <string name="composite_sdk_capture_mode_square">1:1</string>
+    <string name="composite_sdk_share_wechat_friend_content">分享到朋友圈，和朋友们一起MIX吧!</string>
+    <string name="empty_string" translatable="false" />
+</resources>

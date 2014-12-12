@@ -1,0 +1,71 @@
+package com.pinguo.mix.api.share;
+
+import android.os.Bundle;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.EncryptUtils;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class GetFacebookUserInfo extends BaseRequest<String> {
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        UserInfoBean userInfoBean = (UserInfoBean) bean;
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_NICK, userInfoBean.getNickname());
+        return bundle;
+    }
+
+    @Override
+    protected String getResultData(BaseBean bean) {
+        UserInfoBean userInfoBean = (UserInfoBean) bean;
+        return userInfoBean.getHeadimgurl();
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            String url = jsonObject.getJSONObject("picture")
+                    .getJSONObject("data").getString("url");
+            String name = jsonObject.getString("name");
+
+            UserInfoBean userInfoBean = new UserInfoBean();
+            userInfoBean.setHeadimgurl(url);
+            userInfoBean.setNickname(name);
+
+            return userInfoBean;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    protected Map<String, String> buildParam(Bundle bundle) {
+
+        Map<String, String> params = super.buildParam(bundle);
+        params.put("platform", "android");
+        if (params.size() > 0) {
+            String sig = EncryptUtils.getSig(params, ApiConstants.SECRET);
+            params.put("sig", sig);
+            GLogger.i("", "11111 put param:" + "sig" + "/" + sig);
+        }
+
+        return params;
+    }
+}

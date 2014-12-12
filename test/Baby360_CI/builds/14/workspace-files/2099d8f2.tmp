@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:gravity="center"
+              android:background="@drawable/composite_sdk_common_dialog_bg"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:textColor="#FFFFFFFF"
+        android:textSize="20sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center">
+    </TextView>
+
+    <TextView
+        android:id="@+id/dialog_tv"
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center">
+    </TextView>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="25dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+
+        <Button
+            android:id="@+id/positive_btn"
+            android:textColor="#FFFFFFFF"
+            android:layout_gravity="right"
+            android:layout_marginRight="20dp"
+            android:textSize="16sp"
+            android:layout_width="110dp"
+            android:layout_height="43dp"
+            android:background="@drawable/composite_sdk_dialog_cancel_btn">
+        </Button>
+
+        <Button
+            android:id="@+id/negative_btn"
+            android:textColor="#FFFFFFFF"
+            android:layout_marginLeft="20dp"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:layout_width="110dp"
+            android:layout_height="43dp"
+            android:background="@drawable/composite_sdk_dialog_confirm_btn">
+        </Button>
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/img_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"></ImageView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <com.pinguo.mix.MixTitleView
+                android:id="@+id/title_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <ImageView
+                    android:id="@+id/title_1_tv_1"
+                    android:layout_width="@dimen/composite_sdk_mix_main_title_m_width"
+                    android:layout_height="@dimen/composite_sdk_mix_main_title_m_height"
+                    android:layout_marginRight="5dp"
+                    android:layout_weight="1"
+                    android:visibility="invisible"></ImageView>
+
+                <ImageView
+                    android:id="@+id/title_1_tv_2"
+                    android:layout_width="@dimen/composite_sdk_mix_main_title_i_width"
+                    android:layout_height="@dimen/composite_sdk_mix_main_title_i_height"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_weight="1"
+                    android:visibility="invisible"></ImageView>
+
+                <ImageView
+                    android:id="@+id/title_1_tv_3"
+                    android:layout_width="@dimen/composite_sdk_mix_main_title_x_width"
+                    android:layout_height="@dimen/composite_sdk_mix_main_title_x_height"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1"
+                    android:visibility="invisible"></ImageView>
+            </com.pinguo.mix.MixTitleView>
+
+            <ImageView
+                android:id="@+id/title_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/title_1"
+                android:layout_alignRight="@+id/title_1"
+                android:layout_below="@id/title_1"
+                android:layout_marginTop="10dp"
+                android:src="@drawable/composite_sdk_main_title_2"
+                android:visibility="invisible"
+                android:layout_marginBottom="40dp"
+                android:layout_centerHorizontal="true"></ImageView>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/down_area"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/button_layout"
+                android:layout_marginTop="@dimen/composite_sdk_mix_main_btn_margin_top"
+                android:layout_width="match_parent"
+                android:gravity="center_horizontal"
+                android:layout_alignParentTop="true"
+                android:orientation="horizontal"
+                android:layout_height="wrap_content">
+
+                <RelativeLayout
+                    android:id="@+id/edit_btn"
+                    android:onClick="onCaptureBtnClick"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:id="@+id/edit_img"
+                        android:layout_width="@dimen/composite_sdk_mix_main_camera_icon_width"
+                        android:layout_height="@dimen/composite_sdk_mix_main_camera_icon_height"
+                        android:layout_marginLeft="20dp"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/composite_sdk_mix_main_camera"></ImageView>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:layout_alignLeft="@id/edit_img"
+                        android:layout_alignRight="@id/edit_img"
+                        android:layout_below="@id/edit_img"
+                        android:src="@drawable/composite_sdk_mix_main_camera_text_normal"></ImageView>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/capture_btn"
+                    android:onClick="onEditBtnClick"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:id="@+id/capture_img"
+                        android:layout_width="@dimen/composite_sdk_mix_main_camera_icon_width"
+                        android:layout_height="@dimen/composite_sdk_mix_main_camera_icon_height"
+                        android:layout_marginRight="20dp"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/composite_sdk_mix_main_gallery"
+                        android:gravity="center"></ImageView>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:layout_alignLeft="@id/capture_img"
+                        android:layout_alignRight="@id/capture_img"
+                        android:layout_below="@id/capture_img"
+                        android:src="@drawable/composite_sdk_mix_main_gallery_text_normal"></ImageView>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/filter_square_btn"
+                    android:onClick="onFilterSquareBtnClick"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:id="@+id/filter_square"
+                        android:layout_width="@dimen/composite_sdk_mix_main_camera_icon_width"
+                        android:layout_height="@dimen/composite_sdk_mix_main_camera_icon_height"
+                        android:layout_marginRight="20dp"
+                        android:layout_centerInParent="true"
+                        android:src="@drawable/composite_sdk_mix_main_gallery"
+                        android:gravity="center"></ImageView>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:layout_alignLeft="@id/filter_square"
+                        android:layout_alignRight="@id/filter_square"
+                        android:layout_below="@id/filter_square"
+                        android:src="@drawable/composite_sdk_mix_main_gallery_text_normal"></ImageView>
+                </RelativeLayout>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/copy_filter_btn"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_below="@id/button_layout"
+                android:visibility="gone"
+                android:background="#444444"
+                android:textColor="#ffffff"
+                android:gravity="center"
+                android:text="保存滤镜数据"></Button>
+
+            <Button
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:id="@+id/collection_layout"
+                android:background="#00000000"
+                android:onClick="onMixGalleryBtnClick"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="20dp"
+                android:paddingTop="20dp"
+                android:textColor="@drawable/composite_sdk_mix_main_instagram"
+                android:text="@string/composite_sdk_jump_to_instagram"
+                android:gravity="right|bottom"></Button>
+        </RelativeLayout>
+    </LinearLayout>
+
+    <TextView
+        android:textSize="10sp"
+        android:textColor="#7fffffff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
+        android:text="@string/composite_sdk_at_user"></TextView>
+
+    <ImageView
+        android:id="@+id/home_setting"
+        android:background="#ff0000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_margin="20dp"
+        android:onClick="onOptionBtnClick"
+        android:src="@drawable/home_setting_selector" />
+
+    <include
+        layout="@layout/progress_dialog"
+        android:layout_centerInParent="true"
+        android:id="@+id/progress_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/guide_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></FrameLayout>
+
+</RelativeLayout>

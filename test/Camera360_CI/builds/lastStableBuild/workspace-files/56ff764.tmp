@@ -1,0 +1,96 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+
+/**
+ * Created by huowaa on 14-7-1.
+ */
+public class Sharpen extends Effect {
+    private static final String TAG = Sharpen.class.getSimpleName();
+
+    //    public static final String EFFECT_KEY_FAST_SHARPEN = "FastSharpen";
+    // TODO 修改成新的特效key
+    public static final String EFFECT_KEY_FAST_SHARPEN = Effect.SHARPEN_CMD;
+
+    public static final String PARAM_KEY_SHARPENESS = "sharpness"; // 锐化,范围0~1,默认0
+//    public static final String PARAM_KEY_STRONG = "strong"; // 锐化,范围0.3~1.5,默认1.0
+
+    public Sharpen() {
+        this.type = Effect.Type.Sharpen.name();
+        this.key = Sharpen.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.SHARPEN_CMD.toCharArray());
+        this.icon = "composite_sdk_advance_param_sharpen";
+        this.name = "composite_sdk_sharpness";
+
+        param = new Param();
+        ParamFloatItem sharpness = new ParamFloatItem(PARAM_KEY_SHARPENESS, EFFECT_KEY_FAST_SHARPEN, 0f, 1f, 0.01f, 0f, 0f);
+//        ParamFloatItem strong = new ParamFloatItem(PARAM_KEY_STRONG, EFFECT_KEY_FAST_SHARPEN, 0.3f, 1.5f, 0.01f, 1.0f, 1.0f);
+        param.addParamItem(sharpness);
+//        param.addParamItem(strong);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Sharpen sharpen = null;
+
+        try {
+            sharpen = (Sharpen) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != sharpen) {
+            return sharpen;
+        } else {
+            return new Sharpen();
+        }
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", PARAM_KEY_SHARPENESS);
+            jsonObject.put("packName", "");
+            jsonObject.put("name", "");
+            if (null != param) {
+                ParamFloatItem item = (ParamFloatItem) param.getParamItemList().get(0);
+                if (item.value == item.defaultValue) {
+                    return null;
+                }
+
+                jsonObject.put("value", Math.round(item.value / item.step));
+                jsonObject.put("minValue", Math.round(item.min));
+                jsonObject.put("type", 1);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

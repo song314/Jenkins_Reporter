@@ -1,0 +1,65 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+
+import java.util.*;
+
+/**
+ * Created by huowaa on 14-5-26.
+ * 特效字典，用作特效插件磁盘数据的内存缓存
+ */
+public class EffectDict {
+    private static final String TAG = EffectDict.class.getSimpleName();
+
+    private Map<String, EffectType> mEffectTypeMap;
+    private Map<String, Effect> mEffectMap;
+
+    public EffectDict()
+    {
+        mEffectTypeMap = new HashMap<String, EffectType>();
+        mEffectMap = new HashMap<String, Effect>();
+    }
+
+    public Map<String, EffectType> getEffectTypeMap()
+    {
+        return mEffectTypeMap;
+    }
+
+    public Map<String, Effect> getEffectMap()
+    {
+        return  mEffectMap;
+    }
+
+    public List<EffectType> getEffectTypeList(Effect.Type type)
+    {
+        List<EffectType> effectTypeList = new ArrayList<EffectType>();
+
+        // type filter
+        for ( EffectType effectType : mEffectTypeMap.values() ) {
+            if ( effectType.type.equals(type.name()) )
+            {
+                effectTypeList.add(effectType);
+            }
+        }
+
+        // sort
+        Collections.sort(effectTypeList);
+
+        return effectTypeList;
+    }
+
+    public List<Effect> getEffectList(Effect.Type type) {
+        List<Effect> effectList = new ArrayList<Effect>();
+
+        for ( Effect effect : mEffectMap.values() ) {
+            if ( effect.type.equals(type.name()) ) {
+                effectList.add(effect);
+            }
+        }
+
+        Collections.sort(effectList);
+        return effectList;
+    }
+}

@@ -1,0 +1,19 @@
+package com.pinguo.edit.sdk.utils;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class StringUtils {
+
+    public static String uncapitalize(String str) {
+        int strLen;
+        if (str == null || (strLen = str.length()) == 0) {
+            return str;
+        }
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(Character.toLowerCase(str.charAt(0)))
+                .append(str.substring(1));
+        return sb.toString();
+    }
+}

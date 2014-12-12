@@ -1,0 +1,81 @@
+package com.pinguo.edit.sdk.lib;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+/**
+ * Created by liubo on 8/9/13.
+ */
+public class MD5 {
+    private MD5() {
+    }
+
+    /**
+     * md5加密算法，对密码进行两次md5加密
+     *
+     * @param password
+     * @return md5加密后的密码
+     */
+    public static String password_md5(String password) {
+        String strResult = "";
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            md5.update(password.getBytes("UTF-8"));
+            byte[] bzpassword_1 = md5.digest();
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < bzpassword_1.length; ++i) {
+                sb.append(String.format("%02x", bzpassword_1[i]));
+            }
+            md5.update(sb.toString().getBytes("UTF-8"));
+            sb = new StringBuffer();
+            byte[] bzpassword_2 = md5.digest();
+            for (int i = 0; i < bzpassword_2.length; ++i) {
+                sb.append(String.format("%02x", bzpassword_2[i]));
+            }
+            strResult = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return strResult;
+    }
+
+
+    /**
+     * 获取单个文件的MD5值！
+     *
+     * @param file
+     * @return
+     */
+
+    public static String getFileMD5(File file) {
+        if (!file.isFile()) {
+            return null;
+        }
+        MessageDigest digest = null;
+        FileInputStream in = null;
+        byte buffer[] = new byte[1024];
+        int len;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+            in = new FileInputStream(file);
+            while ((len = in.read(buffer, 0, 1024)) != -1) {
+                digest.update(buffer, 0, len);
+            }
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        BigInteger bigInt = new BigInteger(1, digest.digest());
+        return bigInt.toString(16);
+    }
+}

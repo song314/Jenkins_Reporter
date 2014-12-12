@@ -1,0 +1,18 @@
+package com.pinguo.mix.api;
+
+/**
+ * Created by hlf on 14-11-17.
+ * 此类用来保存一些公共使用的参数
+ */
+public class Constants {
+
+    public static String sDeviceId;
+
+    public static String sChannel;
+
+    public static String sAppVersion;
+
+    public static String sMCC;
+
+    public static String sMNC;
+}

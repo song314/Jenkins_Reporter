@@ -1,0 +1,171 @@
+package com.pinguo.edit.sdk.camera.save;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import com.pinguo.edit.sdk.camera.entity.PictureInfo;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+import java.io.File;
+import java.util.ArrayList;
+
+/**
+ * @author Tsmile
+ */
+public class ImageSaver extends Thread {
+    private static final int QUEUE_LIMIT = 3;
+
+    private ArrayList<SaveRequest> mQueue;
+    private boolean mStop;
+
+    public ImageSaver() {
+        mQueue = new ArrayList<SaveRequest>();
+        start();
+    }
+
+    public void addImage(final byte[] pictureData, PictureInfo pictureInfo,
+                         IPictureSaveCallback saveCallback) {
+        SaveRequest r = new SaveRequest();
+        r.pictureData = pictureData;
+        r.pictureInfo = pictureInfo;
+        r.saveCallback = saveCallback;
+        synchronized (this) {
+            while (mQueue.size() >= QUEUE_LIMIT) {
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                    // ignore.
+                }
+            }
+            mQueue.add(r);
+            notifyAll();  // Tell saver thread there is new work to do.
+        }
+    }
+
+    // Runs in saver thread
+    @Override
+    public void run() {
+        while (true) {
+            SaveRequest r;
+            synchronized (this) {
+                if (mQueue.isEmpty()) {
+                    notifyAll();  // notify main thread in waitDone
+
+                    // Note that we can only stop after we saved all images
+                    // in the queue.
+                    if (mStop) break;
+
+                    try {
+                        wait();
+                    } catch (InterruptedException ex) {
+                        // ignore.
+                    }
+                    continue;
+                }
+                r = mQueue.get(0);
+            }
+            storeImage(r.pictureData, r.pictureInfo, r.saveCallback);
+            synchronized (this) {
+                mQueue.remove(0);
+                notifyAll();  // the main thread may wait in addImage
+            }
+        }
+    }
+
+    // Runs in main thread
+    public void waitDone() {
+        synchronized (this) {
+            while (!mQueue.isEmpty()) {
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                    // ignore.
+                }
+            }
+        }
+    }
+
+    // Runs in main thread
+    public void finish() {
+        waitDone();
+        synchronized (this) {
+            mStop = true;
+            notifyAll();
+        }
+        try {
+            join();
+        } catch (InterruptedException ex) {
+            // ignore.
+        }
+    }
+
+    // Runs in saver thread
+    private void storeImage(byte[] pictureData,
+                            PictureInfo pictureInfo,
+                            IPictureSaveCallback saveCallback) {
+        String title = CameraModuleUtil.createJpegName(pictureInfo.getTakenTime());
+        String savePath = pictureInfo.getFileSavePath();
+
+        // save file,no need do now ,crop already do save,rotate
+
+        // save database
+        Uri uri = Storage.addImage(PGCompositeSDKApi.getAppContext().getContentResolver(),
+                title, savePath,
+                pictureInfo.getTakenTime(), null, 0, pictureData);
+        if (saveCallback != null) {
+            saveCallback.onPictureSaved(pictureInfo, true);
+        }
+
+        // create thumbnail
+        if (uri != null) {
+            boolean needThumbnail;
+            synchronized (this) {
+                // If the number of requests in the queue (include the
+                // current one) is greater than 1, we don't need to generate
+                // thumbnail for this image. Because we'll soon replace it
+                // with the thumbnail for some image later in the queue.
+                needThumbnail = (mQueue.size() <= 1);
+            }
+            if (needThumbnail) {
+                // Create a thumbnail
+                if (saveCallback != null) {
+                    // Create the thumbnail.
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeFile(pictureInfo.getFileSavePath(), options);
+                    int wh = Math.min(options.outHeight,options.outWidth);
+                    int inSampleSize = wh / CameraModuleUtil.dpToPixel(80);
+                    inSampleSize++;
+                    options.inSampleSize = inSampleSize;
+                    options.inJustDecodeBounds = false;
+
+                    // save to file
+                    Bitmap bitmap = BitmapFactory.decodeFile(pictureInfo.getFileSavePath(), options);
+                    File lastThumbnailFile = new File(PGCompositeSDKApi.getAppContext().getFilesDir(),
+                            CameraModuleUtil.LAST_THUMB_FILENAME);
+                    CameraModuleUtil.saveTo(lastThumbnailFile, bitmap);
+                    saveCallback.onThumbNailSaved(bitmap);
+                }
+            }
+
+            // broad cast
+            PGCompositeSDKApi.getAppContext().sendBroadcast(new Intent(android.hardware.Camera.ACTION_NEW_PICTURE, uri));
+            PGCompositeSDKApi.getAppContext().sendBroadcast(new Intent("com.android.camera.NEW_PICTURE", uri));
+        }
+    }
+
+    private static class SaveRequest {
+        byte[] pictureData;
+        PictureInfo pictureInfo;
+        IPictureSaveCallback saveCallback;
+    }
+
+    public static interface IPictureSaveCallback {
+
+        public void onThumbNailSaved(Bitmap bitmap);
+
+        public void onPictureSaved(PictureInfo info, boolean saveSucceed);
+    }
+}

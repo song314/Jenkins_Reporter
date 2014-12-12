@@ -1,0 +1,126 @@
+package com.pinguo.edit.sdk.camera.entity;
+
+import android.hardware.Camera;
+import android.util.Log;
+
+/**
+ * Created by liubo on 7/22/13.
+ */
+public class SizeInfo implements Cloneable {
+    private static final String TAG = SizeInfo.class.getSimpleName();
+    protected int width = 0;
+    protected int height = 0;
+
+    public SizeInfo(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void set(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public int getMaxLength() {
+        return width > height ? width : height;
+    }
+
+    public int getMinLength() {
+        return width > height ? height : width;
+    }
+
+    public static SizeInfo parseSize(String str) {
+        if (str == null) {
+            return null;
+        }
+
+        int pos = str.indexOf('x');
+        if (pos != -1) {
+            String width = str.substring(0, pos);
+            String height = str.substring(pos + 1);
+            return new SizeInfo(Integer.parseInt(width), Integer.parseInt(height));
+        }
+        Log.e(TAG, "Invalid size parameter string=" + str);
+        return null;
+    }
+
+    public static SizeInfo parseSize(Camera.Size size) {
+        if (size == null) {
+            return null;
+        }
+        return new SizeInfo(size.width, size.height);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof SizeInfo)) {
+            return false;
+        }
+
+        SizeInfo sizeInfo = (SizeInfo) o;
+        if (height != sizeInfo.height) {
+            return false;
+        }
+        if (width != sizeInfo.width) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = width;
+        result = 31 * result + height;
+        return result;
+    }
+
+    public static boolean isValidSize(SizeInfo size) {
+        if (size == null) {
+            return false;
+        }
+
+        if (size.getHeight() <= 0 || size.getWidth() <= 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return width + "x" + height;
+    }
+
+    public SizeInfo makeCopy() {
+        try {
+            return (SizeInfo) this.clone();
+        } catch (CloneNotSupportedException e) {
+            return new SizeInfo(this.width, this.height);
+        }
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+}

@@ -1,0 +1,173 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import android.content.Context;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+
+import com.pinguo.Camera360Lib.utils.HttpUtils;
+import com.pinguo.edit.sdk.MainApplication;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.lib.Debug;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.login.model.User;
+
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+
+/**
+ * Created by zhongzheng on 14-11-28.
+ */
+public class Constant {
+    private static final String TAG = Constant.class.getSimpleName();
+    // 消息推送
+    // 测试：http://pushmsgtest.camera360.com
+    // 仿真：http://pushmsg.camera360.com
+    // 正式：http://pushmsg.camera360.com
+    public static String HOST_PUSH_MSG = Debug.DEBUG ?
+            "http://pushmsgtest.camera360.com" : "http://pushmsg.camera360.com";
+    public static final String MSG_CENTER_URL = HOST_PUSH_MSG + "/messages/info";
+
+    // 反馈
+    public static String HOST_FEEDBACK = Debug.DEBUG ?
+            "http://125.64.43.29:8500/feedback" : "http://feedback.camera360.com/feedback";
+    // 接口超时值与重试次数
+    public static final int DEFAULT_TIMEOUT_MS = 15000;
+    public static final int DEFAULT_MAX_RETRIES = 0;
+    public static final int DEFAULT_BACKOFF_MULT = 0;
+
+    // 表示用户不存在的字符串
+    public static final String USER_ID_INVALID = "";
+
+    // 接口公共参数
+    public static void prepareCommonParams(Context context, Map<String, String> params) {
+        //新的登录
+        User user = User.create(context);
+        User.Info userInfo = user.getInfo();
+        // 用户登录态
+        if (userInfo != null
+                && !TextUtils.isEmpty(userInfo.userId)
+                && !TextUtils.isEmpty(userInfo.token/*HelperConsole.loadLocalKey(context)*/)) {
+            params.put("uid", HttpUtils.encodeUrlInputParams(userInfo.userId));
+            params.put("userId", HttpUtils.encodeUrlInputParams(userInfo.userId));
+            params.put("userToken", HttpUtils.encodeUrlInputParams(userInfo.token));
+            params.put("token", HttpUtils.encodeUrlInputParams(userInfo.token));
+        }
+
+        params.put("platform", HttpUtils.encodeUrlInputParams("android")); // 平台
+        params.put("channel", HttpUtils.encodeUrlInputParams(MainApplication.getAppContext().getString(R.string.channel))); // 渠道
+        params.put("appname", HttpUtils.encodeUrlInputParams("camera360"));
+
+        String appversion = SystemUtils.getVersionName();
+        if (!TextUtils.isEmpty(appversion))
+            params.put("appversion", HttpUtils.encodeUrlInputParams(appversion));
+
+        String imei = getIMEI(context);
+        if (!TextUtils.isEmpty(imei)) {
+            params.put("deviceId", HttpUtils.encodeUrlInputParams(imei));
+            params.put("imei", HttpUtils.encodeUrlInputParams(imei));
+        }
+        if (!TextUtils.isEmpty(imei))
+            params.put("deviceId", HttpUtils.encodeUrlInputParams(imei));
+        if (!TextUtils.isEmpty(imei))
+            params.put("device", HttpUtils.encodeUrlInputParams(android.os.Build.MODEL));
+
+        String locate = Locale.getDefault().toString(); // 语言
+        if (!TextUtils.isEmpty(locate))
+            params.put("locale", HttpUtils.encodeUrlInputParams(locate));
+
+        // 地理位置
+//        String locStr = CameraBusinessSettingModel.instance().getCachedGeoLocation();
+//        if (locStr != null && !locStr.isEmpty()) {
+//            String[] items = locStr.split(",");
+//            if (items != null && items.length == 2) {
+//                params.put("geoinfo", HttpUtils.encodeUrlInputParams(locStr));
+//                params.put("longitude", items[0]);
+//                params.put("latitude", items[1]);
+//            }
+//        }
+
+        String mcc = SystemUtils.getMCC(context);
+        if (!TextUtils.isEmpty(mcc)) {
+            params.put("mcc", mcc);
+        }
+
+        String mnc = SystemUtils.getMNC(context);
+        if (!TextUtils.isEmpty(mnc)) {
+            params.put("mnc", mnc);
+        }
+    }
+
+    public static String getIMEI(Context context) {
+        TelephonyManager tm = (TelephonyManager) context
+                .getSystemService(Context.TELEPHONY_SERVICE);
+        String imei = tm.getDeviceId();
+        if (imei == null) {
+            return "";
+        }
+        return imei;
+    }
+
+    // 自定义MD5加密部分
+    public static String md5(String original, String key) {
+        StringBuffer sb = new StringBuffer();
+
+        try {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            md5.reset();
+
+            byte[] bzOriginal = md5.digest(original.getBytes("UTF-8"));
+            byte[] bzKey = key.getBytes("UTF-8");
+
+            byte ch, ch1, ch2;
+
+            for (int i = 0; i < bzOriginal.length; ++i) {
+                ch1 = bzOriginal[i];
+                ch2 = bzKey[i % bzKey.length];
+                ch = (byte) (ch1 ^ ch2);
+
+                sb.append(String.format("%02x", ch));
+            }
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+
+            return null;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+
+            return null;
+        }
+
+        return sb.toString();
+    }
+
+    public static String getCloudUserId(Context context) {
+        String userId = "";
+        User user = User.create(context);
+        User.Info info = user.getInfo();
+        if (info != null) {
+            userId = info.userId;
+        }
+        if (userId.equals(USER_ID_INVALID)) {
+            userId = getIMEI(context);
+        }
+
+        return userId;
+    }
+
+    /**
+     * 产生0~99999999的随机数,不足的用0补充
+     *
+     * @return 产生0~99999999的随机数,不足的用0补充
+     * @author liubo
+     */
+    public static String getRandomString() {
+        final int max = 100000000;
+        int random = new Random().nextInt(max);
+        String str = String.format(Locale.ENGLISH, "%8d", random);
+        return str.replace(' ', '0');
+    }
+}

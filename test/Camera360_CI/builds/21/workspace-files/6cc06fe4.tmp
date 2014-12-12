@@ -1,0 +1,116 @@
+package com.pinguo.intent;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+
+import com.pinguo.edit.sdk.edit.PhotoCropActivity;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.mix.StatisticManager;
+import com.umeng.analytics.MobclickAgent;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.sdk.BeautyActivity;
+
+/**
+ * Created by taoli on 14-9-1.
+ */
+public class IntentPhotoCropActivity extends PhotoCropActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        String action = getIntent().getAction();
+        if (null != action) {
+            if (action.equals(Intent.ACTION_EDIT)) {
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_EDIT);
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_OTHER_APP);
+            } else if (action.equals(Intent.ACTION_SEND)) {
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_SEND);
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_OTHER_APP);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        MobclickAgent.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        MobclickAgent.onPause(this);
+    }
+
+    protected String getPhotoPath() {
+
+        String path = getIntent().getStringExtra(ConstantUtil.PHOTO_PATH);
+        ;
+        Uri uri = getIntent().getData();
+        if (null == uri) {
+            Bundle bundle = getIntent().getExtras();
+            uri = bundle.getParcelable(Intent.EXTRA_STREAM);
+        }
+
+        if (null != uri) {
+
+            if (!uri.getScheme().toLowerCase().startsWith("file")) {
+                String[] projection = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                cursor.moveToFirst();
+                path = cursor.getString(columnIndex);
+            } else {
+                path = uri.getEncodedPath();
+            }
+        }
+
+        return path;
+    }
+
+    protected void startEdit(String filePath) {
+        Intent intent = new Intent(this, BeautyActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, filePath);
+        intent.putExtra(ConstantUtil.FROM_OTHER_APP, true);
+        intent.putExtra(ConstantUtil.PHOTO_TAKEN_TIME, System.currentTimeMillis());
+        if (null != getIntent().getExtras()) {
+            intent.putExtras(getIntent().getExtras());
+        }
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    protected void doCrop(final int mode) {
+
+        SharedPreferences sp = getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean initialized = sp.getBoolean(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT.toLowerCase(), false);
+        if (!initialized) {
+            PGCompositeSDKApi.initData(this,
+                    new PGCompositeSDKApi.InitDataCallback() {
+                        @Override
+                        public void onInitStart() {
+
+                        }
+
+                        @Override
+                        public void onInitFinish() {
+                            IntentPhotoCropActivity.super.doCrop(mode);
+                        }
+                    });
+        } else {
+            super.doCrop(mode);
+        }
+    }
+}

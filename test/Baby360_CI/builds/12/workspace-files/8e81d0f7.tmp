@@ -1,0 +1,268 @@
+package com.pinguo.edit.sdk.gallery.ui.layout;
+
+import android.graphics.Rect;
+import com.pinguo.edit.sdk.gallery.data.MediaSet;
+import com.pinguo.edit.sdk.gallery.ui.SlotView;
+import com.pinguo.edit.sdk.gallery.util.GMLogger;
+
+import java.util.ArrayList;
+
+public class ExpandSlotLayout extends BaseSlotLayout {
+
+    private static final String TAG = "ExpandSlotLayout";
+    protected ArrayList<MediaSet.SortTag> mSortTags;
+    protected int mVisibleTagStart;
+    protected int mVisibleTagEnd;
+
+    // 计算每个标签产生的slot位移
+    public void computeSortTagOffsets() {
+        int size = mSortTags.size();
+        MediaSet.SortTag divider0 = mSortTags.get(0);
+        divider0.offset = 0;
+        if (size == 1) {
+            divider0.count = mSlotCount;
+        } else {
+            for (int i = 1; i < size; i++) {
+                MediaSet.SortTag dividerCur = mSortTags.get(i);
+                MediaSet.SortTag dividerPre = mSortTags.get(i - 1);
+                int mode = (dividerCur.index + dividerPre.offset) % mCloumCount;
+                dividerCur.offset = (mCloumCount - mode) % mCloumCount
+                        + dividerPre.offset;
+                dividerPre.count = dividerCur.index - dividerPre.index;
+                if (i == size - 1) {
+                    dividerCur.count = mSlotCount - dividerCur.index;
+                }
+            }
+        }
+    }
+
+    // 初始化每个slot所在的rect
+    private void initLayoutParameters(int majorLength, int minorLength) {
+        mSlotPositions = new ArrayList<SlotPos>();
+        if (mSortTags == null || mSortTags.size() == 0) {
+            return;
+        }
+        final long starttime = System.currentTimeMillis();
+        computeSortTagOffsets();
+        GMLogger.i(TAG,
+                "-------------compute tags spend time"
+                        + (System.currentTimeMillis() - starttime));
+        int yOffset = 0, sortTagOffset = 1;
+        int columLength = mSlotWidth + mSlotGap;
+        int rowLength = mSlotHeight + mSlotGap;
+        int tagLength = mSpec.tagHeight + mSlotGap;
+        // 计算每个slot的位置
+        for (int i = 0; i < mSlotCount; i++) {
+            if (mSortTags.size() != 1) {
+                if (sortTagOffset < mSortTags.size()) {
+                    if (i < mSortTags.get(sortTagOffset).index) {
+                        yOffset = mSortTags.get(sortTagOffset - 1).offset;
+                    } else {
+                        yOffset = mSortTags.get(sortTagOffset).offset;
+                        sortTagOffset += 1;
+                    }
+                }
+            } else {
+                mSortTags.get(0).count = mSlotCount;
+                yOffset = 0;
+            }
+            int col, row, realIndex;
+            realIndex = i + yOffset;
+            if (SlotView.WIDE_SCROLLING) {
+                col = realIndex / mCloumCount;
+                row = realIndex - col * mCloumCount;
+            } else {
+                row = realIndex / mCloumCount;
+                col = realIndex - row * mCloumCount;
+            }
+            int x = col * columLength;
+            int y = row * rowLength + (sortTagOffset * tagLength);
+            Rect rect = new Rect();
+            rect.set(x, y, x + mSlotWidth, y + mSlotHeight);
+            mSlotPositions.add(new SlotPos(false, rect));
+        }
+        for (MediaSet.SortTag tag : mSortTags) {
+            Rect rect = mSlotPositions.get(tag.index).rect;
+            tag.pos = new Rect(rect.left, rect.top - mSpec.tagHeight, rect.left
+                    + mSpec.tagWidth, rect.top); // mSpec.tagHeight要把slotGap空出来
+        }
+        if (mSlotPositions.size() > 0) {
+            mContentLength = mSlotPositions.get(mSlotPositions.size() - 1).rect.bottom;
+        }
+        GMLogger.i(TAG,
+                "-------------compute all poss spend time"
+                        + (System.currentTimeMillis() - starttime));
+    }
+
+    @Override
+    protected void initLayoutParameters() {
+        // Initialize mSlotWidth and mSlotHeight from mSpec
+        int colums = (mWidth > mHeight) ? mSpec.columsLand : mSpec.columsPort;
+        mSlotGap = mSpec.slotGap;
+        mSlotWidth = Math.max(1, (mWidth - (colums - 1) * mSlotGap) / colums);
+        if (mSortTags == null) {
+            mSlotHeight = mSlotWidth + mSpec.tagHeight;
+        } else {
+            mSlotHeight = mSlotWidth;
+        }
+        mCloumCount = colums;
+        if (mSlotRenderer != null) {
+            mSlotRenderer.onSlotSizeChanged(mSlotWidth, mSlotHeight);
+        }
+        if (SlotView.WIDE_SCROLLING) {
+            initLayoutParameters(mWidth, mHeight);
+        } else {
+            initLayoutParameters(mHeight, mWidth);
+        }
+        updateVisibleTagRange();
+        updateVisibleSlotRange();
+    }
+
+    // 计算tag可视范围
+    protected void updateVisibleTagRange() {
+        if (mSortTags == null || mSortTags.size() == 0)
+            return;
+        int position = mScrollPosition;
+        int start = 0, end = 0;
+        boolean findStart = false;
+        for (int i = 0; i < mSortTags.size(); i++) {
+            if (!findStart
+                    && mSortTags.get(i).pos.top >= (position - mSpec.tagHeight)) {
+                start = i;
+                findStart = true;
+            }
+            if (mSortTags.get(i).pos.bottom <= (position + mHeight + mSpec.tagHeight)) {
+                end = i + 1;
+            }
+        }
+        if (!findStart) {
+            start = mSortTags.size();
+        }
+        // GMLogger.i(TAG, "----------------------------updateVisibleTagRange:"
+        // +start + ":" + end + ":mScrollPosition: " + mScrollPosition);
+        setVisibleTagRange(start, end);
+    }
+
+    private void setVisibleTagRange(int start, int end) {
+        if (start == mVisibleTagStart && end == mVisibleTagEnd)
+            return;
+        if (start < end) {
+            mVisibleTagStart = start;
+            mVisibleTagEnd = end;
+        } else {
+            mVisibleTagStart = mVisibleTagEnd = 0;
+        }
+        if (mSlotRenderer != null) {
+            mSlotRenderer.onVisibleTagRangeChanged(mVisibleTagStart,
+                    mVisibleTagEnd);
+        }
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+        mSlotRenderer.initSortTagMetrics(mSpec.tagWidth, mSpec.tagHeight);
+        initLayoutParameters();
+    }
+
+    // 计算slot可视范围
+    @Override
+    protected void updateVisibleSlotRange() {
+        int position = mScrollPosition;
+        int start = 0, end = 0;
+        boolean findStart = false;
+        for (int i = 0; i < mSlotPositions.size(); i++) {
+            if (!findStart
+                    && mSlotPositions.get(i).rect.top >= (position - mSlotHeight)) {
+                start = i;
+                findStart = true;
+            }
+            if (mSlotPositions.get(i).rect.bottom <= (position + mHeight + mSlotHeight)) {
+                end = i + 1;
+            }
+        }
+        if (!findStart) {
+            start = mSlotCount;
+        }
+        // GMLogger.i(TAG, "----------------------------updateVisibleSlotRange:"
+        // +start + ":" + end + ":mScrollPosition: " + mScrollPosition);
+        setVisibleRange(start, end);
+    }
+
+    @Override
+    public void setScrollPosition(int position) {
+        if (mScrollPosition == position)
+            return;
+        mScrollPosition = position;
+        updateVisibleTagRange();
+        updateVisibleSlotRange();
+    }
+
+    public void setSortTags(ArrayList<MediaSet.SortTag> tags) {
+        mSortTags = tags;
+    }
+
+    public ArrayList<MediaSet.SortTag> getSortTags() {
+        return mSortTags;
+    }
+
+    public ArrayList<SlotPos> getSlotPos() {
+        return mSlotPositions;
+    }
+
+    @Override
+    public int getSlotIndexByPosition(float x, float y) {
+        int absoluteX = Math.round(x)
+                + (SlotView.WIDE_SCROLLING ? mScrollPosition : 0);
+        int absoluteY = Math.round(y)
+                + (SlotView.WIDE_SCROLLING ? 0 : mScrollPosition);
+        for (int index = 0; index < mSlotPositions.size(); index++) {
+            if (mSlotPositions.get(index).rect.contains(absoluteX, absoluteY)) {
+                return index;
+            }
+        }
+        return SlotView.INDEX_NONE;
+    }
+
+    public int getTagIndexByPosition(float x, float y) {
+        if (mSortTags == null) {
+            return SlotView.INDEX_NONE;
+        }
+        int absoluteX = Math.round(x)
+                + (SlotView.WIDE_SCROLLING ? mScrollPosition : 0);
+        int absoluteY = Math.round(y)
+                + (SlotView.WIDE_SCROLLING ? 0 : mScrollPosition);
+        for (int index = 0; index < mSortTags.size(); index++) {
+            /*
+             * GMLogger.i(TAG, "absoluteX:" + absoluteX + " absoluteY" + absoluteY +
+			 * " :" + mSortTags.get(index).pos.left + ":" +
+			 * mSortTags.get(index).pos.top + ":" +
+			 * mSortTags.get(index).pos.right + ":" +
+			 * mSortTags.get(index).pos.bottom);
+			 */
+            if (mSortTags.get(index).pos.contains(absoluteX, absoluteY)) {
+                return index;
+            }
+        }
+        return SlotView.INDEX_NONE;
+    }
+
+    // getters
+    public Rect getSlotRect(int index, Rect rect) {
+        if (mSlotPositions.size() > 0)
+            rect = mSlotPositions.get(index).rect;
+        else {
+            rect = new Rect();
+        }
+        return rect;
+    }
+
+    public int getVisibleTagStart() {
+        return mVisibleTagStart;
+    }
+
+    public int getVisibleTagEnd() {
+        return mVisibleTagEnd;
+    }
+}

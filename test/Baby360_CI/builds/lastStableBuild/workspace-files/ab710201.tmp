@@ -1,0 +1,949 @@
+package com.pinguo.edit.sdk.camera;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.RectF;
+import android.hardware.Camera;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.view.GestureDetector;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.entity.PictureInfo;
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.focus.FocusManager;
+import com.pinguo.edit.sdk.camera.focus.IAutoFocusCallBack;
+import com.pinguo.edit.sdk.camera.model.CameraManager;
+import com.pinguo.edit.sdk.camera.model.CameraModel;
+import com.pinguo.edit.sdk.camera.model.ICameraModel;
+import com.pinguo.edit.sdk.camera.model.IPreviewModel;
+import com.pinguo.edit.sdk.camera.model.PreviewModel;
+import com.pinguo.edit.sdk.camera.save.ImageSaver;
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettingModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettings;
+import com.pinguo.edit.sdk.camera.setting.CameraUtils;
+import com.pinguo.edit.sdk.camera.ui.CameraBottomMenuView;
+import com.pinguo.edit.sdk.camera.ui.CameraCaptureModeSelector;
+import com.pinguo.edit.sdk.camera.ui.CameraTopMenuView;
+import com.pinguo.edit.sdk.camera.ui.FocusViewUIManager;
+import com.pinguo.edit.sdk.camera.ui.PreviewTouchLayout;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+import com.pinguo.edit.sdk.camera.util.ThumbnailHolder;
+import com.pinguo.edit.sdk.camera.util.UtilStorage;
+import com.pinguo.edit.sdk.gallery.GalleryActivity;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ImageManager;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+import com.pinguo.mix.StatisticManager;
+
+import java.io.File;
+import java.io.IOException;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.CropRendererMethodForPictureInfo;
+import us.pinguo.sdk.BeautyActivity;
+
+/**
+ * CC相机
+ *
+ * @author Tsmile
+ */
+public class CcCameraFragment extends CameraFragment implements CameraTopMenuView.ICameraTopMenuListener,
+        CameraBottomMenuView.ICameraBottomMenuListener, IAutoFocusCallBack,
+        CameraModel.TakePictureFailCallBack, ICameraModel.TakePictureCallBack
+        , Rotatable
+        , GestureDetector.OnGestureListener {
+
+    private static final String TAG = CcCameraFragment.class.getName();
+    private static final int SET_CAMERA_PARAMETERS_WHEN_IDLE = 0;
+
+    private SDKManager mSdkManager;
+
+    private boolean mPausing;
+    private boolean mDestroyed;
+    private int mOrientation = 0;
+
+    private IPreviewModel mPreviewModel;
+    private ViewHolder mViewHolder;
+    private FocusViewUIManager mFocusViewUIManager;
+
+    private SizeInfo mScaledSize;
+    private final PGAutoFocusCallback mAutoFocusCallback = new PGAutoFocusCallback();
+
+    private int mUpdateSet;
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                // 因为上次mUpdateSet值已经被赋值过，所有这次只需要传入0即可，表示使用上次的赋值
+                case SET_CAMERA_PARAMETERS_WHEN_IDLE:
+                    setCameraParametersWhenIdle(0);
+                    break;
+                default:
+                    break;
+
+            }
+        }
+    };
+
+    private ImageSaver mImageSaver;
+    private ImageSaver.IPictureSaveCallback mImageSaveCallback = new ImageSaver.IPictureSaveCallback() {
+
+        @Override
+        public void onThumbNailSaved(final Bitmap bitmap) {
+            if (bitmap != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (null != bitmap && !mDestroyed) {
+                            mThumbnailHolder.updateBitmap(bitmap);
+                            mViewHolder.mBottomMenuView.setThumbNail(mThumbnailHolder.getThumbnailBitmap(),
+                                    true);
+                        }
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onPictureSaved(PictureInfo info, boolean saveSucceed) {
+
+        }
+    };
+
+    private CropRendererMethodForPictureInfo.RendererActionListener mRendererActionListener = new CropRendererMethodForPictureInfo.RendererActionListener() {
+        @Override
+        public void success(String path, final PictureInfo pictureInfo) {
+            // save to database
+            if (PGCompositeSDKApi.is_save_org || mIsMultiShotEnable) {
+                PictureInfo savePictureInfo = new PictureInfo();
+                savePictureInfo.setTakenTime(System.currentTimeMillis());
+                savePictureInfo.generateAndSetFileSavePath();
+                String savePath = savePictureInfo.getFileSavePath();
+                try {
+                    FileUtils.copySingleFile(path, savePath);
+                    //加入系统相册
+                    Uri uri = ImageManager.addImage(getActivity().getApplicationContext().getContentResolver(), savePath, System.currentTimeMillis(),
+                            ImageManager.IMAGE_JPEG_TYPE, 0, new File(savePath),
+                            null);
+                    if (uri == null) {
+                        Intent scanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
+                        File scanFile = new File(savePath);
+                        Uri pathUri = null;
+                        if (scanFile.exists()) {
+                            pathUri = Uri.fromFile(scanFile);
+                            scanIntent.setData(pathUri);
+                            getActivity().getApplicationContext().sendBroadcast(scanIntent);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (!mIsMultiShotEnable) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mProgressView != null) {
+                            mProgressView.setVisibility(View.GONE);
+                        }
+
+                        startEdit(pictureInfo.getFileSavePath(), pictureInfo.getTakenTime());
+                    }
+                });
+            } else {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mProgressView != null) {
+                            mProgressView.setVisibility(View.GONE);
+                        }
+                        // 拍照完毕，重启预览
+                        if (!(GAdapter.unSupportStopPreview())) {
+                            stopPreview();
+                        }
+                        startPreview();
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void fail() {
+            // 裁剪失败,toast,不存文件
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ToastUtils.makeText(getActivity(), R.string.composite_sdk_crop_failed, Toast.LENGTH_SHORT).show();
+                    if (mProgressView != null) {
+                        mProgressView.setVisibility(View.GONE);
+                    }
+                    // 拍照完毕，重启预览
+                    if (!(GAdapter.unSupportStopPreview())) {
+                        stopPreview();
+                    }
+                    startPreview();
+                }
+            });
+        }
+    };
+    private boolean mIsMultiShotEnable = false;
+    private SizeInfo mPreviewSize;
+    private SizeInfo mScreenSize;
+    private int mTopMenuHeight;
+    private int mBottomMenuHeight;
+
+    protected void startEdit(String path, long takenTime) {
+        StatisticManager.onEvent(getActivity(),
+                StatisticManager.KEY_PAGE_FAST_EDIT_NUMBER_CAPTURE);
+
+        Intent intent = new Intent(getActivity(), BeautyActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, path);
+        intent.putExtra(ConstantUtil.ENTER_PHOTO_TYPE, ConstantUtil.ENTER_PHOTO_TYPE_CAMREA);
+        intent.putExtra(ConstantUtil.PHOTO_TAKEN_TIME, takenTime);
+        getActivity().startActivity(intent);
+    }
+
+    private ThumbnailHolder mThumbnailHolder;
+    private View mProgressView;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        CMLogger.i(TAG, "onCreate");
+        super.onCreate(savedInstanceState);
+        mPreviewModel = new PreviewModel();
+        getCameraModel().setPreviewModel(mPreviewModel);
+        mThumbnailHolder = new ThumbnailHolder();
+        mSdkManager = new SDKManager(getActivity().getApplicationContext());
+        SharedPreferences pref = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        mIsMultiShotEnable = pref.getBoolean("is_multi_shot_enable", false);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mPreviewModel.init(mViewHolder.mPreviewView, null, this);
+    }
+
+    @Override
+    public void onResume() {
+        CMLogger.i(TAG, "onResume");
+        mImageSaver = new ImageSaver();
+
+        mPausing = false;
+        mDestroyed = false;
+        super.onResume();
+        mFocusManager.closeSensorFocus(false);
+
+        mThumbnailHolder.resume(getActivity());
+        mViewHolder.mBottomMenuView.setThumbNail(mThumbnailHolder.getThumbnailBitmap());
+        mSdkManager.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        CMLogger.i(TAG, "onPause");
+        mPausing = true;
+        getCameraModel().setCameraState(CameraManager.CameraState.IDLE);
+        super.onPause();
+        // 提交所有配置项改动
+        CameraBusinessSettingModel.instance().commitAllChange();
+
+        if (mImageSaver != null) {
+            mImageSaver.finish();
+            mImageSaver = null;
+        }
+
+        // 存储thumbnail
+        mThumbnailHolder.pause(getActivity());
+        mSdkManager.onPause();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+
+        final View v = View.inflate(getActivity(),
+                ResourceHelper.getLayout(getActivity().getApplicationContext(), "composite_sdk_camera_layout"), null);
+        mViewHolder = new ViewHolder(v);
+        mViewHolder.mTopMenuView.setListener(this);
+        mViewHolder.mBottomMenuView.setListener(this);
+
+        mProgressView = v.findViewById(
+                ResourceHelper.getId(getActivity().getApplicationContext(), "progress_layout"));
+
+        // 初始化聚焦UI管理类
+        mFocusViewUIManager = new FocusViewUIManager();
+        mFocusViewUIManager.initFocusView(v);
+        return v;
+    }
+
+    @Override
+    public void onDestroy() {
+        CMLogger.i(TAG, "onDestroy");
+        super.onDestroy();
+        getCameraModel().setPreviewModel(null);
+        if (mProgressView != null) {
+            mProgressView.setVisibility(View.GONE);
+        }
+        if (mThumbnailHolder != null) {
+            mThumbnailHolder.pause(getActivity());
+        }
+        mDestroyed = true;
+    }
+
+    @Override
+    public void onCameraOpen(int cameraId, CameraManager.CameraProxy cameraDevice) {
+        super.onCameraOpen(cameraId, cameraDevice);
+        mFocusManager.closeSensorFocus(false);
+
+        CameraSettingModel.instance().updateParameters(CameraSettings.UPDATE_PARAM_ALL);
+        mViewHolder.updateTopMenu();
+
+        CMLogger.i(TAG, "start setSurfaceVisibility");
+        mPreviewModel.init(mViewHolder.mPreviewView, null, this);
+        mPreviewModel.setSurfaceVisibility(mViewHolder.mPreviewView, null);
+
+        mFocusManager.setFocusCallBack(this);
+    }
+
+    @Override
+    public void preStartPreview() {
+        super.preStartPreview();
+        if (null != mPreviewModel) {
+            mPreviewModel.preStartPreview();
+        }
+    }
+
+    @Override
+    public void onStopPreview() {
+        super.onStopPreview();
+        // 不在处理传感器聚焦消息
+        mFocusManager.setPreviewPause(true);
+    }
+
+    @Override
+    public void onStartPreview() {
+        super.onStartPreview();
+        // 开启预览成功，可以处理传感器聚焦消息
+        mFocusManager.setPreviewPause(false);
+
+        mPreviewSize = new SizeInfo(CameraSettingModel.instance()
+                .getPreviewSize()
+                .getHeight(), CameraSettingModel.instance().getPreviewSize().getWidth());
+        mScreenSize = new SizeInfo(CameraModuleUtil.getDisplaySize().getWidth(),
+                CameraModuleUtil.getDisplaySize().getHeight());
+        mScaledSize = CameraModuleUtil.scaleSizeToBound(mPreviewSize, mScreenSize);
+
+        mTopMenuHeight = getResources().getDimensionPixelSize(
+                ResourceHelper.getDimen(getActivity(), "composite_sdk_camera_top_menu_height"));
+
+        mBottomMenuHeight = getResources().getDimensionPixelSize(
+                ResourceHelper.getDimen(getActivity(), "composite_sdk_camera_bottom_height"));
+        ViewGroup.LayoutParams bottomLp = mViewHolder.mBottomMenuView.getLayoutParams();
+        bottomLp.height = mBottomMenuHeight;
+        mViewHolder.mBottomMenuView.setLayoutParams(bottomLp);
+
+        float screenHeightWithOutTopAndBottom = mScreenSize.getHeight() - mTopMenuHeight - mBottomMenuHeight;
+        int topMargin;
+        if (mScaledSize.getHeight() > screenHeightWithOutTopAndBottom) {
+            ViewGroup.MarginLayoutParams previewLp = (ViewGroup.MarginLayoutParams) mViewHolder.mPreviewView.getLayoutParams();
+            if (mScaledSize.getHeight() - screenHeightWithOutTopAndBottom < mTopMenuHeight) {
+                topMargin = (int) (mTopMenuHeight - (mScaledSize.getHeight() - screenHeightWithOutTopAndBottom) / 2);
+            } else {
+                topMargin = (mScreenSize.getHeight() - mScaledSize.getHeight()) / 2;
+
+            }
+
+            previewLp.topMargin = topMargin;
+            mViewHolder.mPreviewView.setLayoutParams(previewLp);
+        } else {
+            ViewGroup.MarginLayoutParams previewLp = (ViewGroup.MarginLayoutParams) mViewHolder.mPreviewView.getLayoutParams();
+            topMargin = mTopMenuHeight;
+            previewLp.topMargin = (int) ((screenHeightWithOutTopAndBottom - mScaledSize.getHeight()) / 2 + topMargin);
+            mViewHolder.mPreviewView.setLayoutParams(previewLp);
+        }
+
+        SharedPreferences pref = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        int captureMode = pref.getInt(ConstantUtil.PREF_CAPTURE_MODE,
+                CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+
+        if (captureMode == CameraCaptureModeSelector.CAPTURE_MODE_LONG) {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 0.75f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+        } else {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 1.0f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_SQUARE);
+        }
+
+        // 设置foucusContainer
+        float foucusContainerHeight = mScaledSize.getHeight() + 2 * topMargin;
+        ViewGroup.MarginLayoutParams focusContainerLp = (ViewGroup.MarginLayoutParams) mViewHolder.mFocusContainer.getLayoutParams();
+        focusContainerLp.height = (int) foucusContainerHeight;
+        mViewHolder.mFocusContainer.setLayoutParams(focusContainerLp);
+
+        CMLogger.i(TAG, "initSensorFocus mFocusManager= " + mFocusManager);
+        if (mFocusManager != null) {
+            mFocusManager.initializeFocusParameters(mScaledSize.getWidth(), mScaledSize.getHeight());
+            mFocusManager.startFirstFocusAfterStartPreview();
+            mFocusManager.resetSensorValue();
+        }
+
+        // 美图手机开启手电筒后拍照会被系统关闭手电筒 适配
+        // 魅族M032设置白平衡参数什么的,需要在开启预览之后设置才会生效.
+        // 比如用户在取景设置已经通过高级调整设置了白平衡，然后进入相册后
+        // 再回到取景界面，如果不加这句话，即使在开启相机后重启设置了参数，
+        // 也是没有作用的 bug 13080 . add by wql
+        // 以后发现还有类似的手机有这个问题，请抽取所有机型到GAdpter里面去统一适配。
+        if (((GAdapter.IS_HTC_G11_ALL || GAdapter.IS_MEITU_KISS) && CameraSettingModel.instance().isOpenFlashLight())
+                || GAdapter.IS_MEIZU_M032) {
+            CameraSettingModel.instance().updateParameters(CameraSettings.UPDATE_PARAM_PREFERENCE);
+        }
+
+        // usb大容量存储开关打开，给出用户提示
+        UtilStorage storage = UtilStorage.getInstance();
+        String path = CameraBusinessSettingModel.instance().getPictureSavePath();
+        if (0 == storage.getAvailableStorage(path)) {
+            ToastUtils.makeText(getActivity(),
+                    ResourceHelper.getString(getActivity().getApplicationContext(),
+                            "composite_sdk_no_storage_to_take_picture"),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 开启预览成功
+     */
+    @Override
+    public void onReleaseCamera() {
+        super.onReleaseCamera();
+        mViewHolder.mPreviewView.setVisibility(View.INVISIBLE);
+        mScaledSize = null;
+
+        if (mPreviewModel != null) {
+            mPreviewModel.destroy();
+        }
+    }
+
+    @Override
+    public void onSwitchCamera(boolean isFront) {
+        if (isFront) {
+            // 当从后置摄像头切换到前置摄像头的时候,如果此时正在聚焦状态,并显示聚焦UI,
+            // 需要清理掉UI.不然会导致切换到前置摄像头还能看见一会聚焦的UI显示。因为切换
+            // 摄像头后没有了聚焦成功与否的回调 add by wql
+            if (mFocusManager != null) {
+                mFocusManager.resetTouchFocus();
+            }
+        }
+    }
+
+    @Override
+    protected CameraModel initCameraModel() {
+        return new CameraModel();
+    }
+
+    @Override
+    protected boolean needEnablePreviewCallback() {
+        return false;
+    }
+
+    @Override
+    public void onShutterBtnClick() {
+        if (mPausing) {
+            return;
+        }
+        UtilStorage storage = UtilStorage.getInstance();
+        String path = CameraBusinessSettingModel.instance().getPictureSavePath();
+        if (0 == storage.getAvailableStorage(path)) {
+            ToastUtils.makeText(getActivity(),
+                    ResourceHelper.getString(getActivity().getApplicationContext(),
+                            "composite_sdk_no_storage_to_take_picture"),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 响应震动
+//        CameraModuleUtil.vibrate();
+        CameraManager.CameraState state = getCameraModel().getCameraState();
+        CMLogger.i(TAG, "onShutterBtnClick state = " + state + " mFocusManager.getState() = " + mFocusManager.getState());
+        // 当前正在拍照或者是聚焦预约拍照状态,取消操作
+        if (state != CameraManager.CameraState.IDLE || FocusManager.STATE_FOCUSING_SNAP_ON_FINISH
+                .equals(mFocusManager.getState())) {
+            return;
+        }
+
+        mFocusManager.setPreviewPause(true);
+        // 立即更新此状态为snap-in-process.如果在真实的Model层拍照方法中设置,会导致在拍照的时候还能进入此方法.
+        // 因为聚焦状态的处理逻辑是在另外线程中处理的。
+        getCameraModel().setCameraState(CameraManager.CameraState.SNAP_IN_PROGRESS);
+        //普通拍照
+        if (getCameraModel().isFrontCamera()
+                || !FocusManager.isSupported(Camera.Parameters.FOCUS_MODE_AUTO,
+                CameraSettingModel.instance().getSupportedFocusModes())) {
+            // 前置攝像頭不進入狀態機器
+            CMLogger.i(TAG, "direct do capture");
+            capture();
+            return;
+        }
+        CMLogger.i(TAG, "focus do capture");
+        // 开始拍照过程中,不再进行传感器聚焦
+        mFocusManager.doCapture();
+    }
+
+    @Override
+    public void onCloseBtnClick() {
+        getActivity().finish();
+    }
+
+    @Override
+    public void onShutterBtnLongClick() {
+        // 前置攝像頭不進入狀態機器
+        if (getCameraModel().isFrontCamera()) {
+            return;
+        }
+
+        if (getCameraModel().getCameraState() != CameraManager.CameraState.IDLE
+                || FocusManager.STATE_FOCUSING_SNAP_ON_FINISH
+                .equals(mFocusManager.getState())) {
+            return;
+        }
+        mFocusManager.onShutterDown();
+    }
+
+    @Override
+    public void onShutterBtnMoving() {
+        // 前置攝像頭不進入狀態機器
+        if (getCameraModel().isFrontCamera()) {
+            return;
+        }
+
+        if (null != mFocusManager) {
+            mFocusManager.onShutterUp();
+        }
+    }
+
+    @Override
+    public void onGalleryEnterClick() {
+        GalleryActivity.launch(getActivity());
+    }
+
+    @Override
+    public void onMultiShotClick() {
+        mIsMultiShotEnable = !mIsMultiShotEnable;
+        mViewHolder.mBottomMenuView.toggleMultiShot(mIsMultiShotEnable);
+        String tips = getResources().getString(R.string.composite_sdk_burst_mode_on);
+        if (!mIsMultiShotEnable) {
+            StatisticManager.onEvent(getActivity(),
+                    StatisticManager.KEY_ACTION_TAKE_PHOTO_CONTINUITY, "关闭");
+            tips = getResources().getString(R.string.composite_sdk_burst_mode_off);
+        } else {
+            StatisticManager.onEvent(getActivity(),
+                    StatisticManager.KEY_ACTION_TAKE_PHOTO_CONTINUITY, "开启");
+        }
+        SharedPreferences pref = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        pref.edit().putBoolean("is_multi_shot_enable", mIsMultiShotEnable).commit();
+        ToastUtils.makeText(getActivity(), tips, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onBottomFling(MotionEvent e1, MotionEvent e2) {
+        SharedPreferences pref = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        if (e1.getX() < e2.getX()) {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 0.75f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+            editor.putInt(ConstantUtil.PREF_CAPTURE_MODE, CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+        } else {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 1.0f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_SQUARE);
+            editor.putInt(ConstantUtil.PREF_CAPTURE_MODE, CameraCaptureModeSelector.CAPTURE_MODE_SQUARE);
+        }
+        editor.apply();
+    }
+
+    @Override
+    public boolean couldSwitchCamera() {
+        return CameraUtils.getCameraNumber() >= 2;
+    }
+
+    @Override
+    public void onSwitchCameraClick() {
+        CMLogger.i(TAG, "onSwitchCameraClick");
+        if (mPausing) {
+            return;
+        }
+        getCameraModel().switchCamera(getActivity());
+    }
+
+    @Override
+    public void onFlashModeClick() {
+        setCameraParametersWhenIdle(CameraSettings.UPDATE_PARAM_PREFERENCE);
+    }
+
+    /**
+     * 开始拍照
+     *
+     * @return
+     */
+    @Override
+    public boolean capture() {
+        // 开始拍照过程中,不再进行传感器聚焦
+        mFocusManager.setPreviewPause(true);
+        // 比如是触屏拍照,需要先聚焦在拍照
+        if (mPausing) {
+            return false;
+        }
+
+        //普通拍照
+        if (!GAdapter.IS_MTK) {
+            //不开启拍后预览的情况下开启拍照动画
+            if (mViewHolder != null) {
+                mViewHolder.doTakeAnimation();
+            }
+        }
+
+//        SoundManager soundManager = SoundManager.getSoundManager(PGCompositeSDKApi.getAppContext());
+//        soundManager.setRingerMode(SoundManager.RINGER_MODE_SILENT);
+
+        getCameraModel().setTakePictureFailCallBack(this);
+        getCameraModel().takePicture(null, null, null, this, getOrientation());
+        return true;
+    }
+
+    @Override
+    public void autoFocus() {
+        if (mPausing) {
+            return;
+        }
+        getCameraModel().autoFocus(mAutoFocusCallback);
+    }
+
+    @Override
+    public void cancelAutoFocus() {
+        if (mPausing) {
+            return;
+        }
+
+        CameraManager.CameraState state = getCameraModel().getCameraState();
+        if (state == CameraManager.CameraState.PREVIEW_STOPPED || state == CameraManager.CameraState.CAMERA_STOPPED) {
+            return;
+        }
+        getCameraModel().cancelAutoFocus();
+    }
+
+    @Override
+    public void setFocusParameters() {
+
+    }
+
+    @Override
+    public void showStart() {
+        if (mPausing) {
+            return;
+        }
+        mFocusViewUIManager.showFocusStart(this.getActivity());
+    }
+
+    @Override
+    public void showSuccess(boolean timeout) {
+        if (mPausing) {
+            return;
+        }
+        mFocusViewUIManager.showFocusSuccess(timeout);
+    }
+
+    @Override
+    public void showFail(boolean timeout) {
+        if (mPausing) {
+            return;
+        }
+        mFocusViewUIManager.showFocusFail(timeout);
+    }
+
+    @Override
+    public void clear() {
+        mFocusViewUIManager.clearFocus();
+    }
+
+    @Override
+    public void onSetFocusArea(int x, int y, int previewW, int previewH) {
+        // change x,y relate preview to relate screen
+        Point pointDiff = mViewHolder.mPreviewTouchView.getTouchViewLeftPoint();
+        mFocusViewUIManager.setFocusArea(this.getActivity(),
+                x - pointDiff.x,
+                y - pointDiff.y, previewW, previewH);
+    }
+
+    @Override
+    public void onSetFocusSize(int x, int y) {
+        mFocusViewUIManager.setFocusSize(x, y);
+    }
+
+    @Override
+    public void onResetFocusArea() {
+        CMLogger.i(TAG, "reset the focus area");
+        mFocusViewUIManager.resetFocus();
+    }
+
+    @Override
+    public Point getFocusSize() {
+        return mFocusViewUIManager.getFocusSize();
+    }
+
+    @Override
+    public void onPictureTakenFail() {
+        CMLogger.d(TAG, "onPictureTakenFail,拍照失败，重启相机");
+        getCameraModel().releaseCamera();
+        try {
+            getCameraModel().openCamera(getCameraModel().getCurCameraId());
+        } catch (Exception e) {
+            //启动相机失败退出
+            onCameraOpenFail(e);
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    @Override
+    public void onPictureTaken(final byte[] data, byte[] exifData, Camera camera, final int orientationRotate) {
+        if (mPausing) {
+            return;
+        }
+
+        if (mProgressView != null) {
+            mProgressView.setVisibility(View.VISIBLE);
+        }
+
+        doCrop(exifData, data, orientationRotate);
+    }
+
+    protected void doCrop(byte[] exifData, byte[] data, int orientationRotate) {
+        // make pictureinfo
+        PictureInfo pictureInfo = new PictureInfo();
+        pictureInfo.setExifData(exifData);
+        // 产出的照片比例
+        pictureInfo.setPicScale(1f);
+
+        PackageManager packageManager = getActivity().getApplicationContext().getPackageManager();
+        String packageName = getActivity().getApplicationContext().getPackageName();
+        try {
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(
+                    packageName, PackageManager.GET_META_DATA);
+            Bundle metaData = applicationInfo.metaData;
+            Object photoSizeObject = metaData.get("composite_sdk_photo_size");
+            int photoSize = Integer.parseInt(photoSizeObject.toString());
+            pictureInfo.setCropSize(photoSize);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        // 获得提前为照片设置的分辨率
+        pictureInfo.setPicSize(CameraSettingModel.instance().getPictureSize());
+        pictureInfo.setTakenTime(System.currentTimeMillis());
+
+        // 计算裁剪的rect
+        RectF cutScaleRect = mViewHolder.mPreviewTouchView.getFinalPicScaleFrameRect();
+        pictureInfo.setCutRect(cutScaleRect);
+        pictureInfo.setFileSavePath(getActivity().getFilesDir().getAbsolutePath()
+                + File.separator + ConstantUtil.COMPOSITE_PHOTO_NAME);
+        pictureInfo.setRotateOrientation(orientationRotate);
+        GLogger.d("cx", "cutRect:" + cutScaleRect);
+
+        byte[] mirrorData = data;
+        if (getCameraModel().isFrontCamera()) {
+            mirrorData = getCameraModel().setCameraMirror(
+                    getActivity(), data, orientationRotate);
+            pictureInfo.setFront(true);
+        }
+
+        // 裁图等待
+        CropRendererMethodForPictureInfo cropRendererMethod
+                = new CropRendererMethodForPictureInfo(getActivity().getApplicationContext());
+        cropRendererMethod.setInputPictureInfo(pictureInfo, mirrorData,
+                mRendererActionListener);
+        mSdkManager.makePhoto(cropRendererMethod);
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+        mOrientation = orientation;
+    }
+
+    public int getOrientation() {
+        return mOrientation;
+    }
+
+
+    /**
+     * 更新相机参数
+     * 注意：更新相机参数需要在当前相机状态为idle的时候才能去更新
+     * (原因是大部分相机不能同时更新两个相机参数，比如聚焦的同时去设置闪光灯等)
+     * 如果状态非idle，那么需要发送消息延迟1s后在更新，以此循环，直到调用了更新参数的方法。
+     */
+    public void setCameraParametersWhenIdle(int additionalUpdateSet) {
+        mUpdateSet |= additionalUpdateSet;
+        if (getCameraModel().getCameraState() == CameraManager.CameraState.IDLE && !("STATE_FOCUSING".equals(mFocusManager
+                .getState()))) {
+            CameraSettingModel.instance().updateParameters(mUpdateSet);
+            mUpdateSet = 0;
+        } else {
+            if (!mHandler.hasMessages(SET_CAMERA_PARAMETERS_WHEN_IDLE)) {
+                mHandler.sendEmptyMessageDelayed(SET_CAMERA_PARAMETERS_WHEN_IDLE, 1000);
+            }
+        }
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        if (mPausing) {
+            return true;
+        }
+        if (getCameraModel().isFrontCamera() || !FocusManager.isSupported(Camera.Parameters.FOCUS_MODE_AUTO,
+                CameraSettingModel.instance().getSupportedFocusModes())) {
+            return true;
+        }
+
+        // change x,y relate screen to relate preview
+        return mFocusManager.onTouch(mViewHolder.mPreviewTouchView.getTouchViewLeftPoint(), e, true);
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+        SharedPreferences pref = getActivity().getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        if (e1.getX() < e2.getX()) {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 0.75f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+            editor.putInt(ConstantUtil.PREF_CAPTURE_MODE, CameraCaptureModeSelector.CAPTURE_MODE_LONG);
+        } else {
+            mViewHolder.mPreviewTouchView.setAllSize(mScreenSize, mScaledSize, mTopMenuHeight, mBottomMenuHeight, 1.0f);
+            mViewHolder.mBottomMenuView.selectPictureMode(CameraCaptureModeSelector.CAPTURE_MODE_SQUARE);
+            editor.putInt(ConstantUtil.PREF_CAPTURE_MODE, CameraCaptureModeSelector.CAPTURE_MODE_SQUARE);
+        }
+        editor.apply();
+        return false;
+    }
+
+    /**
+     * 聚焦回调
+     */
+    private final class PGAutoFocusCallback implements android.hardware.Camera.AutoFocusCallback {
+
+        public void onAutoFocus(boolean focused, android.hardware.Camera camera) {
+            CameraManager.CameraState state = getCameraModel().getCameraState();
+            CMLogger.i(TAG, "state in PGAutoFocusCallback =" + state);
+            if (state == CameraManager.CameraState.PREVIEW_STOPPED || state == CameraManager.CameraState.CAMERA_STOPPED) {
+                return;
+            }
+
+            // 声音开关状态
+//            SoundManager.getSoundManager(getActivity()).playFocusSound();
+            mFocusManager.onAutoFocus(focused);
+        }
+    }
+
+    private class ViewHolder {
+        View root;
+        SurfaceView mPreviewView;
+        CameraTopMenuView mTopMenuView;//顶部Menu
+        CameraBottomMenuView mBottomMenuView;//底部Menu
+        View mTakePictureMask;
+
+        PreviewTouchLayout mPreviewTouchView;    //预览蒙层
+        RelativeLayout mFocusContainer;
+
+        public ViewHolder(View v) {
+            root = v;
+            mPreviewView = (SurfaceView) v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "sur_camera"));
+            mTopMenuView = (CameraTopMenuView) v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "camera_top_menu"));
+            mBottomMenuView = (CameraBottomMenuView) v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "camera_bottom_menu"));
+            mTakePictureMask = v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "take_picture_mask"));
+            mPreviewTouchView = (PreviewTouchLayout) v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "preview_touch_layout"));
+            mPreviewTouchView.setGestureListener(CcCameraFragment.this);
+            mFocusContainer = (RelativeLayout) v.findViewById(
+                    ResourceHelper.getId(getActivity().getApplicationContext(), "focus_container"));
+        }
+
+        public void updateTopMenu() {
+            mTopMenuView.updateView();
+        }
+
+
+        /**
+         * 播放拍照动画
+         */
+        void doTakeAnimation() {
+            mTakePictureMask.setVisibility(View.VISIBLE);
+            CameraModuleUtil.fadeOut(mTakePictureMask, 0, 1, 200, new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mTakePictureMask.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+        }
+    }
+}

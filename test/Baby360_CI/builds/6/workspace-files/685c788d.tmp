@@ -1,0 +1,167 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Point;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * 气泡形PopupView自定义ViewGroup，由气泡的尖角和长方体内容区组成
+ * Created by pinguo on 13-9-4.
+ */
+public class CameraMenuBarPopupView extends ViewGroup {
+
+    private static final String TAG = "CameraMenuBarPopupView";
+    //气泡尖角
+    private ImageView mAncorView = null;
+    //长方体可旋转内容区
+    private View mContentView = null;
+    //尖角顶点坐标，需要从外部设置
+    private Point mAncorTopPoint = null;
+    //内容区左顶点坐标
+    private Point mContentTopPoint = null;
+
+    private boolean mAlignCenter = false;
+
+    public void setAlign(boolean alignCenter) {
+        mAlignCenter = alignCenter;
+    }
+
+    /**
+     * 重绘 将尖角及内容块画到合适的位置
+     * pinguo
+     * 2013-9-6
+     */
+    public void redraw() {
+        requestLayout();
+    }
+
+    /**
+     * 设置尖角顶点坐标
+     * pinguo
+     * 2013-9-6
+     *
+     * @param point 顶点坐标点
+     */
+    public void setAncorTopPoint(Point point) {
+        this.mAncorTopPoint = point;
+    }
+
+    /**
+     * 设置内容区顶点坐标
+     * pinguo
+     * 2013-9-6
+     *
+     * @param point
+     */
+    public void setContentTopPoint(Point point) {
+        this.mContentTopPoint = point;
+    }
+
+    public CameraMenuBarPopupView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        initCustomedChilds(context);
+    }
+
+    public CameraMenuBarPopupView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initCustomedChilds(context);
+    }
+
+    public CameraMenuBarPopupView(Context context) {
+        super(context);
+        initCustomedChilds(context);
+    }
+
+    /**
+     * 初始化自定义子View，即尖角ImgView
+     * pinguo
+     * 2013-9-6
+     *
+     * @param context
+     */
+    private void initCustomedChilds(Context context) {
+        ViewGroup.LayoutParams vlParams;
+        if (null == mAncorView) {
+            mAncorView = new ImageView(context);
+            vlParams = new ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            mAncorView.setImageResource(ResourceHelper.getIdByName(
+                    context, "drawable", "composite_sdk_camera_menubar_popup_ancor"));
+            addView(mAncorView, vlParams);
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        final int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+
+        // 检测控件大小是否符合要求
+        if (widthMode == MeasureSpec.UNSPECIFIED || heightMode == MeasureSpec.UNSPECIFIED) {
+            throw new IllegalArgumentException("不合法的MeasureSpec mode");
+        }
+
+        // 计算子控件大小
+        final int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            final View child = getChildAt(i);
+
+            //获取内容区子View，缓存下来重新设置其位置
+            if (i == 1) {
+                mContentView = child;
+            }
+
+            final LayoutParams lp =  child.getLayoutParams();
+
+            //确定大小的
+            final int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY);
+            final int childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY);
+
+            child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+        }
+
+        // 设置计算的控件大小
+        setMeasuredDimension(widthSize, heightSize);
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (null == mAncorTopPoint || null == mContentTopPoint) {
+            return;
+        }
+
+        int aleft = 0, atop = 0, aright = 0, abottom = 0;
+        int cleft = 0, ctop = 0, cright = 0, cbottom = 0;
+
+        atop = mAncorTopPoint.y;
+        abottom = atop + mAncorView.getMeasuredHeight();
+
+        aleft = mAncorTopPoint.x - mAncorView.getMeasuredWidth() / 2;
+        aright = aleft + mAncorView.getMeasuredWidth();
+
+        ctop = abottom;
+        cbottom = ctop + mContentView.getMeasuredHeight();
+        if (mAlignCenter) {
+            cleft = aleft - mContentView.getMeasuredWidth() / 2 + mAncorView.getMeasuredWidth() / 2;
+            cright = cleft + mContentView.getMeasuredWidth();
+        } else {
+            cright = mContentTopPoint.x;
+            cleft = cright - mContentView.getMeasuredWidth();
+        }
+        mAncorView.layout(aleft, atop, aright, abottom);
+        if (cleft < 0) {
+            int travelW = Math.abs(cleft);
+            cleft = 0;
+            cright = travelW + cright;
+        }
+        mContentView.layout(cleft, ctop, cright, cbottom);
+    }
+
+}

@@ -1,0 +1,43 @@
+package com.pinguo.edit.sdk.camera.util;
+
+import android.util.Log;
+
+/**
+ * 相机模块logger
+ *
+ * @author Tsmile
+ */
+public class CMLogger {
+    private static final boolean DEBUG_LOG = true;
+
+    private CMLogger() {
+    }
+
+    public static void v(String tag, String msg) {
+        if (DEBUG_LOG) {
+            Log.v(tag, msg);
+        }
+    }
+
+    public static void d(String tag, String msg) {
+        if (DEBUG_LOG) {
+            Log.d(tag, msg);
+        }
+    }
+
+    public static void i(String tag, String msg) {
+        Log.i(tag, msg);
+    }
+
+    public static void i(String tag, Throwable error) {
+        Log.i(tag, Log.getStackTraceString(error));
+    }
+
+    public static void w(String tag, String msg) {
+        Log.w(tag, msg);
+    }
+
+    public static void e(String tag, String msg) {
+        Log.e(tag, msg);
+    }
+}

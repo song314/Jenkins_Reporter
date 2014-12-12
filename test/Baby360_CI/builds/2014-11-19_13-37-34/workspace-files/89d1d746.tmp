@@ -1,0 +1,102 @@
+package com.pinguo.mix;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.text.Html;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by taoli on 14-4-18.
+ */
+public class MixVersionUpdateDialog extends Dialog implements View.OnClickListener {
+
+    private String mVersion;
+    private String mContent;
+    private TextView mVersionTv;
+    private TextView mContentTv;
+    private IUpdateDialog mListener;
+
+    public MixVersionUpdateDialog(Context context) {
+        super(context, ResourceHelper.getIdByName(context, "style", "CompositeSDKFullScreenDialog"));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.composite_sdk_mix_version_update_dialog);
+
+        mVersionTv = (TextView) findViewById(R.id.dialog_version);
+        if (null != mVersion) {
+            mVersionTv.setText(mVersion);
+        }
+
+        mContentTv = (TextView) findViewById(R.id.dialog_tv);
+        if (null != mContent) {
+            mContentTv.setText(mContent);
+        }
+
+        Button updateBtn = (Button) findViewById(R.id.update_btn);
+        updateBtn.setOnClickListener(this);
+
+        Button laterBtn = (Button) findViewById(R.id.later_btn);
+        laterBtn.setOnClickListener(this);
+
+        Button ignoreBtn = (Button) findViewById(R.id.ignore_btn);
+        ignoreBtn.setOnClickListener(this);
+    }
+
+    public void setUpdateInfo(String version, String content) {
+        if (null != mVersionTv) {
+            mVersionTv.setText(version);
+        } else {
+            mVersion = version;
+        }
+
+        if (null != mContentTv) {
+            mContentTv.setText(Html.fromHtml(content));
+        } else {
+            mContent = content;
+        }
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        if (null == mListener) {
+            return;
+        }
+
+        if (R.id.update_btn == view.getId()) {
+            mListener.onUpdateBtnClick(getContext(), this);
+            return;
+        }
+
+        if (R.id.later_btn == view.getId()) {
+            mListener.onLaterBtnClick(getContext(), this);
+            return;
+        }
+
+        if (R.id.ignore_btn == view.getId()) {
+            mListener.onIgnoreBtnClick(getContext(), this);
+            return;
+        }
+    }
+
+    public void setUpdateListener(IUpdateDialog listener) {
+        mListener = listener;
+    }
+
+    public interface IUpdateDialog {
+        void onUpdateBtnClick(Context context, DialogInterface dialog);
+        void onLaterBtnClick(Context context, DialogInterface dialog);
+        void onIgnoreBtnClick(Context context, DialogInterface dialog);
+    }
+}

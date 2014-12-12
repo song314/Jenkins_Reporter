@@ -1,0 +1,12 @@
+Started on 2014-12-1 13:53:00
+Using strategy: Default
+[poll] Last Built Revision: Revision 07d827367e6d2f190d0f6c5f04da1f2762781859 (refs/remotes/origin/develop)
+using .gitcredentials to set credentials
+ > git --version # timeout=10
+ > git init /home/ci-android/CI-Gradle/apache-tomcat-8.0.9/temp/hudson1135243374538352980tmp # timeout=10
+ > git config --local credential.helper store --file=/home/ci-android/CI-Gradle/apache-tomcat-8.0.9/temp/git216345419323294932.credentials # timeout=10
+ > git ls-remote -h https://github.com/PGClient/Android-Common-Effect-SDK.git develop # timeout=10
+ > git config --local --remove-section credential # timeout=10
+[poll] Latest remote head revision is: bdab3050bee264ab7d0dbb499c5af56e2f6a9171
+Done. Took 18 秒
+Changes found

@@ -1,0 +1,68 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class TiltShiftLine extends TiltShift{
+    private static final String TAG = TiltShiftLine.class.getSimpleName();
+
+    public static final String EFFECT_KEY_BLUR = "TiltShiftLine_BBlur";
+    public static final String EFFECT_KEY_SINGLE = "TiltShiftLine_Single";
+    public static final String EFFECT_KEY_MASK = "TiltShiftLine_Mask";
+
+    public static final String PARAM_KEY_LINE_PARAM1 = "tiltShiftLineParam1";
+    public static final String PARAM_KEY_LINE_PARAM2 = "tiltShiftLineParam2";
+    public static final String PARAM_KEY_LINE_STRONG_PARAM = "Strong";
+
+
+    public TiltShiftLine() {
+        this.type = Type.TiltShift.name();
+        this.key = TiltShiftLine.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.TILT_SHIFT_LINE_CMD.toCharArray()) ;
+
+        this.maskCmd = Effect.TILT_SHIFT_LINE_MASK_CMD;
+        this.blurCmd = Effect.TILT_SHIFT_LINE_BLUR_CMD;
+        this.singleCmd = Effect.TILT_SHIFT_LINE_SINGLE_CMD;
+
+        param = new Param();
+        ParamVecItem blurParam1 = new ParamVecItem(PARAM_KEY_LINE_PARAM1, EFFECT_KEY_BLUR, "0.5,0.5", "0.5,0.5");
+        ParamVecItem blurParam2 = new ParamVecItem(PARAM_KEY_LINE_PARAM2, EFFECT_KEY_BLUR, "0.0,0.15,0.35", "0.0,0.15,0.35");
+        ParamVecItem singleParam1 = new ParamVecItem(PARAM_KEY_LINE_PARAM1, EFFECT_KEY_SINGLE, "0.5,0.5", "0.5,0.5");
+        ParamVecItem singleParam2 = new ParamVecItem(PARAM_KEY_LINE_PARAM2, EFFECT_KEY_SINGLE, "0.0,0.15,0.05", "0.0,0.15,0.05");
+        ParamVecItem maskParam1 = new ParamVecItem(PARAM_KEY_LINE_PARAM1, EFFECT_KEY_MASK, "0.5,0.5", "0.5,0.5");
+        ParamVecItem maskParam2 = new ParamVecItem(PARAM_KEY_LINE_PARAM2, EFFECT_KEY_MASK, "0.0,0.15,0.35", "0.0,0.15,0.35");
+        ParamFloatItem strongItem = new ParamFloatItem(PARAM_KEY_LINE_STRONG_PARAM, EFFECT_KEY_BLUR, 0.3f, 1.5f, 0.1f, 1.0f, 1.0f);
+
+        param.addParamItem(blurParam1);
+        param.addParamItem(blurParam2);
+        param.addParamItem(singleParam1);
+        param.addParamItem(singleParam2);
+        param.addParamItem(maskParam1);
+        param.addParamItem(maskParam2);
+        param.addParamItem(strongItem);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        TiltShiftLine base = null;
+
+        try {
+            base = (TiltShiftLine) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != base )
+            return base;
+        else
+            return new TiltShiftLine();
+    }
+}

@@ -1,0 +1,194 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Point;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.ScaleAnimation;
+import android.widget.RelativeLayout;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+
+/**
+ * Created by wangqinlong on 11/5/13.
+ */
+public class FocusViewUIManager implements FocusIndicatorRotateLayout.DrawFocusViewDoneListener {
+
+    private static final String TAG = FocusViewUIManager.class.getName();
+    private RotateLayout mFocusAreaIndicator;
+    private FocusIndicatorRotateLayout mFocusIndicatorView;
+    // 用于聚焦开始的动画
+    private Animation mAnimation;
+    /**
+     * 初始化UI
+     * @param v
+     */
+    public void initFocusView(View v) {
+        if (null == mFocusAreaIndicator) {
+            mFocusAreaIndicator = (RotateLayout) v.findViewById(
+                    ResourceHelper.getId(v.getContext(), "focus_indicator_rotate_layout"));
+        }
+
+        if (null == mFocusIndicatorView) {
+            mFocusIndicatorView = (FocusIndicatorRotateLayout) mFocusAreaIndicator
+                    .findViewById(ResourceHelper.getId(v.getContext(), "focus_indicator"));
+        }
+    }
+
+    /**
+     * 显示聚焦成功UI
+     * @param timeout
+     */
+    public void showFocusSuccess(boolean timeout) {
+        if (null != mFocusIndicatorView) {
+            mFocusIndicatorView.showSuccess(timeout);
+        }
+    }
+
+    /**
+     * 显示聚焦失败UI
+     * @param timeout
+     */
+    public void showFocusFail(boolean timeout) {
+        if (null != mFocusIndicatorView) {
+            mFocusIndicatorView.showFail(timeout);
+        }
+    }
+
+    /**
+     * 开始聚焦
+     */
+    public void showFocusStart(Context context) {
+        if (context == null) return;
+        if (null != mFocusIndicatorView) {
+            // 开始时清除动画
+            mFocusAreaIndicator.clearAnimation();
+            // 初始化动画
+            mAnimation = AnimationUtils.loadAnimation(context, R.anim.composite_sdk_camera_focus_scale_down);
+            // setFillEnabled方法：使能用填充效果
+            mAnimation.setFillEnabled(true);
+            // 动画结束后停止在终止位置
+            mAnimation.setFillAfter(true);
+            // 设置聚焦UI绘制完成回调
+            mFocusIndicatorView.setDrawFocusViewDoneCallback(this);
+            mFocusIndicatorView.showStart();
+//            Animation mAnimation = AnimationUtils.loadAnimation(context, R.anim.composite_sdk_camera_focus_scale_down);
+//            mAnimation.setFillEnabled(true);
+//            mAnimation.setFillAfter(true);
+//            mFocusAreaIndicator.setAnimation(mAnimation);
+        }
+    }
+
+    /**
+     * 清除聚焦UI
+     */
+    public void clearFocus() {
+        if (null != mFocusIndicatorView) {
+            mFocusIndicatorView.clear();
+        }
+    }
+
+    /**
+     * 设置聚焦区域
+     * @param mActivity
+     * @param x  点击x坐标
+     * @param y  点击Y坐标
+     * @param previewW 预览界面的宽度
+     * @param previewH 预览界面的高度
+     */
+    public void setFocusArea(Activity mActivity, int x, int y, int previewW, int previewH) {
+
+        int focusW = mFocusIndicatorView.getWidth();
+        int focusH = mFocusIndicatorView.getHeight();
+
+        DisplayMetrics dm = new DisplayMetrics();
+        mActivity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) mFocusAreaIndicator
+                .getLayoutParams();
+        int left = CameraModuleUtil.clamp(x - focusW / 2, -focusW / 2, previewW);
+        int top = CameraModuleUtil.clamp(y - focusH / 2, -focusH /2, previewH);
+
+        CMLogger.i("Test", "1111111111111: " + top + "/" + "left = " + left + "//" + dm.heightPixels + "/" + previewW + "/" + previewH);
+        p.setMargins(left, top, 0, 0);
+        int[] rules = p.getRules();
+        rules[RelativeLayout.CENTER_IN_PARENT] = 0;
+        mFocusAreaIndicator.requestLayout();
+
+    }
+
+    /**
+     * 重置聚焦的位置
+     */
+    public void resetFocus() {
+        if (null != mFocusAreaIndicator) {
+            RelativeLayout.LayoutParams p = (RelativeLayout.LayoutParams) mFocusAreaIndicator
+                    .getLayoutParams();
+            int[] rules = p.getRules();
+            rules[RelativeLayout.CENTER_IN_PARENT] = RelativeLayout.TRUE;
+            p.setMargins(0, 0, 0, 0);
+            mFocusAreaIndicator.requestLayout();
+        }
+    }
+
+    /**
+     * 获得聚焦UI的宽度和高度
+     * @return
+     */
+    public Point getFocusSize() {
+        Point p = new Point();
+        if (null != mFocusAreaIndicator) {
+            p.x = mFocusAreaIndicator.getWidth();
+            p.y = mFocusAreaIndicator.getHeight();
+        }
+
+        return p;
+    }
+
+    public void setFocusSize(int x, int y) {
+//		ViewGroup.LayoutParams layout = mFocusIndicatorView.getLayoutParams();
+//		layout.width = x;
+//		layout.height = y;
+//		mFocusIndicatorView.setLayoutParams(layout);
+    }
+
+
+    /**
+     * 开始聚焦绘制完成后的动画
+     */
+    @Override
+    public void drawFocusViewDone() {
+        CMLogger.i(TAG, "start focus view animation");
+        if (mAnimation == null || mAnimation.hasStarted()) return;
+        mAnimation.setAnimationListener(animationListener);
+        mFocusAreaIndicator.startAnimation(mAnimation);
+
+    }
+
+    Animation.AnimationListener animationListener = new Animation.AnimationListener() {
+        @Override
+        public void onAnimationStart(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            Animation animation1 = new ScaleAnimation(0.6f, 0.7f, 0.6f, 0.7f, mFocusAreaIndicator.getWidth() / 2, mFocusAreaIndicator.getHeight() / 2);
+            animation1.setDuration(100);
+            animation1.setFillEnabled(true);
+            // 动画结束后停止在终止位置
+            animation1.setFillAfter(true);
+            mFocusAreaIndicator.startAnimation(animation1);
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+    };
+}

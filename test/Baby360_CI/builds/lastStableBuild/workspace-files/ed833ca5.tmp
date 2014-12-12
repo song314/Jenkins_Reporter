@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@color/login_alert_dialog_bg"
+    android:layout_width="@dimen/login_alert_dialog_width"
+    android:layout_height="@dimen/login_alert_dialog_height">
+
+    <TextView
+        android:id="@+id/dialog_tv"
+        android:textColor="#FFFFFFFF"
+        android:textSize="@dimen/login_alert_dialog_mes_text_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/select_dialog_title_top"
+        android:gravity="center"></TextView>
+
+    <View
+        android:layout_width="@dimen/login_alert_dialog_line_width"
+        android:layout_height="1dp"
+        android:background="#ffffffff"
+        android:layout_marginTop="@dimen/login_alert_dialog_line_top"
+        android:layout_marginLeft="@dimen/login_alert_dialog_inner_padding"
+        android:layout_marginRight="@dimen/login_alert_dialog_inner_padding"
+        android:gravity="center"></View>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/login_alert_dialog_btn_top"
+        android:layout_marginLeft="@dimen/login_alert_dialog_inner_padding"
+        android:layout_marginRight="@dimen/login_alert_dialog_inner_padding">
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:textColor="#FFFFFFFF"
+            android:layout_alignParentLeft="true"
+            android:textSize="@dimen/login_alert_btn_text_size"
+            android:text="@string/login_select_btn_cancel"
+            android:layout_width="@dimen/login_alert_btn_width"
+            android:layout_height="@dimen/login_alert_btn_height"
+            android:background="@drawable/login_alert_dialog_btn" />
+
+        <Button
+            android:id="@+id/confirm_btn"
+            android:textColor="#FFFFFFFF"
+            android:layout_gravity="right"
+            android:textSize="@dimen/login_alert_btn_text_size"
+            android:layout_alignParentRight="true"
+            android:text="@string/login_select_btn_confirm"
+            android:layout_width="@dimen/login_alert_btn_width"
+            android:layout_height="@dimen/login_alert_btn_height"
+            android:background="@drawable/login_alert_dialog_btn"></Button>
+    </RelativeLayout>
+
+</LinearLayout>

@@ -1,0 +1,178 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.OperationApplicationException;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQueryBuilder;
+import android.net.Uri;
+
+import java.util.ArrayList;
+
+public class Camera360FeedbackProvider extends ContentProvider {
+
+    private static final UriMatcher sURLMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    private static final int URL_CAMER360_FEEDKBACK = 1;
+    public static final String FEEDBACK_TABLE_NAME = "feedback";
+
+    static {
+        sURLMatcher.addURI(Camera360FeedbackDatabaseField.AUTHORITY, Camera360FeedbackDatabaseField.TABLE_PATH, URL_CAMER360_FEEDKBACK);
+    }
+
+    private SQLiteOpenHelper mOpenHelper;
+
+    @Override
+    public synchronized boolean onCreate() {
+        mOpenHelper = new Camera360FeedbackDataseHelper(getContext());
+        return true;
+    }
+
+    @Override
+    public synchronized Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        switch (sURLMatcher.match(uri)) {
+            case URL_CAMER360_FEEDKBACK: {
+                constructQueryForCamera360Photo(qb, 0);
+                break;
+            }
+            default: {
+                return null;
+            }
+        }
+        SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+        Cursor ret = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+        ret.setNotificationUri(getContext().getContentResolver(), uri);
+        return ret;
+    }
+
+    private void constructQueryForCamera360Photo(SQLiteQueryBuilder qb, int type) {
+        qb.setTables(FEEDBACK_TABLE_NAME);
+        if (type != 0) {
+            qb.appendWhere("type=" + type);
+        }
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        return null;
+    }
+
+    @Override
+    public synchronized Uri insert(Uri uri, ContentValues values) {
+        String tableName = "";
+        switch (sURLMatcher.match(uri)) {
+            case URL_CAMER360_FEEDKBACK: {
+                tableName = FEEDBACK_TABLE_NAME;
+                break;
+            }
+
+            default:
+                break;
+        }
+        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        long rowID = db.insert(tableName, null, values);
+        if (rowID > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return uri;
+    }
+
+    @Override
+    public synchronized int delete(Uri uri, String selection, String[] selectionArgs) {
+        int count = 0;
+        String tableName = "";
+        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        switch (sURLMatcher.match(uri)) {
+            case URL_CAMER360_FEEDKBACK: {
+                tableName = FEEDBACK_TABLE_NAME;
+                count = db.delete(tableName, selection, selectionArgs);
+                break;
+            }
+
+            default:
+                break;
+        }
+        if (count > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return count;
+    }
+
+    @Override
+    public synchronized int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        int count = 0;
+        String tableName = "";
+        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+
+        switch (sURLMatcher.match(uri)) {
+            case URL_CAMER360_FEEDKBACK: {
+                tableName = FEEDBACK_TABLE_NAME;
+                break;
+            }
+
+            default:
+                break;
+        }
+        // where = DatabaseUtils.concatenateWhere(where, extraWhere);
+        count = db.update(tableName, values, selection, selectionArgs);
+
+        if (count > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return count;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        int numValues = 0;
+        int match = sURLMatcher.match(uri);
+        String tableName = "";
+        switch (match) {
+            case URL_CAMER360_FEEDKBACK:
+                tableName = FEEDBACK_TABLE_NAME;
+                SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+                db.beginTransaction(); //开始事务
+                try {
+                    //数据库操作
+                    numValues = values.length;
+                    for (int i = 0;
+                         i < numValues;
+                         i++) {
+                        //insert(uri, values[i]);
+                        if (db.insert(tableName, null, values[i]) < 0) {
+                            throw new RuntimeException("插入数据时失败了");
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction(); //结束事务
+                }
+                break;
+        }
+        return numValues;
+    }
+
+    @Override
+    public ContentProviderResult[] applyBatch(ArrayList<ContentProviderOperation> operations) throws OperationApplicationException {
+        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            ContentProviderResult[] result = super.applyBatch(operations);
+            db.setTransactionSuccessful();
+            // Rather than sending targeted change notifications for every Uri
+            // affected by the batch operation, just invalidate the entire internal
+            // and external name space.
+            ContentResolver res = getContext().getContentResolver();
+            res.notifyChange(Camera360FeedbackDatabaseField.CONTENT_URI, null);
+            return result;
+        } finally {
+            db.endTransaction();
+        }
+    }
+}

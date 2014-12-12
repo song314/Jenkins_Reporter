@@ -1,0 +1,29 @@
+package com.pinguo.mix.api.upload;
+
+import android.os.Bundle;
+
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+
+/**
+ * Created by taoli on 14-4-11.
+ */
+public class UploadApi {
+
+    public static void photoUploadAuth(final ApiCallback<String> callback) {
+
+        new PhotoUploadPhotoAuth().execute(
+                ApiConstants.API_URL_PHOTO_UPLOAD_AUTH, null, callback);
+    }
+
+    public static void photoUpload(final String url,
+                                   final String filePath,
+                                   final String token,
+                                   final ApiCallback callback) {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_FILE, filePath);
+        bundle.putString(ApiConstants.PARAM_TOKEN, token);
+        new PhotoUpload().execute(url, bundle, callback);
+    }
+}

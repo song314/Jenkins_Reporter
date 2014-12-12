@@ -1,0 +1,102 @@
+package com.pinguo.edit.sdk.widget;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by taoli on 14-4-18.
+ */
+public class CompositeSDKDialog extends Dialog {
+
+    private int mPositiveBtnDrawable;
+    private int mNegativeBtnDrawable;
+    private int mPositiveBtnText;
+    private int mNegativeBtnText;
+    private int mTitle;
+    private int mMessage;
+    private View.OnClickListener mPositiveBtnClickListener;
+    private View.OnClickListener mNegativeBtnClickListener;
+
+    public CompositeSDKDialog(Context context) {
+        super(context, ResourceHelper.getIdByName(context, "style", "CompositeSDKFullScreenDialog"));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(ResourceHelper.getIdByName(getContext(), "layout", "composite_sdk_common_dialog"));
+
+        Button positiveBtn = (Button) findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "positive_btn"));
+        if (0 != mPositiveBtnDrawable) {
+            positiveBtn.setBackgroundResource(mPositiveBtnDrawable);
+        }
+
+        if (0 != mPositiveBtnText) {
+            positiveBtn.setText(mPositiveBtnText);
+        } else {
+            positiveBtn.setVisibility(View.GONE);
+        }
+        
+        if (null != mPositiveBtnClickListener) {
+            positiveBtn.setOnClickListener(mPositiveBtnClickListener);
+        }
+
+        Button negativeBtn = (Button) findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "negative_btn"));
+        if (0 != mNegativeBtnDrawable) {
+            negativeBtn.setBackgroundResource(mNegativeBtnDrawable);
+        }
+
+        if (0 != mNegativeBtnText) {
+            negativeBtn.setText(mNegativeBtnText);
+        } else {
+            negativeBtn.setVisibility(View.GONE);
+        }
+
+        if (null != mNegativeBtnClickListener) {
+            negativeBtn.setOnClickListener(mNegativeBtnClickListener);
+        }
+
+        TextView title = (TextView) findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "dialog_title"));
+        if (0 != mTitle) {
+            title.setText(mTitle);
+        } else {
+            title.setVisibility(View.GONE);
+        }
+
+        TextView message = (TextView) findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "dialog_tv"));
+        if (0 != mMessage) {
+            message.setText(mMessage);
+        }
+    }
+
+    public void setPositiveBtn(int drawable, int text, View.OnClickListener listener) {
+        mPositiveBtnDrawable = drawable;
+        mPositiveBtnText = text;
+        mPositiveBtnClickListener = listener;
+    }
+
+    public void setNegativeBtn(int drawable, int text, View.OnClickListener listener) {
+        mNegativeBtnDrawable = drawable;
+        mNegativeBtnText = text;
+        mNegativeBtnClickListener = listener;
+    }
+
+    public void setTitle(int text) {
+        mTitle = text;
+    }
+
+    public void setMessage(int text) {
+        mMessage = text;
+    }
+}

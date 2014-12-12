@@ -1,0 +1,417 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Message;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.TranslateAnimation;
+import android.widget.LinearLayout;
+import android.widget.Scroller;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.widget.EditPtrHorizontalScrollView;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by zhongzheng on 14-11-4.
+ */
+public class VerticalLayout extends LinearLayout {
+
+    private final Scroller mScroller;
+    private LinearLayout layout;
+    private float count = 3.8f;
+    private EditPtrHorizontalScrollView scrollView;
+
+    private Map<View, OnClickListener> mViewClickMap = new HashMap<View, OnClickListener>();
+
+    public VerticalLayout(Context context) {
+        super(context);
+
+        LayoutInflater.from(context).inflate(ResourceHelper.getLayout(context, "composite_sdk_horizontal_layout"), this, true);
+        layout = (LinearLayout) findViewById(
+                ResourceHelper.getId(context, "layout"));
+        scrollView = (EditPtrHorizontalScrollView) findViewById(
+                ResourceHelper.getId(context, "scroll_view"));
+        mScroller = new Scroller(getContext(), new DecelerateInterpolator());
+    }
+
+    public VerticalLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        LayoutInflater.from(context).inflate(ResourceHelper.getLayout(context, "composite_sdk_horizontal_layout"), this, true);
+        layout = (LinearLayout) findViewById(
+                ResourceHelper.getId(context, "layout"));
+        scrollView = (EditPtrHorizontalScrollView) findViewById(
+                ResourceHelper.getId(context, "scroll_view"));
+        mScroller = new Scroller(getContext(), new DecelerateInterpolator());
+    }
+
+    public void addChildView(View view,
+                             OnClickListener onClickListener,
+                             boolean enableAnimation,
+                             boolean isResizeByCount) {
+
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        if (null == params) {
+            params = new ViewGroup.LayoutParams(0, 0);
+        }
+
+        if (isResizeByCount) {
+            params.width = getMeasuredWidth();
+            params.height = (int) (getMeasuredHeight() / count);
+
+        } else {
+            params.width = getMeasuredWidth();
+            params.height = (int) (params.height * 3 / 4.05f);
+        }
+
+        view.setLayoutParams(params);
+
+        mViewClickMap.put(view, onClickListener);
+
+        if (enableAnimation) {
+            view.setOnClickListener(mOnItemClickListener);
+        } else {
+            view.setOnClickListener(onClickListener);
+        }
+        layout.addView(view);
+    }
+
+    public void addBackView(View view, int height) {
+        ViewGroup.LayoutParams params = view.getLayoutParams();
+        if (null == params) {
+            params = new ViewGroup.LayoutParams(0, 0);
+        }
+
+        params.height = height;
+        params.width = getMeasuredWidth();
+        view.setLayoutParams(params);
+        layout.addView(view);
+    }
+
+    public void removeAllChildViews() {
+        mViewClickMap.clear();
+        layout.removeAllViews();
+    }
+
+    @Override
+    public void scrollTo(int x, int y) {
+        scrollView.getRefreshableView().scrollTo(x, y);
+    }
+
+    @Override
+    public void scrollBy(int x, int y) {
+        mScroller.startScroll(scrollView.getRefreshableView().getScrollX(), 0,
+                x - scrollView.getRefreshableView().getScrollX(), 0, 400);
+        invalidate();
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        if (mScroller.computeScrollOffset()) {
+            int curX = mScroller.getCurrX();
+            scrollView.getRefreshableView().scrollTo(curX, 0);
+            invalidate();
+        }
+    }
+
+    private OnClickListener mOnItemClickListener = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Rect rect = new Rect();
+            v.getGlobalVisibleRect(rect);
+            int width = rect.width();
+            if (width < v.getMeasuredWidth()) {
+                int scrollLength = 2 * v.getMeasuredWidth() - width;
+                if (rect.right == getRight()) {
+                    scrollBy(scrollView.getRefreshableView().getScrollX() + scrollLength, 0);
+                } else {
+                    scrollBy(scrollView.getRefreshableView().getScrollX()
+                            - scrollLength - v.getMeasuredWidth(), 0);
+                }
+            } else if (rect.right == getRight()) {
+                scrollBy(scrollView.getRefreshableView().getScrollX() + v.getMeasuredWidth(), 0);
+
+            } else if (rect.left == getLeft()) {
+                scrollBy(scrollView.getRefreshableView().getScrollX()
+                        - v.getMeasuredWidth() - v.getMeasuredWidth(), 0);
+
+            } else if (getRight() - rect.right < v.getMeasuredWidth()) {
+                scrollBy(scrollView.getRefreshableView().getScrollX() + v.getMeasuredWidth() - (getRight() - rect.right), 0);
+
+            } else if (rect.left - getLeft() < v.getMeasuredWidth()) {
+                scrollBy(scrollView.getRefreshableView().getScrollX()
+                        - (v.getMeasuredWidth() - (rect.left - getLeft())) - v.getMeasuredWidth(), 0);
+            } else if (rect.left - getLeft() < v.getMeasuredWidth() * 2) {
+                scrollBy(scrollView.getRefreshableView().getScrollX()
+                        - (v.getMeasuredWidth() * 2 - (rect.left - getLeft())), 0);
+            }
+
+            if (mViewClickMap.get(v) != null) {
+                mViewClickMap.get(v).onClick(v);
+            }
+        }
+    };
+
+    public OnClickListener getOnItemClickListener() {
+        return mOnItemClickListener;
+    }
+
+    public void clickItem(View v) {
+        if (mViewClickMap.get(v) != null) {
+            mViewClickMap.get(v).onClick(v);
+        }
+    }
+
+    public void setCount(float count) {
+        this.count = count;
+    }
+
+    public void showViewForTranslateAnimation(float right, int index, int displayWidth) {
+
+        Rect rect = new Rect();
+        layout.getChildAt(index).getGlobalVisibleRect(rect);
+        float selectedRight = rect.right;
+//        System.out.println("left:"+layout.getChildAt(index).getLeft());
+
+        float lastRightDis = selectedRight;
+        int startPosition = 0;
+        for (int i = index;
+             i >= 0;
+             i--) {
+            lastRightDis -= layout.getChildAt(i).getLayoutParams().width;
+            if (lastRightDis > 0) {
+
+                continue;
+
+            } else {
+                startPosition = i;
+                break;
+            }
+        }
+
+        float nextLeftDis = selectedRight - layout.getChildAt(index).getLayoutParams().width;
+        int endPosition = index;
+        for (int i = index;
+             i < layout.getChildCount();
+             i++) {
+            nextLeftDis += layout.getChildAt(i).getLayoutParams().width;
+
+            if (nextLeftDis < displayWidth) {
+
+                continue;
+
+            } else {
+                endPosition = i;
+                break;
+            }
+        }
+
+//System.out.println("right:"+right+",startPosition:"+startPosition+",endPosition:"+endPosition+",index:"+index);
+        float fromXDelta = right - layout.getChildAt(index).getLayoutParams().width - lastRightDis;
+        for (int i = startPosition;
+             i <= endPosition;
+             i++) {
+
+
+            TranslateAnimation translateAnimation = new TranslateAnimation(fromXDelta, 0f, 0f, 0f);
+            translateAnimation.setInterpolator(new DecelerateInterpolator());
+            translateAnimation.setDuration(350l);
+
+            AlphaAnimation alphaAnimation = new AlphaAnimation(0f, 1f);
+            alphaAnimation.setInterpolator(new DecelerateInterpolator());
+            alphaAnimation.setDuration(350l);
+
+            AnimationSet animationSet = new AnimationSet(true);
+            animationSet.addAnimation(translateAnimation);
+
+            View childView = layout.getChildAt(i);
+            childView.startAnimation(animationSet);
+            fromXDelta -= childView.getLayoutParams().width;
+
+        }
+    }
+
+    public void hideViewForTranslateAnimation(float x) {
+        int left = scrollView.getRefreshableView().getScrollX();
+        int right = left + getWidth();
+
+        for (int i = 0;
+             i < layout.getChildCount();
+             i++) {
+            if (i == 0) {
+                x -= layout.getChildAt(0).getLayoutParams().width;
+            }
+
+            View childView = layout.getChildAt(i);
+            if (childView.getRight() > left && childView.getLeft() < right) {
+                float toXDelta = x - (childView.getLeft() - left);
+
+                TranslateAnimation translateAnimation = new TranslateAnimation(0f, toXDelta, 0f, 0f);
+                translateAnimation.setInterpolator(new DecelerateInterpolator());
+                translateAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mHandler.sendEmptyMessage(SET_VIEW_INVISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                translateAnimation.setDuration(350l);
+
+                AlphaAnimation alphaAnimation = new AlphaAnimation(1f, 0f);
+                alphaAnimation.setInterpolator(new DecelerateInterpolator());
+                alphaAnimation.setDuration(350l);
+
+                AnimationSet animationSet = new AnimationSet(true);
+                animationSet.addAnimation(translateAnimation);
+                animationSet.addAnimation(alphaAnimation);
+
+                childView.startAnimation(animationSet);
+
+            }
+        }
+    }
+
+    public void hideViewForAlphaAnimation() {
+
+        AlphaAnimation alphaAnimation = new AlphaAnimation(1f, 0f);
+        alphaAnimation.setDuration(350l);
+        alphaAnimation.setInterpolator(new DecelerateInterpolator());
+        alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+
+                mHandler.sendEmptyMessage(SET_VIEW_GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        this.startAnimation(alphaAnimation);
+    }
+
+    public void showViewForAlphaAnimation() {
+//        AlphaAnimation alphaAnimation = new AlphaAnimation(0f, 1f);
+//        alphaAnimation.setDuration(200l);
+//        this.startAnimation(alphaAnimation);
+    }
+
+    public void revertLayout() {
+        scrollView.scrollTo(0, 0);
+        layout.removeAllViews();
+        VerticalLayout.this.setVisibility(View.INVISIBLE);
+    }
+
+    public ViewGroup getLayout() {
+        return layout;
+    }
+
+    private final static int SET_VIEW_GONE = 1;
+    private final static int SET_VIEW_INVISIBLE = 2;
+    private Handler mHandler = new Handler() {
+
+        @Override
+        public void dispatchMessage(Message msg) {
+            if (msg.what == SET_VIEW_GONE) {
+                VerticalLayout.this.setVisibility(View.GONE);
+
+            } else if (msg.what == SET_VIEW_INVISIBLE) {
+                revertLayout();
+
+            }
+        }
+    };
+
+    public void scrollToView(final View currentView, final HorizontalLayoutCallBackListener callBackListener) {
+
+        scrollView.getRefreshableView().post(new Runnable() {
+            @Override
+            public void run() {
+                int containerWidth = getMeasuredWidth();
+                int viewWidth = (int) (getMeasuredWidth() / count);
+
+                int index = 0;
+                if (null != currentView) {
+                    index = layout.indexOfChild(currentView);
+                }
+
+                int totalWidth = viewWidth * index;
+
+                int gap = totalWidth % containerWidth;
+                int predictor = totalWidth / containerWidth;
+
+                int scrollX = 0;
+                if (0 != index) {
+                    scrollX = gap + containerWidth * predictor - 2 * viewWidth;
+                }
+                scrollView.getRefreshableView().scrollTo(scrollX, scrollView.getRefreshableView().getScrollY());
+
+
+                if (callBackListener != null) {
+                    callBackListener.callBack();
+                }
+            }
+        });
+    }
+
+    public void scrollToView(View currentView) {
+        scrollToView(currentView, null);
+    }
+
+    public void scrollToViewWithAnimation(final View currentView, final float right, final int displayWidth, final HorizontalLayoutCallBackListener callBackListener) {
+
+        scrollToView(currentView, new HorizontalLayoutCallBackListener() {
+            @Override
+            public void callBack() {
+                int index = layout.indexOfChild(currentView);
+                if (index == -1) {
+                    index = 0;
+                }
+                showViewForTranslateAnimation(right, index, displayWidth);
+
+                if (callBackListener != null) {
+                    callBackListener.callBack();
+                }
+            }
+        });
+
+    }
+
+    public ViewGroup getContainerView() {
+        return layout;
+    }
+
+    public static interface HorizontalLayoutCallBackListener {
+
+        public void callBack();
+    }
+}

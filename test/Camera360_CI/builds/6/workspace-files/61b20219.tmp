@@ -1,0 +1,97 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.os.Environment;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+
+import java.io.File;
+
+/**
+ * Created by wangqinlong on 11/15/13.
+ * 此类用于封装camera360业务的设置.不同于CameraSettingModel, CameraSettingModel它主要负责处理一些
+ * 与相机参数强相关的一些设置操作
+ * <p/>
+ * 当发现有些key在此类没找到get和set方法的时候,请自行添加到此类
+ */
+public class CameraBusinessSettingModel {
+    private PGCameraPreferences preferences = null;
+
+    public static final String KEY_CAMERA_TOUCH_SHOT_ENABLE = "key_camera_touch_shot_enable";
+    public static final String IGNORE_XIAOMI3_FLASH_BLACK = "ignore_xiaomi_flash_black";
+
+    private static CameraBusinessSettingModel CAMERA_SETTING_MODEL = new CameraBusinessSettingModel();
+
+    public CameraBusinessSettingModel() {
+        this.preferences = PGCameraPreferences.get();
+    }
+
+    public static CameraBusinessSettingModel instance() {
+        return CAMERA_SETTING_MODEL;
+    }
+
+    /**
+     * 适配解决xiaomi 3第一次使用软件开始闪光灯就黑屏的问题
+     *
+     * @param isIgnore
+     */
+    public void setIsIgnoreXiaomiFlashBlackProblem(boolean isIgnore) {
+        preferences.putBoolean(IGNORE_XIAOMI3_FLASH_BLACK, isIgnore);
+    }
+
+    public boolean getIsIgnoreXiaomiFlashBlackProblem() {
+        return preferences.getBoolean(IGNORE_XIAOMI3_FLASH_BLACK, false);
+    }
+
+    /**
+     * 设置触屏拍照
+     *
+     * @param isTouchTaken
+     */
+    public void setTouchScreenTakePicState(boolean isTouchTaken) {
+        this.preferences.putBoolean(KEY_CAMERA_TOUCH_SHOT_ENABLE, isTouchTaken);
+    }
+
+    /**
+     * 获得是否打开了触屏拍照
+     *
+     * @return
+     */
+    public boolean getTouchScreenTakePic() {
+        return this.preferences.getBoolean(KEY_CAMERA_TOUCH_SHOT_ENABLE, false);
+    }
+
+    /**
+     * 获取图片保存路径
+     *
+     * @return
+     */
+    public String getPictureSavePath() {
+        return GAdapter.getSystemPhotoPath();
+    }
+
+    /**
+     * 获取临时图片保存路径
+     *
+     * @return
+     */
+    public String getTempPictureSavePath() {
+        String rootPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath()
+                + File.separator;
+        String tempPicPath = rootPath + ".c360EffectTemp" + File.separator;
+        File tempPicDir = new File(tempPicPath);
+        if (!tempPicDir.exists()) {
+            boolean successCreate = tempPicDir.mkdirs();
+            if (!successCreate) {
+                tempPicPath = rootPath;
+            }
+        }
+        return tempPicPath;
+    }
+
+
+    /**
+     * commit all change to file
+     */
+    public void commitAllChange() {
+        this.preferences.commit();
+    }
+}

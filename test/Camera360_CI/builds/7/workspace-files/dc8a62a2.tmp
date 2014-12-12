@@ -1,0 +1,63 @@
+package com.pinguo.edit.sdk.camera;
+
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
+import com.pinguo.edit.sdk.camera.ui.PGOrientationEventListener;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.mix.StatisticManager;
+
+/**
+ * @author Tsmile
+ */
+public class CameraActivity extends FragmentActivity {
+    private PGOrientationEventListener mOrientationListener;
+    private CcCameraFragment mCcCameraFragment;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(ResourceHelper.getIdByName(this, "layout", "composite_sdk_camera_activity"));
+
+        // 添加各个Fragment到容器中
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        mCcCameraFragment = getCameraFragment();
+        ft.replace(ResourceHelper.getIdByName(this, "id", "camera_container"), mCcCameraFragment);
+        ft.commit();
+
+//        EffectModel.getInstance().init(getApplicationContext()); // 创建databases目录
+//        PGCompositeSDKApi.copyInitData(getApplicationContext());
+//        EffectModel.getInstance().invalidEffectDict(true);
+    }
+
+    protected CcCameraFragment getCameraFragment() {
+        return new CcCameraFragment();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (null == mOrientationListener) {
+            mOrientationListener = new PGOrientationEventListener(this);
+            mOrientationListener.register(mCcCameraFragment);
+            mOrientationListener.enable();
+        }
+        mOrientationListener.setOrientationIndicator(0, false);
+
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if (null != mOrientationListener) {
+            mOrientationListener.unregister(mCcCameraFragment);
+            mOrientationListener.disable();
+            mOrientationListener = null;
+        }
+
+        StatisticManager.destroy(this);
+    }
+}

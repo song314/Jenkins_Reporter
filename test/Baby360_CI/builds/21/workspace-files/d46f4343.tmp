@@ -1,0 +1,45 @@
+package com.pinguo.mix.api.upload;
+
+import android.text.TextUtils;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by pinguo on 14-4-14.
+ */
+public class UploadBean<T extends UploadBean> extends BaseBean<T> {
+
+    private String uid;              // 数据库表里的ID索引字段 需要根据这个去删缓存
+    private String timestamp;        // 时间戳
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    /**
+     * @param obj
+     * @return 时间戳是否合法
+     */
+    @Override
+    public boolean isValid(UploadBean obj) {
+        return !(TextUtils.isEmpty(obj.timestamp) ||
+                Long.valueOf(obj.timestamp) < System.currentTimeMillis());
+    }
+
+    @Override
+    public boolean isValid() {
+        return isValid(this);
+    }
+}

@@ -1,0 +1,297 @@
+package com.pinguo.edit.sdk.camera.model;
+
+import android.annotation.TargetApi;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import com.pinguo.edit.sdk.camera.util.ApiHelper;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+
+import java.io.IOException;
+
+/**
+ * Created by geniuslt on 13-7-9.
+ */
+public class CameraManager {
+
+    private static final String TAG = CameraManager.class.getSimpleName();
+
+    private static CameraManager CAMERA_MANAGER = new CameraManager();
+    private CameraProxy mCameraDevice = null;
+    private Camera mCamera = null;
+    private int mNumberOfCameras = -1;
+    private Camera.CameraInfo[] mInfos = null;
+    private int mBackCameraId = -1;
+    private int mFrontCameraId = -1;
+    private int mCurCameraId = -1;
+
+    public enum CameraState {
+        CAMERA_STOPPED,
+        PREVIEW_STOPPED,
+        IDLE,
+        SNAP_IN_PROGRESS
+    }
+
+    public static CameraManager instance() {
+        return CAMERA_MANAGER;
+    }
+
+    public int getFrontCameraId() {
+        return mFrontCameraId;
+    }
+
+    public int getBackCameraId() {
+        return mBackCameraId;
+    }
+
+    public int getCurCameraId() {
+        return mCurCameraId;
+    }
+
+    public boolean isFrontCamera() {
+        return isFrontCamera(mCurCameraId);
+    }
+
+    public boolean isFrontCamera(int cameraId) {
+        if (cameraId >= 0 && cameraId <= mInfos.length - 1) {
+            return mInfos[cameraId].facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
+        }
+        return false;
+    }
+
+    public Camera.CameraInfo[] getCameraInfo() {
+        return this.mInfos;
+    }
+
+    public int getCameraCount() {
+        return mNumberOfCameras;
+    }
+
+    private CameraManager() {
+        mNumberOfCameras = Camera.getNumberOfCameras();
+        mInfos = new Camera.CameraInfo[mNumberOfCameras];
+        for (int i = 0; i < mNumberOfCameras; i++) {
+            mInfos[i] = new Camera.CameraInfo();
+            try {
+                Camera.getCameraInfo(i, mInfos[i]);
+            } catch (Exception e) {
+                throw new RuntimeException("Camera Number:" + mNumberOfCameras + "/Camera id:" + i);
+            }
+        }
+
+        // get the first (smallest) back and first front camera id
+        for (int i = 0; i < mNumberOfCameras; i++) {
+            if (mBackCameraId == -1 && mInfos[i].facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                Log.i(TAG, "Set back camera id:" + i);
+                mBackCameraId = i;
+            } else if (mFrontCameraId == -1 && mInfos[i].facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                Log.i(TAG, "Set front camera id:" + i);
+                mFrontCameraId = i;
+            }
+        }
+    }
+
+    public int switchCamera(int curCameraId) {
+        if (mBackCameraId == curCameraId) {
+            return mFrontCameraId;
+        }
+
+        if (mFrontCameraId == curCameraId) {
+            return mBackCameraId;
+        }
+
+        return mBackCameraId;
+    }
+
+    @TargetApi(ApiHelper.VERSION_CODES.GINGERBREAD)
+    public CameraProxy openCamera(int cameraId) throws CameraHardwareException {
+        try {
+            if (ApiHelper.AFTER_GINGERBREAD) {
+                mCamera = Camera.open(cameraId);
+            } else {
+                mCamera = Camera.open();
+            }
+            if (mCamera == null) {
+                throw new RuntimeException("Camera is NULL, Camera ID is " + cameraId);
+            }
+        } catch (RuntimeException e) {
+            throw new CameraHardwareException(e);
+        }
+
+        if (null == mCameraDevice) {
+            mCameraDevice = new CameraProxy();
+        }
+
+        if (mBackCameraId == cameraId) {
+            mCameraDevice.setFacing(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
+
+        if (mFrontCameraId == cameraId) {
+            mCameraDevice.setFacing(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        }
+
+        return mCameraDevice;
+    }
+
+    public void releaseCamera() {
+        if (null != mCameraDevice) {
+            mCameraDevice.release();
+            mCameraDevice = null;
+            mCamera = null;
+        }
+    }
+
+    /**
+     * 返回相機實例
+     *
+     * @return
+     */
+    public CameraManager.CameraProxy getCamera() {
+        return mCameraDevice;
+    }
+
+    /**
+     * 仅供摄像使用
+     *
+     * @return
+     */
+    public Camera getRealCameraInstance() {
+        return mCamera;
+    }
+
+    /**
+     * Created by taoli on 13-7-2.
+     */
+    public class CameraProxy {
+
+        private int facing;
+
+        public void setFacing(int facing) {
+            this.facing = facing;
+        }
+
+        public int getFacing() {
+            return facing;
+        }
+
+        public Parameters getParameters() {
+            return mCamera.getParameters();
+        }
+
+        public void startPreview() {
+            if (mCamera != null) {
+                mCamera.startPreview();
+            }
+        }
+
+        public void stopPreview() {
+            if (mCamera != null) {
+                mCamera.stopPreview();
+            }
+        }
+
+        private void release() {
+            if (mCamera != null) {
+                mCamera.release();
+            }
+        }
+
+        /**
+         * Start auto focus
+         *
+         * @param callback
+         */
+        public void autoFocus(Camera.AutoFocusCallback callback) {
+            if (mCamera != null) {
+                mCamera.autoFocus(callback);
+            }
+        }
+
+        /**
+         * Cancel the antoFocus
+         */
+        public void cancelAutoFocus() {
+            if (mCamera != null) {
+                mCamera.cancelAutoFocus();
+            }
+        }
+
+        public void setPreviewDisplay(SurfaceHolder holder) {
+            try {
+                mCamera.setPreviewDisplay(holder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void setDisplayOrientation(int previewDefaultDegree) {
+
+            // 魅族M9取景方向需要矫正
+            if (GAdapter.IS_MEIZU_M9) {
+                // TODO 180需要抽取成一个常量,放到一个统一管理适配的类中
+                previewDefaultDegree = 180;
+            }
+
+            mCamera.setDisplayOrientation(previewDefaultDegree);
+        }
+
+        public void setParameters(Parameters parameters) {
+            mCamera.setParameters(parameters);
+        }
+
+        public void takePicture(Camera.ShutterCallback shutter,
+                                Camera.PictureCallback raw,
+                                Camera.PictureCallback post,
+                                Camera.PictureCallback jpeg) {
+            mCamera.setPreviewCallback(null);
+            mCamera.takePicture(shutter, raw, post, jpeg);
+        }
+
+        public void addCallbackBuffer(byte[] buffer) {
+            if (mCamera != null) {
+                mCamera.addCallbackBuffer(buffer);
+            }
+        }
+
+        /**
+         * 设置普通的preivewCall.
+         *
+         * @param callback
+         */
+        public void setPreviewCallBack(Camera.PreviewCallback callback) {
+            Log.i(TAG, "setPreviewCallBack");
+            if (mCamera != null) {
+                mCamera.setPreviewCallback(callback);
+            }
+        }
+
+        /**
+         * 设置普通的preivewCall.
+         *
+         * @param callback
+         */
+        public void setOneShotPreviewCallBack(Camera.PreviewCallback callback) {
+            Log.i(TAG, "setPreviewCallBack");
+            if (mCamera != null) {
+                mCamera.setOneShotPreviewCallback(callback);
+            }
+        }
+
+        public void setPreviewCallbackWithBuffer(Camera.PreviewCallback pb) {
+            if (mCamera != null) {
+                mCamera.setPreviewCallbackWithBuffer(pb);
+            }
+        }
+
+        @TargetApi(ApiHelper.VERSION_CODES.HONEYCOMB)
+        public void setPreviewTexture(SurfaceTexture texture) throws IOException {
+            mCamera.setPreviewTexture(texture);
+        }
+
+        public void startSmoothZoom(int value) {
+            mCamera.startSmoothZoom(value);
+        }
+    }
+}

@@ -1,0 +1,186 @@
+package com.pinguo.mix;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.telephony.TelephonyManager;
+import android.view.View;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.widget.CompositeSDKDialog;
+
+import java.util.Random;
+
+/**
+ * Created by taoli on 14-9-19.
+ */
+public class RatingController {
+
+    private static String GP_PACKAGE_NAME = "com.android.vending";
+
+    public void showRatingDialog(Activity activity,
+                                 final View.OnClickListener confirmListener,
+                                 final View.OnClickListener cancelListener) {
+
+        final boolean installed
+                = SystemUtils.checkApkExist(activity, GP_PACKAGE_NAME);
+        final boolean isChannelFromGooglePlay
+                = "GooglePlay".equals(activity.getString(R.string.channel));
+
+        final Context context = activity.getApplicationContext();
+
+        final CompositeSDKDialog ratingDialog = new CompositeSDKDialog(activity);
+        ratingDialog.setMessage(R.string.composite_sdk_rating_msg);
+        ratingDialog.setNegativeBtn(0, R.string.composite_sdk_rating_confirm,
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                StatisticManager.onEvent(view.getContext(),
+                        StatisticManager.KEY_ACTION_RATE_FUNCTION, "火速支持");
+
+                //检查有无安装GooglePlay  tangsong 2013.06.18 ++
+                if (isChannelFromGooglePlay && installed) {
+                    Intent intent = context.getPackageManager().getLaunchIntentForPackage(GP_PACKAGE_NAME);
+                    intent.setData(Uri.parse("http://play.google.com/store/apps/details?id=com.pinguo.edit.sdk"));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setAction(Intent.ACTION_VIEW);
+                    context.startActivity(intent);
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("market://details?id=com.pinguo.edit.sdk"));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    try {
+                        context.startActivity(intent);
+                    } catch (ActivityNotFoundException e) {
+                        e.printStackTrace();
+                        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.pinguo.edit.sdk"));
+                        try {
+                            context.startActivity(intent);
+                        } catch (ActivityNotFoundException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                }
+
+                ratingDialog.dismiss();
+                if (null != confirmListener) {
+                    confirmListener.onClick(view);
+                }
+            }
+        });
+        ratingDialog.setPositiveBtn(0, R.string.composite_sdk_rating_cancel,
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                StatisticManager.onEvent(view.getContext(),
+                        StatisticManager.KEY_ACTION_RATE_FUNCTION, "再观望");
+
+                ratingDialog.dismiss();
+                if (null != cancelListener) {
+                    cancelListener.onClick(view);
+                }
+            }
+        });
+        ratingDialog.setCancelable(false);
+        ratingDialog.setCanceledOnTouchOutside(false);
+        ratingDialog.show();
+    }
+
+    public boolean needRating(Context context) {
+
+        int versionCode = -1;
+        try {
+            PackageInfo pkgInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), PackageManager.GET_CONFIGURATIONS);
+            versionCode = pkgInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        final SharedPreferences pref = context.getSharedPreferences("MIX_PREF", Context.MODE_PRIVATE);
+        int shownVersion = pref.getInt("MIX_PREF_KEY_RATING_SHOWN_VERSION", -1);
+
+        //case.1
+        if (shownVersion > 0 && shownVersion == versionCode) {
+            //在该版本中已经显提示，不再提示
+            return false;
+        }
+
+        int startTime = pref.getInt("MIX_PREF_KEY_RATING_START_TIME_" + versionCode, 0);
+        if (startTime > 0) {
+            long snrNumber = getSnrFromIMEI(context);
+
+            if (versionCode != -1) {
+                //case.2.1
+                GLogger.v("", " snrNumber / 3 = " + (snrNumber % 3) + ", mVersionCode / 3 = " + (versionCode % 3));
+                if (snrNumber % 3 == versionCode % 3) {
+                    GLogger.v("", " OK, you now can show grade tip UI .");
+                    pref.edit()
+                            .putInt("MIX_PREF_KEY_RATING_SHOWN_VERSION", versionCode)
+                            .apply();
+                    return true;
+                } else {
+                    GLogger.v("", " sorry, wait for next version to show grade UI");
+                    return false;
+                }
+            } else {
+                //case.2.2 获取失败，每个版本都弹（或许这种情况永远不会出现）
+                GLogger.v("", " error occurs, show tip in every vision.");
+                return true;
+            }
+        } else {
+            pref.edit().putInt("MIX_PREF_KEY_RATING_START_TIME_" + versionCode, 1).apply();
+            return false;
+        }
+    }
+
+    /**
+     * 如果没有Telephone 模块，会返回一个随机数
+     * @param context
+     */
+    private long getSnrFromIMEI(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String snrNumber = null;
+        if (tm != null) {//没有Telephone 的设备 TelePhonyManager 会为null
+            //手机IMEI码结构说明 
+            //手机IMEI码由15-17位数字组成。 
+            //第一部分 TAC，Type Allocation Code，类型分配码，由8位数字组成（早期是6位），是区分手机品牌和型号的编码，该代码由GSMA及其授权机构分配。其中TAC码前两位又是分配机构标识（Reporting Body Identifier），是授权IMEI码分配机构的代码，如01为美国CTIA，35为英国BABT，86为中国TAF。 
+            //第二部分 FAC，Final Assembly Code，最终装配地代码，由2位数字构成，仅在早期TAC码为6位的手机中存在，所以TAC和FAC码合计一共8位数字。FAC码用于生产商内部区分生产地代码。 
+            //第三部分 SNR，Serial Number，序列号，由第9位开始的6位数字组成，区分每部手机的生产序列号。 
+            //第四部分 CD，Check Digit，验证码，由前14位数字通过Luhn算法计算得出。 
+            //第五部分 SVN，Software Version Number，软件版本号，区分同型号手机出厂时使用的不同软件版本，仅在部分品牌的部分机型中存在。 
+            //一般来说，由IMEI码中的TAC部分就可以得出手机的型号，但也有个别品牌不同型号的手机共用一个TAC码。同时，由
+            //于一个TAC最多只能对应6位数字序列号，即100万台手机，所以诺基亚N95、苹果iPhone等热门机型有多个TAC号段。 本站查询IMEI码仅需要输入前15位，软件版本号不需要输入。
+            snrNumber = tm.getDeviceId();
+        } else {
+            snrNumber = null;
+        }
+
+        long deviceNumber = -1;
+        if (snrNumber != null) {
+            try {
+                //截取SNR部分，此字段分别较为平均
+                if (snrNumber.length() >= 14) {
+                    snrNumber = snrNumber.substring(9, 14);
+                }
+                deviceNumber = Long.parseLong(snrNumber);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (deviceNumber == -1) {
+            deviceNumber = new Random().nextLong();
+        }
+        return deviceNumber;
+    }
+}

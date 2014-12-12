@@ -1,0 +1,78 @@
+package us.pinguo.android.effect.group.sdk.androidsdk;
+
+import android.content.Context;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectFactory;
+import us.pinguo.androidsdk.PGGLSurfaceView;
+import us.pinguo.androidsdk.PGImageSDK;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class SDKManager {
+
+    private PGImageSDK mPGImageSDK;
+    private Context mContext;
+
+    private boolean isResume;
+    private PGGLSurfaceView mGlSurfaceView;
+
+    public SDKManager(Context context, PGGLSurfaceView glSurfaceView) {
+        this.mContext = context;
+        this.mGlSurfaceView = glSurfaceView;
+    }
+
+    public SDKManager(Context context) {
+        this(context, null);
+    }
+
+
+    public void onResume() {
+
+        mPGImageSDK = new PGImageSDK(mContext,
+                mContext.getString(ResourceHelper.getString(mContext, "composite_sdk_key")),
+                EffectFactory.getShaderFile(mContext));
+        if (mGlSurfaceView != null) {
+            mGlSurfaceView.onResume();
+        }
+        isResume = true;
+    }
+
+    public void onPause() {
+        isResume = false;
+        mPGImageSDK.destroySDK();
+        if (mGlSurfaceView != null) {
+            mGlSurfaceView.onPause();
+        }
+
+    }
+
+    public void makePhoto(PGRendererMethod rendererMethod) {
+        mPGImageSDK.renderAction(rendererMethod);
+    }
+
+    public void showPhoto(PGRendererMethod rendererMethod) {
+        mGlSurfaceView.renderAction(rendererMethod);
+    }
+
+    public boolean isActionResume() {
+        return isResume;
+    }
+
+
+//    public static class GetGLSurfaceViewBitmapForSDKManagerRendererMethod extends GetGLSurfaceViewBitmapRendererMethod{
+//
+//        private boolean handlerOnPause = true;
+//
+//        public void stopOnPause(){
+//            handlerOnPause = false;
+//        }
+//
+//        public boolean isHandlerOnPause(){
+//            return handlerOnPause;
+//        }
+//    }
+}

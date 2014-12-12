@@ -1,0 +1,145 @@
+package com.pinguo.edit.sdk.filter.square.model.entity;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by hlf on 14-11-25.
+ * 滤镜数据bean类
+ */
+public class OnLineCompositeBean extends BaseBean {
+
+    private String originEtag;
+
+    private String editEtag;
+
+    private String info;
+
+    private String userId;
+
+    private String avatar;
+
+    private String nickName;
+
+    private String filterName;
+
+    private String data;
+
+    private String downloadCnt;
+
+    private String id;
+
+    private long created;
+
+    public void setOriginEtag(String originEtag) {
+        this.originEtag = originEtag;
+    }
+
+    public void setEditEtag(String editEtag) {
+        this.editEtag = editEtag;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public void setFilterName(String filterName) {
+        this.filterName = filterName;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
+    public void setDownloadCnt(String downloadCnt) {
+        this.downloadCnt = downloadCnt;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setCreated(long created) {
+        this.created = created;
+    }
+
+    public long getCreated() {
+        return created;
+    }
+
+    public String getOriginEtag() {
+
+        return originEtag;
+    }
+
+    public String getEditEtag() {
+        return editEtag;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public String getFilterName() {
+        return filterName;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public String getDownloadCnt() {
+        return downloadCnt;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    protected boolean isValid(Object obj) {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OnLineCompositeBean)) return false;
+
+        OnLineCompositeBean bean = (OnLineCompositeBean) o;
+
+        if (id.equals(bean.id)) return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        return result;
+    }
+
+
+}

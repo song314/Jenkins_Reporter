@@ -1,0 +1,65 @@
+package com.pinguo.edit.sdk;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.android.volley.toolbox.Volley;
+import com.pinguo.Camera360Lib.network.HttpRequestQueue;
+import com.pinguo.Camera360Lib.network.TrustAllCertsHttpClientStack;
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.mix.AppCrashHandler;
+import com.pinguo.mix.api.Constants;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+/**
+ * @author Tsmile
+ */
+public class MainApplication extends Application {
+
+    private AppCrashHandler mAppCrashHandler;
+    private static MainApplication sAppInstance = null;
+
+    @Override
+    public void onCreate() {
+        PGCompositeSDKApi.initSDK(this);
+        super.onCreate();
+        sAppInstance = this;
+
+        mAppCrashHandler = new AppCrashHandler(this);
+        Thread.setDefaultUncaughtExceptionHandler(mAppCrashHandler);
+
+        initVolley(this);
+
+        String imsi = SystemUtils.getIMSI(getApplicationContext());
+        String mccmnc = "";
+        String mcc = "";
+        String mnc = "";
+        if (null != imsi && imsi.length() >= 5) {
+            mccmnc = imsi.substring(0, 5);
+            mcc = mccmnc.substring(0, 3);
+            mnc = mccmnc.substring(3, 5);
+        }
+        Constants.sMCC = mcc;
+        Constants.sMNC = mnc;
+        Constants.sDeviceId = SystemUtils.getIMEI(getApplicationContext());
+        Constants.sAppVersion = SystemUtils.getVersionCode(getApplicationContext());
+        Constants.sChannel = getApplicationContext().getResources().getString(R.string.channel);
+    }
+
+    private void initVolley(Context context) {
+        HttpRequestQueue.setInstance(Volley.newRequestQueue(context, new TrustAllCertsHttpClientStack()));
+    }
+
+    /**
+     * 取得Application Context
+     * App为空时抛出npe
+     *
+     * @return Application Context, this getInstance of Application
+     */
+    public static Context getAppContext() {
+        if (sAppInstance == null)
+            throw new NullPointerException("App getInstance not create or be terminated");
+        return sAppInstance.getApplicationContext();
+    }
+}

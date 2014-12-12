@@ -1,0 +1,54 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.TextView;
+
+
+/**
+ * Created by pinguo on 14-7-4.
+ */
+public class AutoHideTextView extends TextView {
+
+    private long mLastShowTime;
+    private final static long HIDE_TIME = 1000l;
+
+    public AutoHideTextView(Context context) {
+        super(context);
+    }
+
+    public AutoHideTextView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public AutoHideTextView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public void setTextForShow(String str){
+        mLastShowTime = System.currentTimeMillis();
+        mHandler.sendEmptyMessageDelayed(1,HIDE_TIME + 1l);
+        setText(str);
+        if(getVisibility() == View.GONE){
+            setVisibility(View.VISIBLE);
+        }
+    }
+
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void dispatchMessage(Message msg) {
+            if(System.currentTimeMillis() - mLastShowTime >= HIDE_TIME){
+                setVisibility(View.GONE);
+            }
+        }
+    };
+
+    public void hideForNow() {
+        mLastShowTime = -1;
+        mHandler.sendEmptyMessage(1);
+    }
+}

@@ -1,0 +1,90 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+
+/**
+ * Created by huowaa on 14-6-28.
+ */
+public class TiltShift extends Effect {
+    private static final String TAG = TiltShift.class.getSimpleName();
+
+    protected static final String[] mTags = new String[]{
+            "F1.0", "F1.2", "F1.4", "F2.0", "F2.8", "F3.2"
+    };
+
+    protected static final float[] mValues = new float[]{
+            1.5f, 1.25f, 1.0f, 0.8f, 0.55f, 0.3f
+    };
+
+    // 移轴自有的cmd参数
+    public String maskCmd;
+    public String blurCmd;
+    public String singleCmd;
+
+    public TiltShift() {
+        this.type = Type.TiltShift.name();
+        this.key = TiltShift.class.getSimpleName();
+        this.icon = "composite_sdk_advance_base_param_tilt_shift";
+        this.name = "composite_sdk_tilt_shift";
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        TiltShift base = null;
+
+        try {
+            base = (TiltShift) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != base) {
+            return base;
+        } else {
+            return new TiltShift();
+        }
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", type);
+            jsonObject.put("packName", "");
+            jsonObject.put("name", "");
+            if (null != param) {
+                for (ParamItem item : param.getParamItemList()) {
+                    if (item.key.equals("Strong")) {
+                        for (int i = 0;
+                             i < mValues.length;
+                             i++) {
+                            if (mValues[i] == ((ParamFloatItem) item).value) {
+                                jsonObject.put("value", mTags[i]);
+                                jsonObject.put("minValue", 0);
+                                jsonObject.put("type", 0);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

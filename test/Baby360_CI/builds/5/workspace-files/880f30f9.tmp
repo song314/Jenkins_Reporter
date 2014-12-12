@@ -1,0 +1,192 @@
+package com.pinguo.edit.sdk.gallery.data;
+
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.ImageColumns;
+import com.pinguo.edit.sdk.gallery.AlbumAppImpl;
+import com.pinguo.edit.sdk.gallery.ui.layout.BaseSlotLayout;
+import com.pinguo.edit.sdk.gallery.util.AlbumUtils;
+import com.pinguo.edit.sdk.gallery.util.GMLogger;
+import com.pinguo.edit.sdk.gallery.util.Utils;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+
+public class Album extends MediaSet {
+
+    private static final String TAG = "Album";
+    private static final String[] COUNT_PROJECTION = {"count(*)"};
+    private static final int INVALID_COUNT = -1;
+    private final String mWhereClause;
+    private final String mOrderClause;
+    private final Uri mBaseUri;
+    private final String[] mProjection;
+    private final AlbumAppImpl mApplication;
+    private final ContentResolver mResolver;
+    private final String mName;
+    private final ChangeNotifier mNotifier;
+    private int mCachedCount = INVALID_COUNT;
+
+    // cache info
+    public Album(AlbumAppImpl app, Path path, String name) {
+        super(path, nextVersionNumber());
+        mApplication = app;
+        mResolver = app.getApplication().getContentResolver();
+        mName = name;
+        mWhereClause = ImageColumns.BUCKET_ID + " = ?";
+        mOrderClause = ImageColumns.DATE_TAKEN + " DESC";
+        mBaseUri = Images.Media.EXTERNAL_CONTENT_URI;
+        mProjection = Image.PROJECTION;
+        mNotifier = new ChangeNotifier(this, mBaseUri, app);
+    }
+
+    @Override
+    public Uri getContentUri() {
+        return Images.Media.EXTERNAL_CONTENT_URI
+                .buildUpon()
+                .appendQueryParameter("bucketId",
+                        String.valueOf(mPath.getPathId())).build();
+    }
+
+    @Override
+    public ArrayList<SortTag> analysisSortTags() {
+        long starttime = System.currentTimeMillis();
+        ArrayList<SortTag> ret = new ArrayList<SortTag>();
+        Cursor cursor = mResolver.query(mBaseUri, new String[]{
+                ImageColumns.DATE_TAKEN, ImageColumns.BUCKET_ID,
+                "count(" + ImageColumns.BUCKET_ID + ")"},
+                ImageColumns.BUCKET_ID + " = ? " + ") group by ("
+                        + ImageColumns.DATE_TAKEN + "/86400000",
+                new String[]{String.valueOf(mPath.getPathId())},
+                ImageColumns.DATE_TAKEN + " DESC ");
+        if (cursor == null) {
+            GMLogger.w(TAG, "query fail: " + mBaseUri);
+            return ret;
+        }
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd E");
+            int lastCount = 0;
+            while (cursor.moveToNext()) {
+                SortTag tag = new SortTag();
+                tag.name = formatter.format(cursor.getLong(0));
+                if (ret.size() > 0) {
+                    tag.index = lastCount;
+                } else {
+                    tag.index = 0;
+                }
+                // GMLogger.i(TAG, "xxxx:" + tag.name + ":::" + tag.index + ":" +
+                // cursor.getInt(2));
+                lastCount += cursor.getInt(2);
+                ret.add(tag);
+            }
+        } finally {
+            cursor.close();
+        }
+        GMLogger.i(TAG,
+                "-------------get tags used time:"
+                        + (System.currentTimeMillis() - starttime));
+        return ret;
+    }
+
+    @Override
+    public ArrayList<MediaItem> getMediaItem(int start, int count) {
+        Uri uri = mBaseUri.buildUpon()
+                .appendQueryParameter("limit", start + "," + count).build();
+        //GMLogger.i(TAG, "------------22-------info.reloadStart:info.reloadCount " + start + ":" + count);
+        ArrayList<MediaItem> list = new ArrayList<MediaItem>();
+        AlbumUtils.assertNotInRenderThread();
+        Cursor cursor = mResolver.query(uri, mProjection, mWhereClause, new String[]{String.valueOf(mPath.getPathId())},
+                mOrderClause);
+        if (cursor == null) {
+            GMLogger.w(TAG, "query fail: " + uri);
+            return list;
+        }
+        try {
+            while (cursor.moveToNext()) {
+                MediaItem item = new Image(mApplication, new Path(
+                        DataManager.MEDIA_TYPE_SYSTEM_IMAGE,
+                        cursor.getString(Image.INDEX_DATA), cursor.getLong(Image.INDEX_DATE_TAKEN)), cursor);
+                //GMLogger.i(TAG, "------------212------- " + cursor.getString(Image.INDEX_DATA) + ":" + cursor.getLong(0));
+                list.add(item);
+            }
+        } finally {
+            cursor.close();
+        }
+        return list;
+    }
+
+    @Override
+    public int getMediaItemCount() {
+        if (mCachedCount == INVALID_COUNT) {
+            Cursor cursor = mResolver.query(mBaseUri, COUNT_PROJECTION,
+                    mWhereClause,
+                    new String[]{String.valueOf(mPath.getPathId())}, null);
+            if (cursor == null) {
+                GMLogger.w(TAG, "query fail");
+                return 0;
+            }
+            try {
+                Utils.assertTrue(cursor.moveToNext());
+                mCachedCount = cursor.getInt(0);
+            } finally {
+                cursor.close();
+            }
+        }
+        return mCachedCount;
+    }
+
+    @Override
+    public String getName() {
+        return mName;
+    }
+
+    @Override
+    public long reload() {
+        if (mNotifier.isDirty()) {
+            mDataVersion = nextVersionNumber();
+            mCachedCount = INVALID_COUNT;
+        }
+        return mDataVersion;
+    }
+
+    @Override
+    public void delete() {
+        AlbumUtils.assertNotInRenderThread();
+        mResolver.delete(mBaseUri, mWhereClause,
+                new String[]{String.valueOf(mPath.getPathId())});
+    }
+
+    @Override
+    public boolean isLeafAlbum() {
+        return true;
+    }
+
+    @Override
+    public ArrayList<Path> getMediaItem(ArrayList<BaseSlotLayout.SlotPos> slotPos,
+                                        int checkedCount) {
+        ArrayList<Path> list = new ArrayList<Path>();
+        AlbumUtils.assertNotInRenderThread();
+        Cursor cursor = mResolver.query(mBaseUri, mProjection, mWhereClause,
+                new String[]{String.valueOf(mPath.getPathId())},
+                mOrderClause);
+        if (cursor == null || cursor.getCount() != slotPos.size()) {
+            GMLogger.w(TAG, " getMediaItem fail********album**********: " + mBaseUri);
+            return list;
+        }
+        try {
+            int index = 0;
+            while (cursor.moveToNext() && list.size() < checkedCount) {
+                if (slotPos.get(index).isChecked) {
+                    list.add(new Path(DataManager.MEDIA_TYPE_SYSTEM_IMAGE,
+                            cursor.getString(Image.INDEX_DATA), cursor.getLong(Image.INDEX_DATE_TAKEN)));
+                }
+                index++;
+            }
+        } finally {
+            cursor.close();
+        }
+        return list;
+    }
+}

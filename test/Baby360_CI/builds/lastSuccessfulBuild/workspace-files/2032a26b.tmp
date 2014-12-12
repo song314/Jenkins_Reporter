@@ -1,0 +1,496 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+
+/**
+ * Created by hlf on 13-12-5.
+ */
+public class PGEditTiltShiftView extends View implements View.OnTouchListener {
+
+    private final static int MIN_VALUE = 10;
+    private final static double RADIAN = 57.32d;
+
+    private static final float MAX_OUTSIDE_RATE = 0.7f;
+    private static final float MIN_OUTSIDE_RATE = 0.1f;
+
+    private Paint mInSidePaint = new Paint();
+
+    {
+        mInSidePaint.setColor(Color.argb(0x7F, 0, 0, 0));
+        mInSidePaint.setStyle(Paint.Style.STROKE);
+        mInSidePaint.setStrokeWidth(2);
+    }
+
+    private Paint mOutSidePaint = new Paint();
+
+    {
+        mOutSidePaint.setColor(Color.argb(0x3F, 0, 0, 0));
+        mOutSidePaint.setStyle(Paint.Style.STROKE);
+        mOutSidePaint.setStrokeWidth(2);
+    }
+
+    private int width;
+    private int height;
+    private int photoWidth;
+    private int photoHeight;
+    private int photoLeft;
+    private int photoTop;
+    private int photoRight;
+    private int photoBottom;
+    private long diagonalLine;
+
+    private DrawView mNowDrawView;
+
+    private float mLastX;
+    private float mLastY;
+    private float mLastVectorX;
+    private float mLastVectorY;
+
+    private double mLastDistance;
+    private boolean mIsPointer2;
+
+    private float mMinRoundRate;
+
+    private TiltShiftViewListener mTiltShiftViewListener;
+    //    private float[] mParamValues;
+    private ParamVecItem mCircleParamItem;
+    private float[] mCircleParamValue;
+
+    private ParamVecItem mLineParamItem1;
+    private float[] mLineParamValue1;
+
+    private ParamVecItem mLineParamItem2;
+    private float[] mLineParamValue2;
+
+    public PGEditTiltShiftView(Context context) {
+        super(context);
+        init();
+    }
+
+    public PGEditTiltShiftView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public PGEditTiltShiftView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init() {
+        setOnTouchListener(this);
+    }
+
+    public void setTilfShiftViewListener(TiltShiftViewListener listener) {
+        this.mTiltShiftViewListener = listener;
+    }
+
+    public void setWidthHeight(int width, int height, int photoWidth, int photoHeight) {
+        this.width = width;
+        this.height = height;
+        this.photoWidth = photoWidth;
+        this.photoHeight = photoHeight;
+
+        photoLeft = (width - photoWidth) / 2;
+        photoTop = (height - photoHeight) / 2;
+        photoRight = photoLeft + photoWidth;
+        photoBottom = photoTop + photoHeight;
+
+        //因为photowidht和photoheight的值很小（不可能大的），所以不会有溢出的问题
+        diagonalLine = Math.round(Math.sqrt((photoWidth * photoWidth + photoHeight * photoHeight)));
+
+        mMinRoundRate = MIN_VALUE / (float) diagonalLine;
+    }
+
+    public void initCircleTiltShift(ParamVecItem item) {
+        showCircleTiltShift(item);
+        if (mTiltShiftViewListener != null) {
+            mTiltShiftViewListener.stop();
+        }
+    }
+
+    public void showCircleTiltShift(ParamVecItem item) {
+        mCircleParamItem = item;
+        mCircleParamValue = mCircleParamItem.getValues();
+        mNowDrawView = new RoundDrawView();
+        if (mTiltShiftViewListener != null) {
+            mTiltShiftViewListener.move();
+        }
+    }
+
+    public void initLineTiltShift(ParamVecItem item1, ParamVecItem item2) {
+        showLineTiltShift(item1, item2);
+        if (mTiltShiftViewListener != null) {
+            mTiltShiftViewListener.stop();
+        }
+    }
+
+    public void showLineTiltShift(ParamVecItem item1, ParamVecItem item2) {
+        mLineParamItem1 = item1;
+        mLineParamValue1 = mLineParamItem1.getValues();
+
+        mLineParamItem2 = item2;
+        mLineParamValue2 = mLineParamItem2.getValues();
+
+        mNowDrawView = new LineDrawView();
+        if (mTiltShiftViewListener != null) {
+            mTiltShiftViewListener.move();
+        }
+
+        invalidate();
+    }
+
+    public void clearTiltShift() {
+        mNowDrawView = null;
+        mTiltShiftViewListener = null;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+
+        if (mNowDrawView != null) {
+            mNowDrawView.drawView(canvas);
+        }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+
+        int action = event.getAction();
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                mLastX = event.getX();
+                mLastY = event.getY();
+
+                break;
+
+            case MotionEvent.ACTION_POINTER_2_DOWN:
+                mIsPointer2 = true;
+                mLastDistance = distanceBetweenFingers(event);
+
+                break;
+
+            case MotionEvent.ACTION_POINTER_UP:
+                break;
+
+            case MotionEvent.ACTION_UP:
+                mIsPointer2 = false;
+                mLastVectorX = -1f;
+                mLastVectorY = -1f;
+                if (null != mTiltShiftViewListener) {
+                    mTiltShiftViewListener.stop();
+                }
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                if (mNowDrawView != null) {
+                    mNowDrawView.move(event);
+                }
+
+                break;
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+    private double distanceBetweenFingers(MotionEvent event) {
+        float disX = Math.abs(event.getX(0) - event.getX(1));
+        float disY = Math.abs(event.getY(0) - event.getY(1));
+        return Math.sqrt(disX * disX + disY * disY);
+    }
+
+    public abstract class DrawView {
+
+        public abstract void drawView(Canvas canvas);
+
+        public abstract void move(MotionEvent event);
+    }
+
+    public class RoundDrawView extends DrawView {
+
+        public RoundDrawView() {
+
+        }
+
+        @Override
+        public void drawView(Canvas canvas) {
+
+        }
+
+        public void move(MotionEvent event) {
+
+            int count = event.getPointerCount();
+            if (count == 1) {
+                if (!mIsPointer2) {
+                    moveView(event);
+                }
+
+            } else if (count == 2) {
+                scaleView(event);
+            }
+        }
+
+        public void scaleView(MotionEvent event) {
+            float outSideCircleRoundRate = mCircleParamValue[3];
+
+            double distance = distanceBetweenFingers(event);
+            double increaseRate = (distance - mLastDistance) / (diagonalLine * 2);
+
+            if (outSideCircleRoundRate + (float) increaseRate < mMinRoundRate) {
+                mCircleParamValue[3] = mMinRoundRate;
+            } else {
+                mCircleParamValue[3] = (float) (outSideCircleRoundRate + increaseRate);
+            }
+
+            if (mCircleParamValue[3] > MAX_OUTSIDE_RATE) {
+                mCircleParamValue[3] = MAX_OUTSIDE_RATE;
+            } else if (mCircleParamValue[3] < MIN_OUTSIDE_RATE) {
+                mCircleParamValue[3] = MIN_OUTSIDE_RATE;
+            }
+
+            mCircleParamValue[2] = mCircleParamValue[3] * 3 / 7;
+            mCircleParamItem.setValues(mCircleParamValue);
+
+            mLastDistance = distance;
+            invalidate();
+
+            if (mTiltShiftViewListener != null) {
+                mTiltShiftViewListener.move();
+            }
+        }
+
+        public void moveView(MotionEvent event) {
+            float moveX = event.getX() - mLastX;
+            float moveY = event.getY() - mLastY;
+
+            float moveXRate = moveX / photoWidth;
+            float moveYRate = moveY / photoHeight;
+
+            float centerX = event.getX() / photoWidth;
+            if (moveX > 0) {
+                if (centerX + moveXRate > 1f) {
+                    mCircleParamValue[0] = 1f;
+                } else {
+                    mCircleParamValue[0] = centerX + moveXRate;
+                }
+
+            } else {
+                if (centerX + moveXRate < 0f) {
+                    mCircleParamValue[0] = 0f;
+                } else {
+                    mCircleParamValue[0] = centerX + moveXRate;
+                }
+            }
+
+            float centerY = event.getY() / photoHeight;
+            if (moveY > 0) {
+                if (centerY + moveYRate > 1f) {
+                    mCircleParamValue[1] = 1f;
+                } else {
+                    mCircleParamValue[1] = centerY + moveYRate;
+                }
+
+            } else {
+                if (centerY + moveYRate < 0f) {
+                    mCircleParamValue[1] = 0f;
+                } else {
+                    mCircleParamValue[1] = centerY + moveYRate;
+                }
+            }
+
+            mCircleParamItem.setValues(mCircleParamValue);
+
+            mLastX = event.getX();
+            mLastY = event.getY();
+            invalidate();
+
+            if (mTiltShiftViewListener != null) {
+                mTiltShiftViewListener.move();
+            }
+        }
+    }
+
+    public class LineDrawView extends DrawView {
+
+        private Rect mInSideLine = new Rect();
+        private Rect mOutSideLine = new Rect();
+
+        public LineDrawView() {
+
+            mInSideLine.left = -width;
+            mInSideLine.right = 2 * width;
+
+            mOutSideLine.left = -width;
+            mOutSideLine.right = 2 * width;
+
+            init();
+        }
+
+        public void init() {
+
+        }
+
+        @Override
+        public void drawView(Canvas canvas) {
+            changeLineValue();
+        }
+
+        @Override
+        public void move(MotionEvent event) {
+
+            int count = event.getPointerCount();
+            if (count == 1) {
+                if (!mIsPointer2) {
+                    moveView(event);
+                }
+
+            } else if (count == 2) {
+
+                scaleAndRotate(event);
+            }
+        }
+
+        private void moveView(MotionEvent event) {
+
+            float centerX = event.getX() / photoWidth;
+            float centerY = event.getY() / photoHeight;
+
+            float x = event.getX();
+            float y = event.getY();
+
+            float shiftingX = x - mLastX;
+            float shiftingY = y - mLastY;
+
+            float centerRoundX = photoLeft + centerX * photoWidth;
+            float centerRoundY = photoTop + centerY * photoHeight;
+
+            if (centerRoundX + shiftingX < photoLeft) {
+                mLineParamValue1[0] = 0f;
+            } else if (centerRoundX + shiftingX > photoRight) {
+                mLineParamValue1[0] = 1f;
+            } else {
+                mLineParamValue1[0] = centerX + shiftingX / photoWidth;
+            }
+
+            if (centerRoundY + shiftingY < photoTop) {
+                mLineParamValue1[1] = 0f;
+            } else if (centerRoundY + shiftingY > photoBottom) {
+                mLineParamValue1[1] = 1f;
+            } else {
+                mLineParamValue1[1] = centerY + shiftingY / photoHeight;
+            }
+
+            mLineParamItem1.setValues(mLineParamValue1);
+
+            mLastX = event.getX();
+            mLastY = event.getY();
+            invalidate();
+
+            if (mTiltShiftViewListener != null) {
+                mTiltShiftViewListener.move();
+            }
+        }
+
+        private void changeLineValue() {
+
+            float centerY = mLineParamValue1[0];
+            float lineWidth = mLineParamValue2[1];
+            float outSideCircleRoundRate = mLineParamValue2[2];
+
+            mInSideLine.top = Math.round(centerY * photoHeight + photoTop - lineWidth * diagonalLine);
+            mInSideLine.bottom = Math.round(mInSideLine.top + 2 * lineWidth * diagonalLine);
+
+            float step = outSideCircleRoundRate - lineWidth;
+            mOutSideLine.top = Math.round(mInSideLine.top - (step * diagonalLine));
+            mOutSideLine.bottom = Math.round(mInSideLine.bottom + (step * diagonalLine));
+        }
+
+        private void scaleAndRotate(MotionEvent event) {
+
+            if (mLastVectorY == -1 || mLastVectorX == -1) {
+                mLastVectorX = event.getX(1) - event.getX(0);
+                mLastVectorY = event.getY(1) - event.getX(0);
+
+            } else {
+                float vectorX = event.getX(1) - event.getX(0);
+                float vectorY = event.getY(1) - event.getY(0);
+
+                double vector = (mLastVectorX * vectorX + mLastVectorY * vectorY)
+                        / (Math.sqrt(mLastVectorX * mLastVectorX + mLastVectorY * mLastVectorY)
+                        * Math.sqrt(vectorX * vectorX + vectorY * vectorY));
+
+                if (vector >= -1 && vector <= 1) {
+                    float degree = (float) (Math.acos(vector) * RADIAN);
+
+                    if (degree < 4f) {
+
+                        float vxy = vectorY / vectorX;
+                        float lastvxy = mLastVectorY / mLastVectorX;
+                        if (vxy < lastvxy) {
+                            degree = -degree;
+                        }
+
+                        float paramDegree = mLineParamValue2[0];
+                        mLineParamValue2[0] = paramDegree + degree;
+
+                        //当等于90度，黑屏，sdk bug
+                        if (paramDegree > 90f && paramDegree < 90.1f) {
+                            mLineParamValue2[0] = 90.1f;
+                        }
+                        if (paramDegree > 269f && paramDegree < 271f) {
+                            mLineParamValue2[0] = 270.2f;
+                        }
+                        //90.5在部分手机中会出现错误
+                        if (paramDegree > 90.2 && paramDegree < 90.8) {
+                            mLineParamValue2[0] = 90.8f;
+                        }
+                    }
+                }
+                mLastVectorX = vectorX;
+                mLastVectorY = vectorY;
+            }
+
+            double distance = distanceBetweenFingers(event);
+            double increaseRate = (distance - mLastDistance) / (diagonalLine * 2);
+
+            float outSideCircleRoundRate = mLineParamValue2[2];
+            mLineParamValue2[2] = outSideCircleRoundRate + (float) increaseRate;
+            if (mLineParamValue2[2] > MAX_OUTSIDE_RATE) {
+                mLineParamValue2[2] = MAX_OUTSIDE_RATE;
+            } else if (mLineParamValue2[2] < MIN_OUTSIDE_RATE) {
+                mLineParamValue2[2] = MIN_OUTSIDE_RATE;
+            }
+
+            mLineParamValue2[1] = mLineParamValue2[2] * 3 / 7;
+
+            mLineParamItem2.setValues(mLineParamValue2);
+
+            mLastDistance = distance;
+            invalidate();
+
+            if (mTiltShiftViewListener != null) {
+                mTiltShiftViewListener.move();
+            }
+        }
+    }
+
+    public interface TiltShiftViewListener {
+
+        public void move();
+
+        public void stop();
+    }
+
+}

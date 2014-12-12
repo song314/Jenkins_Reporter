@@ -1,0 +1,88 @@
+package com.pinguo.edit.sdk.login.view.Dialog;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by zhongzheng on 14-11-24.
+ */
+public class LogicDialog extends Dialog {
+    private int mTitle;
+    private int mMessage;
+    private String mExtraMessage;
+    private View.OnClickListener mPositiveBtnClickListener;
+
+    public LogicDialog(Context context) {
+        super(context, ResourceHelper.getStyle(context, "CompositeSDKFullScreenDialog"));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.composite_sdk_logic_dialog);
+
+        Button positiveBtn = (Button) findViewById(
+                R.id.confirm_btn);
+
+        if (null != mPositiveBtnClickListener) {
+            positiveBtn.setOnClickListener(mPositiveBtnClickListener);
+        } else {
+            positiveBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+        }
+
+        Button negativeBtn = (Button) findViewById(
+                ResourceHelper.getId(getContext(), "cancel_btn"));
+
+        negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+
+        TextView message = (TextView) findViewById(
+                ResourceHelper.getId(getContext(), "dialog_tv"));
+        if (0 != mMessage) {
+            String text = "";
+            if (0 != mMessage) {
+
+                if (mExtraMessage != null && !mExtraMessage.isEmpty()) {
+                    text = getContext().getString(mMessage, mExtraMessage);
+                } else {
+                    text = getContext().getString(mMessage, mExtraMessage);
+                }
+            }
+            message.setText(text);
+        }
+    }
+
+    public void setExtraMessage(String mes) {
+        mExtraMessage = mes;
+    }
+
+    public void setPositiveBtn(View.OnClickListener listener) {
+        mPositiveBtnClickListener = listener;
+    }
+
+    public void setTitle(int text) {
+        mTitle = text;
+    }
+
+    public void setMessage(int text) {
+        mMessage = text;
+    }
+}
+

@@ -1,0 +1,89 @@
+package com.pinguo.edit.sdk.filter.square.Info;
+
+import android.os.Bundle;
+
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+
+/**
+ * Created by taoli on 14-10-22.
+ */
+public class GetFilterInfoApi {
+
+    public static void AddFilterInfo(String originEtag,
+                                     String editEtag,
+                                     String info,
+                                     String data,
+                                     String userId,
+                                     String avatar,
+                                     String nickName,
+                                     String filterName,
+                                     final ApiCallback callback) {
+
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_FILTER_ORIGIN_ETAG, originEtag);
+        bundle.putString(ApiConstants.PARAM_FILTER_EDIT_ETAG, editEtag);
+        bundle.putString(ApiConstants.PARAM_FILTER_INFO, info);
+        bundle.putString(ApiConstants.PARAM_FILTER_DATA, data);
+        bundle.putString(ApiConstants.PARAM_FILTER_USER_ID, userId);
+        bundle.putString(ApiConstants.PARAM_FILTER_AVATAR, avatar);
+        bundle.putString(ApiConstants.PARAM_FILTER_NICK_NAME, nickName);
+        bundle.putString(ApiConstants.PARAM_FILTER_NAME, filterName);
+        new AddFilterInfo().execute(
+                ApiConstants.API_URL_ADD_FILTER_INFO, bundle, callback);
+    }
+
+//    public static void updateFilterInfo(int id,
+//                                        String originEtag,
+//                                        String editEtag,
+//                                        String info,
+//                                        String data,
+//                                        String userId,
+//                                        String avatar,
+//                                        String nickName,
+//                                        String filterName,
+//                                        final ApiCallback callback) {
+//
+//        Bundle bundle = new Bundle();
+//        bundle.putString(ApiConstants.PARAM_FILTER_ID, String.valueOf(id));
+//        bundle.putString(ApiConstants.PARAM_FILTER_ORIGIN_ETAG, originEtag);
+//        bundle.putString(ApiConstants.PARAM_FILTER_EDIT_ETAG, editEtag);
+//        bundle.putString(ApiConstants.PARAM_FILTER_INFO, info);
+//        bundle.putString(ApiConstants.PARAM_FILTER_DATA, data);
+//        bundle.putString(ApiConstants.PARAM_FILTER_USER_ID, userId);
+//        bundle.putString(ApiConstants.PARAM_FILTER_AVATAR, avatar);
+//        bundle.putString(ApiConstants.PARAM_FILTER_NICK_NAME, nickName);
+//        bundle.putString(ApiConstants.PARAM_FILTER_NAME, filterName);
+//        new AddFilterInfo().execute(
+//                ApiConstants.API_URL_UPDATE_FILTER_INFO, bundle, callback);
+//    }
+
+//    public static void getFilterInfo(int id,
+//                                     final ApiCallback callback) {
+//
+//        Bundle bundle = new Bundle();
+//        bundle.putString(ApiConstants.PARAM_FILTER_ID, String.valueOf(id));
+//        new AddFilterInfo().execute(
+//                ApiConstants.API_URL_GET_FILTER_INFO, bundle, callback);
+//    }
+
+//    public static void downloadFilterInfo(int id,
+//                                          final ApiCallback callback) {
+//
+//        Bundle bundle = new Bundle();
+//        bundle.putString(ApiConstants.PARAM_FILTER_ID, String.valueOf(id));
+//        new AddFilterInfo().execute(
+//                ApiConstants.API_URL_DOWNLOAD_FILTER_INFO, bundle, callback);
+//    }
+//
+//    public static void getNewestFilterInfo(int limit,
+//                                           int skip,
+//                                           final ApiCallback callback) {
+//
+//        Bundle bundle = new Bundle();
+//        bundle.putString(ApiConstants.PARAM_FILTER_LIMIT, String.valueOf(limit));
+//        bundle.putString(ApiConstants.PARAM_FILTER_SKIP, String.valueOf(limit));
+//        new AddFilterInfo().execute(
+//                ApiConstants.API_URL_GET_FILTER_NEWEST_INFO, bundle, callback);
+//    }
+}

@@ -1,0 +1,92 @@
+package com.pinguo.edit.sdk.login.user;
+
+import android.content.Context;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.pinguo.Camera360Lib.network.HttpStringRequest;
+import com.pinguo.edit.sdk.login.lib.network.ApiAsyncTaskBase;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.util.MD5;
+import com.pinguo.edit.sdk.login.model.LoginConfig;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+/**
+ * Created by crab on 14-10-27.
+ */
+public class ApiPhoneRegister extends ApiAsyncTaskBase<ApiPhoneRegister.Response> {
+    public static class Response {
+        public boolean data;
+        public int status;
+        public String message;
+    }
+
+    private String mPhoneNumber;
+    private String mPassword;
+
+    public ApiPhoneRegister(Context context, String phoneNumber, String password) {
+        super(context);
+        mPhoneNumber = phoneNumber;
+        mPassword = password;
+    }
+
+    @Override
+    public void get(final AsyncResult<Response> result) {
+        //两次md5加密
+        final String md5_password = MD5.password_md5(mPassword);
+        String url = LoginConfig.HOST + LoginConfig.REGISTER_PHONE_URL;
+        execute(new HttpStringRequest(Request.Method.POST, url) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+
+                LoginConfig.prepareCommonParams(mContext, params);
+                //邮箱跟密码参数
+                params.put("mobile", mPhoneNumber);
+                params.put("password", md5_password);
+                //获取签名
+                String sig = com.pinguo.Camera360Lib.utils.NetworkUtils.getSigByParamMap(params);
+                params.put("sig", sig);
+                return params;
+
+            }
+
+            @Override
+            protected void onResponse(String s) {
+                try {
+                    JSONObject responseObj = new JSONObject(s);
+                    Iterator<String> keys = responseObj.keys();
+                    Response response = new Response();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        if (key.equals("status")) {
+                            response.status = responseObj.getInt(key);
+                        } else if (key.equals("data")) {
+                            try {
+                                response.data = responseObj.getBoolean(key);
+                            } catch (Exception e) {
+
+                            }
+                        } else if (key.equals("message")) {
+                            response.message = responseObj.getString(key);
+                        }
+                    }
+                    postResponse(result, response);
+                } catch (JSONException e) {
+                    onErrorResponse(e);
+                }
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                postError(result, e);
+            }
+        });
+    }
+}

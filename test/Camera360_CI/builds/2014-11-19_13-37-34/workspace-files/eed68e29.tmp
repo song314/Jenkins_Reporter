@@ -1,0 +1,34 @@
+package com.pinguo.edit.sdk;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.android.volley.toolbox.Volley;
+import com.pinguo.Camera360Lib.network.HttpRequestQueue;
+import com.pinguo.Camera360Lib.network.TrustAllCertsHttpClientStack;
+import com.pinguo.mix.AppCrashHandler;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+/**
+ * @author Tsmile
+ */
+public class MainApplication extends Application {
+
+    private AppCrashHandler mAppCrashHandler;
+
+    @Override
+    public void onCreate() {
+        PGCompositeSDKApi.initSDK(this);
+        super.onCreate();
+
+        mAppCrashHandler = new AppCrashHandler(this);
+        Thread.setDefaultUncaughtExceptionHandler(mAppCrashHandler);
+
+        initVolley(this);
+    }
+
+    private void initVolley(Context context) {
+        HttpRequestQueue.setInstance(Volley.newRequestQueue(context, new TrustAllCertsHttpClientStack()));
+    }
+}

@@ -1,0 +1,57 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+
+/**
+ * Created by pinguo on 14-6-25.
+ */
+public class GLSurfaceViewCompositeRendererMethod extends EffectGroupRendererMethod {
+
+    private final static String TAG = GLSurfaceViewCompositeRendererMethod.class.getSimpleName();
+    private int mShowBitmapHeight;
+    private int mShowBitmapWidth;
+
+    protected void makePhoto() {
+
+        if (!this.getMakedImage2Screen(0, 0, 0, mShowBitmapWidth, mShowBitmapHeight)) {
+            if (mRendererMethodActionListener != null) {
+                mRendererMethodActionListener.fail();
+            }
+            GLogger.i(TAG, "getMakedImage2Screen is fail");
+            return;
+        }
+
+        if (mRendererMethodActionListener != null) {
+            mRendererMethodActionListener.successForGLSurfaceView();
+        }
+    }
+
+    @Override
+    public void setBitmap(Bitmap bitmap) {
+        super.setBitmap(bitmap);
+        if (null != bitmap) {
+            mShowBitmapHeight = bitmap.getHeight();
+            mShowBitmapWidth = bitmap.getWidth();
+        }
+    }
+
+    public void setShowBitmapHeight(int height) {
+        this.mShowBitmapHeight = height;
+    }
+
+    public void setShowBitmapWidth(int width) {
+        this.mShowBitmapWidth = width;
+    }
+
+    public int getShowBitmapHeight() {
+        return mShowBitmapHeight;
+    }
+
+    public int getShowBitmapWidth() {
+        return mShowBitmapWidth;
+    }
+}

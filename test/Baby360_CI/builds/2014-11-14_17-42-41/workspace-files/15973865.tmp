@@ -1,0 +1,204 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.hardware.Camera;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+import java.util.*;
+
+/**
+ * Created by liubo on 9/12/13.
+ */
+public final class PreferenceGroup {
+    private static final int NOT_FOUND = -1;
+    private static final PreferenceGroup instance = new PreferenceGroup();
+    private Map<String, ListPreference> preferenceMap = new HashMap<String, ListPreference>();
+
+    private PreferenceGroup() {
+
+    }
+
+    /**
+     * 取得该函数的单例
+     *
+     * @return
+     */
+    public static PreferenceGroup get() {
+        return instance;
+    }
+
+    /**
+     * 取得相机的实际配置参数
+     *
+     * @param key
+     * @return
+     */
+    public ListPreference findPreference(String key) {
+        return preferenceMap.get(key);
+    }
+
+    /**
+     * 重新加载相机值
+     */
+    public void reloadAllValue() {
+        for (Map.Entry<String, ListPreference> entry : preferenceMap.entrySet()) {
+            reloadValue(entry.getValue());
+        }
+    }
+
+    /**
+     * 重新加载相机值
+     *
+     * @param keys
+     */
+    public void reloadValue(String[] keys) {
+        for (String key : keys) {
+            reloadValue(key);
+        }
+    }
+
+    /**
+     * 重新加载相机值
+     *
+     * @param key
+     */
+    public void reloadValue(String key) {
+        reloadValue(preferenceMap.get(key));
+    }
+
+    private void reloadValue(ListPreference preference) {
+        if (preference != null) {
+            preference.reloadValue();
+        }
+    }
+
+    /**
+     * 相机实际参数进行匹配的初始化，该初始化在CameraSettingModel中，不对外提供
+     *
+     * @param cameraParameters CameraParameters
+     */
+    protected void init(CameraParameters cameraParameters) {
+        //闪光灯
+        ListPreference flashMode = PreferenceGroupMap.findPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+        if (flashMode != null) {
+            if (supportedOptions(flashMode, cameraParameters.getSupportedFlashModes())) {
+                preferenceMap.put(flashMode.getKey(), flashMode);
+            } else {
+                preferenceMap.put(flashMode.getKey(), null);
+            }
+        }
+
+        //图片尺寸
+        ListPreference picSizeMode = PreferenceGroupMap.findPreference(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE);
+        CMLogger.i("PreferenceGroup", "picSizeMode = " + picSizeMode);
+        if (picSizeMode != null) {
+
+            List<Camera.Size> pictureSize = cameraParameters.getSupportedPictureSizes();
+            List<Camera.Size> previewSize = cameraParameters.getSupportedPreviewSizes();
+            // 根据预览尺寸数据过滤出合适的照片尺寸数据
+            List<CameraSettings.PicSizeInfo> picSizeInfo = CameraSettings.filterPictureSize(pictureSize, previewSize);
+
+            // 不存在过滤后的尺寸数据，则disable此选项
+            if (picSizeInfo == null || picSizeInfo.size() <= 0) {
+                picSizeMode.setEnable(false);
+                preferenceMap.put(picSizeMode.getKey(), picSizeMode);
+                return;
+            }
+
+            // 为Picture ListPreference 赋值
+            buildPictureSize(picSizeMode, picSizeInfo);
+            // 过滤掉重复的数据
+            picSizeMode.filterDuplicated();
+            preferenceMap.put(picSizeMode.getKey(), picSizeMode);
+        }
+
+        //聚焦模式
+        ListPreference focusMode = PreferenceGroupMap.findPreference(CameraPrefKeys.KEY_CAMERA_FOCUS_MODE);
+        if (focusMode != null) {
+            if (supportedOptions(focusMode, cameraParameters.getSupportedFocusModes())) {
+                preferenceMap.put(focusMode.getKey(), focusMode);
+            }
+        }
+    }
+
+    private boolean supportedOptions(ListPreference pref, List<String> supported) {
+
+        // Remove the preference if the parameter is not supported or there is
+        // only one options for the settings.
+        if (supported == null || supported.size() <= 1) {
+            return false;
+        }
+
+        pref.filterUnsupported(supported);
+        if (pref.getEntries().length <= 1) {
+            return false;
+        }
+
+        resetIfInvalid(pref);
+        return true;
+    }
+
+    private void buildPictureSize(ListPreference pictureSize, List<CameraSettings.PicSizeInfo> picSizeList) {
+        int length = picSizeList.size();
+        if (length <= 0) {
+            pictureSize.setEnable(false);
+            return;
+        }
+
+        List<String> entries = new ArrayList<String>();
+        List<String> entryValues = new ArrayList<String>();
+        for (CameraSettings.PicSizeInfo info : picSizeList) {
+            CMLogger.i("Test", "info = " + info.getPicSize().height + "/" + info.getPicSize().width + "/ " + info.getIsValid());
+            if (info.getIsValid()) {
+                String radio = convertPictureRadioToString(info.getPictureRatio());
+                String count = "";
+                if (CameraModuleUtil.getLocationInfo().startsWith("en")) {
+                    count = String.format("%.1f", info.getPicPix() / 100f);
+                    if (count.endsWith(".0")) {
+                        count = count.substring(0, count.length() - 2);
+                    }
+                } else {
+                    count = String.valueOf(info.getPicPix());
+                }
+                String name = count + radio;
+                Camera.Size size = info.getPicSize();
+                entryValues.add(size.width + "x" + size.height);
+                entries.add(name);
+            }
+        }
+
+        String[] temp = entries.toArray(new String[entries.size()]);
+
+        CMLogger.i("Test", "Array = " + Arrays.toString(temp));
+        pictureSize.setEntries(temp);
+        pictureSize.setEntryValues(entryValues.toArray(new String[entryValues.size()]));
+    }
+
+    private String convertPictureRadioToString(CameraSettings.PictureRatio radio) {
+        if (radio == CameraSettings.PictureRatio.RATIO_16X9) {
+            return "(16:9)";
+        }
+        if (radio == CameraSettings.PictureRatio.RATIO_16X10) {
+            return "(16:10)";
+        }
+        if (radio == CameraSettings.PictureRatio.RATIO_5X3) {
+            return "(5:3)";
+        }
+        if (radio == CameraSettings.PictureRatio.RATIO_3X2) {
+            return "(3:2)";
+        }
+        if (radio == CameraSettings.PictureRatio.RATIO_3X2) {
+            return "(1:1)";
+        }
+
+        return "";
+    }
+
+    private static void resetIfInvalid(ListPreference pref) {
+        // Set the value to the first entry if it is invalid.
+        String value = pref.getValue();
+        if (pref.findIndexOfValue(value) == NOT_FOUND) {
+            pref.setValueIndex(0);
+        }
+    }
+}

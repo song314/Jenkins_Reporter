@@ -1,0 +1,148 @@
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_beauty_seekbar_layout_height"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:weightSum="3"
+        android:background="@color/composite_sdk_beauty_menu_bg">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:id="@+id/layout"
+            android:orientation="vertical"
+            android:gravity="center">
+
+        <!-- 色相 -->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="@dimen/composite_sdk_seekbar_margin_left"
+                android:layout_marginRight="@dimen/composite_sdk_seekbar_margin_right"
+                android:gravity="center">
+
+            <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/composite_sdk_hsl1"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:textColor="@color/composite_sdk_effect_menu_txt_bg_normal"/>
+
+            <com.pinguo.ui.widget.SeekBar
+                    android:id="@+id/hue_seek_bar"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+        </LinearLayout>
+
+        <!-- 饱和度 -->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="@dimen/composite_sdk_seekbar_margin_left"
+                android:layout_marginRight="@dimen/composite_sdk_seekbar_margin_right"
+                android:gravity="center">
+
+            <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/composite_sdk_saturation"
+                    android:textSize="14sp"
+                    android:textColor="@color/composite_sdk_effect_menu_txt_bg_normal"/>
+
+
+            <com.pinguo.ui.widget.SeekBar
+                    android:id="@+id/sat_seek_bar"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+        </LinearLayout>
+
+        <!-- 明亮度 -->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="@dimen/composite_sdk_seekbar_margin_left"
+                android:layout_marginRight="@dimen/composite_sdk_seekbar_margin_right"
+                android:gravity="center">
+
+            <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/composite_sdk_brightness"
+                    android:textSize="14sp"
+                    android:textColor="@color/composite_sdk_effect_menu_txt_bg_normal"/>
+
+            <com.pinguo.ui.widget.SeekBar
+                    android:id="@+id/light_seek_bar"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/composite_sdk_beauty_composite_bg">
+
+        <View
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:background="@color/composite_sdk_beauty_menu_bg"
+                android:layout_centerInParent="true"
+                android:id="@+id/center_line"/>
+
+        <!-- x图标 -->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="#0b0b0b"
+                android:gravity="center"
+                android:id="@+id/quit"
+                android:layout_toLeftOf="@+id/center_line">
+
+            <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/composite_sdk_camera_quit"/>
+
+        </LinearLayout>
+
+        <!-- 勾图标 -->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="#0b0b0b"
+                android:gravity="center"
+                android:id="@+id/done"
+                android:layout_toRightOf="@+id/center_line">
+
+            <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/composite_sdk_senior_adjustment_finish"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>

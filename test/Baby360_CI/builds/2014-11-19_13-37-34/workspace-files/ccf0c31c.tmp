@@ -1,0 +1,56 @@
+package com.pinguo.edit.sdk.utils;
+
+/**
+ * Created by pinguo on 14-6-6.
+ */
+public class ConstantUtil {
+
+    public final static String PHOTO_PATH = "photo_path";
+
+    public final static String COMPOSITE_SDK = "compositesdk";
+
+    public final static int PHOTO_QUALITY = 95;
+
+    public final static String COMPOSITE_CROP_PHOTO_PATH = "composite_crop_photo_path";
+
+    public final static String BLANK_CROP_PHOTO_PATH = "blank_crop_photo_path";
+
+    public final static String EFFECT_PHOTO_PATH = "effect_photo_path";
+
+    public final static String COMPOSITE_JSON = "composite_json";
+    public final static String ENTER_PHOTO_TYPE = "enter_photo_type";
+    public final static String COMPOSITE_KEY = "composite_key";
+    public final static String COMPOSITE_NAME = "composite_name";
+
+    public final static String RESULT_CLASS_NAME = ".CompositeSDKEntryActivity";
+
+    public final static int ENTER_PHOTO_TYPE_CAMREA = 1;
+
+    public final static int ENTER_PHOTO_TYPE_OTHER = 2;
+
+    public final static int BEAUTY_ACTIVITY_REQUEST_CODE = 123456;
+
+    public final static int BEAUTY_ACTIVITY_REQUEST_CODE_INTENT = 1000001;
+
+    public final static int COMPOISTE_ACTIVITY_CHANGE_RESULT = 1234567;
+
+    public final static String RESULT_TYPE = "result_type";
+
+    public final static int RESULT_SUCCESS_TYPE = 1;
+
+    public final static float ZOOM_RATE = 1.0f;
+    public static final String PHOTO_TAKEN_TIME = "photo_taken_time";
+
+    public static final String COMPOSITE_PHOTO_NAME = "composite_photo";
+
+    public final static String GROUP_RESULT_TYPE = "group_result_type";
+
+    public final static int GROUP_RESULT_TYPE_JUMP = 1;
+    public final static int GROUP_RESULT_TYPE_SAVE = 0;
+    public static final String FROM_OTHER_APP = "is_from_other_app";
+    public static final String START_FROM_CAMERA = "is_from_camera";
+
+    public static boolean enableHighPerformance = false;
+
+    public static boolean needClearTexture = false;
+}

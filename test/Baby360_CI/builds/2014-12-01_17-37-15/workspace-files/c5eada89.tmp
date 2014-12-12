@@ -1,0 +1,430 @@
+package com.pinguo.mix;
+
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.model.CompositeModel;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+import com.umeng.analytics.MobclickAgent;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.android.effect.group.sdk.PGStarInsApi;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+
+/**
+ * Created by taoli on 14-8-5.
+ */
+public class MixMainActivity extends FragmentActivity {
+
+    private int[] mAnimationViewIds = new int[]{
+            R.id.img_bg, 300, R.id.title_1_tv_1, 200, R.id.title_1_tv_2, 200,
+            R.id.title_1_tv_3, 200, R.id.title_2, 200, R.id.down_area, 200
+    };
+    private MixGuideFragment mGuideFragment;
+    private ImageView mImageView;
+    private ImageView mTitle1Img;
+    private ImageView mTitle2Img;
+    private ImageView mTitle3Img;
+
+    private View mProgressView;
+    private UpdateController mUpdateController;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.layout_mix_main);
+
+        mImageView = (ImageView) findViewById(R.id.img_bg);
+        mTitle1Img = (ImageView) findViewById(R.id.title_1_tv_1);
+        mTitle2Img = (ImageView) findViewById(R.id.title_1_tv_2);
+        mTitle3Img = (ImageView) findViewById(R.id.title_1_tv_3);
+        mProgressView = findViewById(R.id.progress_layout);
+
+        MobclickAgent.setCatchUncaughtExceptions(false);
+        GLogger.setEnabled(false);
+
+        if (getSharedPreferences("MIX_PREF", MODE_PRIVATE).getBoolean("FIRST_START", true)) {
+            FragmentManager manager = getSupportFragmentManager();
+            FragmentTransaction transaction = manager.beginTransaction();
+
+            mGuideFragment = new MixGuideFragment();
+            mGuideFragment.setOnGuideFinishListener(
+                    new MixGuideFragment.OnGuideFinishListener() {
+                        @Override
+                        public void onGuideFinish() {
+                            getSharedPreferences("MIX_PREF", MODE_PRIVATE)
+                                    .edit().putBoolean("FIRST_START", false).commit();
+
+                            FragmentManager manager = getSupportFragmentManager();
+                            FragmentTransaction transaction = manager.beginTransaction();
+                            transaction.remove(mGuideFragment);
+                            transaction.commit();
+
+                            // 加快Fragment内部资源销毁
+                            mGuideFragment = null;
+
+                            showStartPageWithAnimation();
+                        }
+                    });
+
+            transaction.replace(R.id.guide_container, mGuideFragment);
+            transaction.commit();
+
+            return;
+        }
+
+        boolean bIsLaunch = getIntent().getBooleanExtra("IS_LAUNCH", true);
+        if (bIsLaunch) {
+            showStartPageWithAnimation();
+            mUpdateController = new UpdateController();
+            if (mUpdateController.needShowUpdateDialog(this)) {
+                mUpdateController.showUpdateDialog(this);
+
+            } else if (mUpdateController.needCheckUpdate(this)) {
+                mUpdateController.setUpdateCallback(mUpdateCallback);
+                mUpdateController.checkUpdate(getApplicationContext());
+            }
+        } else {
+            showStartPage();
+        }
+
+        CompositeModel.getInstance().init(getApplicationContext());
+    }
+
+    private UpdateController.IUpdateCallback mUpdateCallback
+            = new UpdateController.IUpdateCallback() {
+        @Override
+        public void onUpdateSucceed(int versionCode, String versionName,
+                                    String title, String description, String url) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (null != MixMainActivity.this && !MixMainActivity.this.isFinishing()) {
+                        if (null != mProgressView && mProgressView.getVisibility() == View.VISIBLE) {
+                            return;
+                        }
+                        mUpdateController.showUpdateDialog(MixMainActivity.this);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onUpdateFailed() {
+            // Do nothing
+        }
+    };
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        mImageView.setImageResource(R.drawable.composite_sdk_main_bg);
+        mTitle1Img.setImageResource(R.drawable.composite_sdk_mix_main_title_m);
+        mTitle2Img.setImageResource(R.drawable.composite_sdk_mix_main_title_i);
+        mTitle3Img.setImageResource(R.drawable.composite_sdk_mix_main_title_x);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mImageView.setImageBitmap(null);
+        mTitle1Img.setImageBitmap(null);
+        mTitle2Img.setImageBitmap(null);
+        mTitle3Img.setImageBitmap(null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        StatisticManager.destroy(this);
+        if (null != mUpdateController) {
+            mUpdateController.setUpdateCallback(null);
+        }
+    }
+
+    public void onEditBtnClick(View v) {
+
+        SharedPreferences sp = getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean initialized = sp.getBoolean(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT.toLowerCase(), false);
+        if (!initialized) {
+
+            if (null != mProgressView) {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
+
+            PGCompositeSDKApi.initData(this,
+                    new PGCompositeSDKApi.InitDataCallback() {
+                        @Override
+                        public void onInitStart() {
+
+                        }
+
+                        @Override
+                        public void onInitFinish() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    PGStarInsApi.insStar(getApplicationContext());
+                                    if (null != mProgressView) {
+                                        mProgressView.setVisibility(View.GONE);
+                                    }
+                                    PGCompositeSDKApi.startGallery(MixMainActivity.this);
+                                }
+                            });
+                        }
+                    });
+
+        } else {
+            if (!PGStarInsApi.isInitStar(getApplicationContext())) {
+                if (null != mProgressView) {
+                    mProgressView.setVisibility(View.VISIBLE);
+                }
+
+                PGStarInsApi.initData(getApplicationContext(), new PGCompositeSDKApi.InitDataCallback() {
+                    @Override
+                    public void onInitStart() {
+
+                    }
+
+                    @Override
+                    public void onInitFinish() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                EffectModel.getInstance().invalidEffectDict(true);
+                                PGStarInsApi.insStar(getApplicationContext());
+                                if (null != mProgressView) {
+                                    mProgressView.setVisibility(View.GONE);
+                                }
+                                PGCompositeSDKApi.startGallery(MixMainActivity.this);
+                            }
+                        });
+                    }
+                });
+
+            } else {
+                PGCompositeSDKApi.startGallery(this);
+
+            }
+
+        }
+
+        StatisticManager.onEvent(this,
+                StatisticManager.KEY_ACTION_HOME_FUNCTION_GALLERY);
+    }
+
+    public void onCaptureBtnClick(View v) {
+        SharedPreferences sp = getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean initialized = sp.getBoolean(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT.toLowerCase(), false);
+        if (!initialized) {
+
+            if (null != mProgressView) {
+                mProgressView.setVisibility(View.VISIBLE);
+            }
+
+            PGCompositeSDKApi.initData(this,
+                    new PGCompositeSDKApi.InitDataCallback() {
+                        @Override
+                        public void onInitStart() {
+
+                        }
+
+                        @Override
+                        public void onInitFinish() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (null != mProgressView) {
+                                        mProgressView.setVisibility(View.GONE);
+                                    }
+                                    PGCompositeSDKApi.startCamera(MixMainActivity.this, false);
+                                }
+                            });
+                        }
+                    });
+        } else {
+            if (!PGStarInsApi.isInitStar(getApplicationContext())) {
+                if (null != mProgressView) {
+                    mProgressView.setVisibility(View.VISIBLE);
+                }
+
+                PGStarInsApi.initData(getApplicationContext(), new PGCompositeSDKApi.InitDataCallback() {
+                    @Override
+                    public void onInitStart() {
+
+                    }
+
+                    @Override
+                    public void onInitFinish() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                EffectModel.getInstance().invalidEffectDict(true);
+                                PGStarInsApi.insStar(getApplicationContext());
+                                if (null != mProgressView) {
+                                    mProgressView.setVisibility(View.GONE);
+                                }
+                                PGCompositeSDKApi.startCamera(MixMainActivity.this, false);
+                            }
+                        });
+                    }
+                });
+
+            } else {
+                PGCompositeSDKApi.startCamera(this, false);
+
+            }
+
+
+        }
+
+        StatisticManager.onEvent(this,
+                StatisticManager.KEY_ACTION_HOME_FUNCTION_CAPTURE);
+    }
+
+    public void onMixGalleryBtnClick(View v) {
+
+        Uri uri = Uri.parse("http://instagram.com/_u/mix4ins");
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.setPackage("com.instagram.android");
+
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://instagram.com/mix4ins")));
+        }
+    }
+
+    public void onFilterSquareBtnClick(View v) {
+        PGCompositeSDKApi.startFilterSquare(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        RatingController controller = new RatingController();
+        if (controller.needRating(this)) {
+            controller.showRatingDialog(this, null,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            StatisticManager.onEvent(MixMainActivity.this,
+                                    StatisticManager.KEY_ACTION_HOME_FUNCTION_QUIT);
+                            MixMainActivity.super.onBackPressed();
+                        }
+                    });
+
+            return;
+        }
+
+        StatisticManager.onEvent(this,
+                StatisticManager.KEY_ACTION_HOME_FUNCTION_QUIT);
+        super.onBackPressed();
+    }
+
+    private void copyFilterData() {
+        String srcFolder = "/data/data/com.pinguo.edit.sdk/files/effect/composite/icon/";
+        File srcFolderFile = new File(srcFolder);
+
+        String destFolder = "/sdcard/mix_sdk_filter_backup/";
+        File destFolderFile = new File(destFolder);
+
+        try {
+            FileUtils.copyFolder(srcFolderFile, destFolderFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void copyJsonData() {
+        EffectModel effectModel = EffectModel.getInstance().init(this);
+        List<EffectType> effectTypeList = effectModel.getEffectTypeList(Effect.Type.Composite);
+        for (EffectType effectType : effectTypeList) {
+            List<CompositeEffect> compositeEffectList = effectType.compositeEffects;
+            String outputDir = "/sdcard/mix_sdk_filter_backup/json/";
+            FileUtils.checkFolder(outputDir);
+            File outputFile;
+            for (CompositeEffect effect : compositeEffectList) {
+                outputFile = new File(outputDir + effect.key);
+                try {
+                    FileUtils.writeFileContent(outputFile, effect.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void showStartPageWithAnimation() {
+        int totalOffset = 0;
+        ViewGroup viewGroup = (ViewGroup) findViewById(R.id.parent);
+        for (int i = 0; i < mAnimationViewIds.length; i += 2) {
+            View child = viewGroup.findViewById(mAnimationViewIds[i]);
+            AlphaAnimation alphaAnimation = new AlphaAnimation(0, 1.0f);
+            alphaAnimation.setDuration(mAnimationViewIds[i + 1]);
+            alphaAnimation.setStartOffset(totalOffset);
+            totalOffset += mAnimationViewIds[i + 1];
+
+            child.startAnimation(alphaAnimation);
+            child.setVisibility(View.VISIBLE);
+        }
+
+        findViewById(R.id.copy_filter_btn).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        copyFilterData();
+                        copyJsonData();
+
+                        ToastUtils.makeText(MixMainActivity.this, "保存成功!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showStartPage() {
+        ViewGroup viewGroup = (ViewGroup) findViewById(R.id.parent);
+        for (int i = 0; i < mAnimationViewIds.length; i += 2) {
+            View child = viewGroup.findViewById(mAnimationViewIds[i]);
+            if (child.getVisibility() != View.VISIBLE) {
+                child.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+}

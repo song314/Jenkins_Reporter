@@ -1,0 +1,39 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.annotations.Expose;
+
+/**
+ * Created by huowaa on 14-7-2.
+ * 无EffectKey的ParamItem，比如Filter的EffectOpacity
+ */
+public class ParamNoEffectItem extends ParamItem{
+    private static final String TAG = ParamNoEffectItem.class.getSimpleName();
+
+    @Expose
+    public float min;  // 最小值
+    @Expose
+    public float max;  // 最大值
+    @Expose
+    public float defaultValue; // 默认值
+    @Expose
+    public float noEffectValue; // 无特效值
+    @Expose
+    public float step; // 步长
+    @Expose
+    public float value; // 特效值
+
+    public ParamNoEffectItem(String key, float min, float max, float step, float defaultValue, float noEffectValue) {
+        super(key, "", Type.NoEffectItem);
+
+        this.min = min;
+        this.max = max;
+        this.step = step;
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+    }
+
+    public ParamNoEffectItem() {
+
+    }
+}

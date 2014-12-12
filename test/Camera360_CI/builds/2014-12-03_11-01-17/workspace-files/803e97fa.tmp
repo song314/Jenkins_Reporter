@@ -1,0 +1,506 @@
+package com.pinguo.edit.sdk.filter.square.fragment;
+
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.BaseTitleFragment;
+import com.pinguo.edit.sdk.filter.square.FilterSquareActivity;
+import com.pinguo.edit.sdk.filter.square.FilterSquareConst;
+import com.pinguo.edit.sdk.filter.square.Info.GetFilterInfoApi;
+import com.pinguo.edit.sdk.filter.square.Info.bean.FilterData;
+import com.pinguo.edit.sdk.login.activity.PGLoginHomeActivity;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.utils.EncryptUtils;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.ui.widget.GradientSeekBar;
+import com.pinguo.ui.widget.ProgressDialog;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.data.EffectSaveManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+
+/**
+ * Created by zhongzheng on 14-11-3.
+ */
+public class FilterDetails extends BaseTitleFragment implements View.OnClickListener {
+    private static final String TAG = FilterDetails.class.getSimpleName();
+    private ImageLoaderView mBeforeImageLoaderView;
+    private final int MSG_START_ADD_FILTER = 0;
+    private final int MSG_START_DOWN_FILTER = 1;
+    private final int MSG_START_LOGIN = 2;
+
+    public static final int REQUEST_CODE_LOGIN = 1003;
+
+    private Context mContext;
+
+    private View mRetakeButton;
+    private ImageLoaderView mUserIconView;
+    private TextView mAuthorName;
+    private TextView mFilterName;
+    private ImageLoaderView mPreviewImage;
+    private ImageLoaderView mOrgPreviewImage;
+    private ListView mParamListView;
+    private ProgressDialog mProgressDialog;
+
+    private Button mDownView;
+    private Button mShareView;
+
+    private Activity mActivity;
+    private FilterData mData;
+    private String mCompositeEffectInfo;
+    private CompositeEffect mEffects;
+
+    private String mFilterUrl;
+    private Thread mAddFilterInfoProcess;
+    private Thread mSaveFilterInfoProcess;
+    private int mModel;
+
+    public static FilterDetails newInstance(int pos, int model) {
+        FilterDetails f = new FilterDetails();
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putInt("pos", pos);
+        args.putInt("model", model);
+        f.setArguments(args);
+        return f;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Bundle args = getArguments();
+        if (args != null) {
+            mModel = args.getInt("model");
+            if (mModel == FilterSquareConst.PAGE_MODEL_NEW) {
+                mData = ((FilterSquareActivity) getActivity()).
+                        getNewFilterDataList().get(args.getInt("pos"));
+            }
+        } else if (mModel == FilterSquareConst.PAGE_MODEL_HOT) {
+            mData = ((FilterSquareActivity) getActivity()).
+                    getHotFilterDataList().get(args.getInt("pos"));
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Create our Preview view and set it as the content of our activity.
+        // 第一个参数是这个Fragment将要显示的界面布局,第二个参数是这个Fragment所属的Activity,第三个参数是决定此fragment是否附属于Activity
+        View rootView = inflater.inflate(R.layout.composite_sdk_filter_square_details_layout, container, false);
+//                ResourceHelper.getIdByName(
+//                getActivity(), "layout", "composite_sdk_filter_square_details_layout"), container,  false);
+
+        mContext = getActivity().getApplicationContext();
+        mActivity = getActivity();
+//        mSaveCallback = callback;
+//        mBeforeImageLoaderView.setImageBitmap(oldBitmap);
+        mProgressDialog = (ProgressDialog) rootView.findViewById(R.id.progress_layout);
+        mRetakeButton = rootView.findViewById(ResourceHelper.getId(mContext, "re_take"));
+        mRetakeButton.setOnClickListener(this);
+        mUserIconView = (ImageLoaderView) rootView.findViewById(ResourceHelper.getId(mContext, "user_icon"));
+        mUserIconView.setImageUrl(mData.getAvatar());
+
+        mAuthorName = (TextView) rootView.findViewById(ResourceHelper.getId(mContext, "author_name"));
+        mAuthorName.setText("作   者:  " + mData.getNickName());
+        mFilterName = (TextView) rootView.findViewById(ResourceHelper.getId(mContext, "filter_name"));
+        mFilterName.setText("滤镜名:  " + mData.getFilterName());
+
+        mDownView = (Button) rootView.findViewById(ResourceHelper.getId(mContext, "down"));
+        mDownView.setOnClickListener(this);
+
+        mShareView = (Button) rootView.findViewById(ResourceHelper.getId(mContext, "share"));
+        mShareView.setOnClickListener(this);
+        addPrePhoto(rootView);
+        mParamListView = (ListView) rootView.findViewById(R.id.param_list);
+        mEffects = CompositeEffect.loadFromJsonStr(mData.getData());
+        mAddFilterInfoProcess = new AddFilterInfoThread();
+        mAddFilterInfoProcess.start();
+        return rootView;
+    }
+
+    private void addPrePhoto(View rootView) {
+        String path = mData.getOriginEtag();
+        if (null != path) {
+            mOrgPreviewImage = (ImageLoaderView) rootView.findViewById(R.id.preview_org_img);
+            mOrgPreviewImage.setImageUrl(path);
+        }
+        path = mData.getEditEtag();
+        if (null != path) {
+            DisplayMetrics dm = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+            mPreviewImage = (ImageLoaderView) rootView.findViewById(R.id.preview_img);
+            mPreviewImage.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                        mPreviewImage.setVisibility(View.INVISIBLE);
+                    }
+
+                    if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                        mPreviewImage.setVisibility(View.VISIBLE);
+                    }
+                    return true;
+                }
+            });
+
+            mPreviewImage.setImageLoadingListener(new ImageLoadingListener() {
+                @Override
+                public void onLoadingStarted(String s, View view) {
+                }
+
+                @Override
+                public void onLoadingFailed(String s, View view, FailReason failReason) {
+                }
+
+                @Override
+                public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                    AlphaAnimation animation = new AlphaAnimation(0, 1.0f);
+                    animation.setDuration(1000);
+                    view.startAnimation(animation);
+                }
+
+                @Override
+                public void onLoadingCancelled(String s, View view) {
+
+                }
+            });
+            mPreviewImage.setImageUrl(path);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == mRetakeButton) {
+            mFragmentChange.onCurrentFragmentFinish();
+        } else if (v == mDownView) {
+//            sendMessage(MSG_START_DOWN_FILTER);
+//            mSaveFilterInfoProcess = new SaveFilterInfoThread();
+//            mSaveFilterInfoProcess.start();
+
+        } else if (v == mShareView) {
+            sendMessage(MSG_START_LOGIN);
+        }
+    }
+
+    private void startAddFilterInfo(String originEtag,
+                                    String editEtag,
+                                    String info,
+                                    String data,
+                                    String userId,
+                                    String avatar,
+                                    String nickName,
+                                    String filterName) {
+        GLogger.i(TAG, "Start add filter info!");
+        GetFilterInfoApi.addFilterInfo(originEtag, editEtag, info, data,
+                userId, avatar, nickName, filterName, new ApiCallback() {
+                    @Override
+                    public void onResponse(Object data, Object... params) {
+                        GLogger.i(TAG, "Add filter info succeed!");
+                        mFilterUrl = (String) data;
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        GLogger.i(TAG, "Add filter info failed:" + error);
+                    }
+                });
+    }
+
+    private void startGetFilterData(String id) {
+        GLogger.i(TAG, "Start add filter info!");
+        GetFilterInfoApi.getFilterInfo(id, new ApiCallback() {
+            @Override
+            public void onResponse(Object data, Object... params) {
+                GLogger.i(TAG, "Add filter info succeed!");
+                mData = ((FilterData) data);
+            }
+
+            @Override
+            public void onError(String error) {
+                GLogger.i(TAG, "Add filter info failed:" + error);
+            }
+        });
+    }
+
+    Handler myHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_START_ADD_FILTER:
+                    String originEtag = EncryptUtils.getQETAG(mData.getOriginEtag());
+                    String editEtag = EncryptUtils.getQETAG(mData.getEditEtag());
+                    startAddFilterInfo(originEtag, editEtag, mData.getInfo(), mData.getData(), mData.getUserId(), mData.getAvatar(),
+                            mData.getNickName(), mData.getFilterName());
+                    break;
+                case MSG_START_DOWN_FILTER:
+                    startGetFilterData(mData.getId());
+                    break;
+                case MSG_START_LOGIN:
+                    User user = User.create(getActivity().getApplicationContext());
+                    if (true) {//!user.isLogin()) {
+                        PGLoginHomeActivity.launchLoginPageAdapte(getActivity(), REQUEST_CODE_LOGIN);
+                    }
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+
+    private void sendMessage(int what) {
+        Message message = new Message();
+        message.what = what;
+        myHandler.sendMessage(message);
+    }
+
+    private static class ParamListAdapter extends BaseAdapter {
+
+        private List<ParamInfoBean> mParamInfoList;
+
+        public ParamListAdapter(List<ParamInfoBean> list) {
+            mParamInfoList = list;
+        }
+
+        @Override
+        public int getCount() {
+            return mParamInfoList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mParamInfoList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            ParamInfoBean infoBean = (ParamInfoBean) getItem(position);
+            return infoBean.getType();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup viewGroup) {
+
+            LayoutInflater layoutInflater = LayoutInflater.from(viewGroup.getContext());
+            ParamInfoBean infoBean = (ParamInfoBean) getItem(position);
+            if (0 == getItemViewType(position)) {
+                convertView = layoutInflater.inflate(
+                        R.layout.composite_sdk_param_item_layout, null);
+                TextView titleTv = (TextView) convertView.findViewById(R.id.title_tv);
+                titleTv.setText(infoBean.getKey() + ":");
+
+                TextView packNameTv = (TextView) convertView.findViewById(R.id.pack_name_tv);
+                packNameTv.setText(infoBean.getPackName() + " ");
+                if (infoBean.getPackName().isEmpty()) {
+                    packNameTv.setVisibility(View.GONE);
+                }
+
+                TextView effectNameTv = (TextView) convertView.findViewById(R.id.effect_name_tv);
+                effectNameTv.setText(infoBean.getName() + " ");
+                if (infoBean.getName().isEmpty()) {
+                    effectNameTv.setVisibility(View.GONE);
+                }
+
+                TextView valueTv = (TextView) convertView.findViewById(R.id.value_tv);
+                valueTv.setText(infoBean.getValue());
+            } else {
+                convertView = layoutInflater.inflate(
+                        R.layout.composite_sdk_param_item_seek_layout, null);
+                TextView titleTv = (TextView) convertView.findViewById(R.id.title_tv);
+                titleTv.setText(infoBean.getKey());
+
+                TextView valueTv = (TextView) convertView.findViewById(R.id.value_tv);
+                valueTv.setText(String.valueOf(infoBean.getValue()));
+
+                GradientSeekBar seekBar = (GradientSeekBar) convertView.findViewById(R.id.value_seek_bar);
+                seekBar.setValue(Math.round(Float.parseFloat(infoBean.getValue())) + 100, 200, 100);
+            }
+
+            return convertView;
+        }
+    }
+
+    private static class ParamInfoBean extends BaseBean {
+        private String key;
+        private String packName;
+        private String name;
+        private int type;
+        private String value;
+        private float minValue;
+
+        @Override
+        protected boolean isValid(Object obj) {
+            return true;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public String getPackName() {
+            return packName;
+        }
+
+        public void setPackName(String packName) {
+            this.packName = packName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public float getMinValue() {
+            return minValue;
+        }
+
+        public void setMinValue(float minValue) {
+            this.minValue = minValue;
+        }
+
+        public int getType() {
+            return type;
+        }
+
+        public void setType(int type) {
+            this.type = type;
+        }
+    }
+
+    private List<ParamInfoBean> parseEffectInfo(String info) {
+        try {
+
+            JSONArray jsonArray = new JSONArray(info);
+            List<ParamInfoBean> list = new ArrayList<ParamInfoBean>();
+            for (int i = 0;
+                 i < jsonArray.length();
+                 i++) {
+                JSONObject object = jsonArray.optJSONObject(i);
+                ParamInfoBean infoBean = new ParamInfoBean();
+                infoBean.setKey(getResources().getString(
+                        ResourceHelper.getString(getActivity(), "composite_sdk_param_" + object.getString("key"))));
+
+                String packName = object.getString("packName");
+                infoBean.setPackName(packName);
+                infoBean.setName(object.getString("name"));
+
+                try {
+                    int value = Integer.parseInt(object.getString("value"));
+                    if (value > 0) {
+                        infoBean.setValue("+" + value);
+                    } else {
+                        infoBean.setValue(object.getString("value"));
+                    }
+                } catch (NumberFormatException e) {
+                    infoBean.setValue(object.getString("value"));
+                }
+
+                infoBean.setMinValue(Float.parseFloat(object.getString("minValue")));
+                int type = object.getInt("type");
+                infoBean.setType(type);
+                if (0 == type) {
+                    list.add(0, infoBean);
+                } else {
+                    list.add(infoBean);
+                }
+            }
+
+            return list;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private class AddFilterInfoThread extends Thread {
+        @Override
+        public void run() {
+            mProgressDialog.setVisibility(View.VISIBLE);
+            if (mEffects != null) {
+                mCompositeEffectInfo = mEffects.getJsonFilterInfo(getActivity());
+                if (null != mCompositeEffectInfo && !mCompositeEffectInfo.isEmpty() && !mCompositeEffectInfo.equals(" ")) {
+                    List<ParamInfoBean> list = parseEffectInfo(mCompositeEffectInfo);
+                    ParamListAdapter adapter = new ParamListAdapter(list);
+                    mParamListView.setAdapter(adapter);
+                }
+            }
+            mProgressDialog.setVisibility(View.GONE);
+        }
+    }
+
+    private class SaveFilterInfoThread extends Thread {
+        @Override
+        public void run() {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mProgressDialog.setVisibility(View.VISIBLE);
+                }
+            });
+            Bitmap bm = ((BitmapDrawable) mOrgPreviewImage.getDrawable()).getBitmap();
+            EffectSaveManager.saveEffect(mData.getFilterName(), mEffects.key, "",
+                    mEffects, bm, getActivity());
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mProgressDialog.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+}

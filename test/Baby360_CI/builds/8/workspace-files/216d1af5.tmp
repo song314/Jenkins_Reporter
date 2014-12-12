@@ -1,0 +1,120 @@
+package com.pinguo.edit.sdk.camera.util;
+
+import android.os.Build;
+import android.os.Environment;
+
+import java.io.File;
+
+/**
+ * 相机适配相关逻辑<br/>
+ *
+ * @author Tsmile
+ */
+public class GAdapter {
+    /**
+     * 当前设备的型号
+     */
+    public static final String MODEL = Build.MODEL;
+    /**
+     * 当前设备的厂商
+     */
+    private static final String BRAND = Build.BRAND;
+    /**
+     * 当前设备的硬件解决方案
+     */
+    private static final String HARDWARE = Build.HARDWARE;
+    /**
+     * RELEASE
+     */
+    public static final String RELEASE = Build.VERSION.RELEASE;
+
+    /**
+     * 魅族
+     */
+    private static final String BRAND_MEIZU = "Meizu";
+    /**
+     * 魅族 M9
+     */
+    private static final String MODEL_M9 = "M9";
+    /**
+     * 魅族 MX _M032
+     */
+    private static final String MODEL_M032 = "M032";
+
+    private static final String HARDWARE_MT6589 = "mt6589";
+
+    private static final String HARDWARE_MT6577 = "mt6577";
+
+    private static final boolean IS_MI_2 = MODEL.equals("MI 2");
+    private static final boolean IS_MI_2S = MODEL.equals("MI 2S");
+    public static final boolean IS_MI_2A = MODEL.equals("MI 2A");
+    public static final boolean IS_MI_3 = MODEL.equals("MI 3");
+
+    private static final boolean IS_HUAWEI_U8860 = MODEL.equals("U8860");
+    private static final boolean IS_NEXUS_4 = MODEL.equals("Nexus 4");
+    public static final boolean IS_MEIZU_DEVICE = BRAND.equals(BRAND_MEIZU);
+    public static final boolean IS_MEIZU_M9 = IS_MEIZU_DEVICE && (MODEL.equals(MODEL_M9));
+    public static final boolean IS_MEIZU_M032 = IS_MEIZU_DEVICE && MODEL.equals(MODEL_M032);
+    private static final boolean IS_MOTO_DEFY = MODEL.equals("MB525") && RELEASE.startsWith("2.");
+    private static final boolean IS_HTC_ONE = MODEL.equals("HTC 802w");
+    public static final boolean IS_MEITU_KISS = BRAND.equals("Meitu Kiss");
+    public static final boolean IS_HTC_G11_ALL = MODEL.startsWith("HTC Incredible S");
+
+    public static final boolean IS_OLD_I9100G = MODEL.equals("GT-I9100G") && !ApiHelper.AFTER_ICE_CREAM_SANDWICH;
+    public static final boolean IS_LG_404 = MODEL.equals("LG-P970") && (RELEASE.equals("4.0.4"));
+    public static final boolean IS_XT912 = MODEL.equals("XT912") && (RELEASE.equals("2.3.6"));
+    public static final boolean IS_ZTE_T_U880 = BRAND.equals("ZTE") && MODEL.equals("ZTE-T U880");
+
+    private static boolean IS_USE_DCIM = IS_MEIZU_M9 || IS_MEIZU_M032;
+
+    /**
+     * 实时预览变焦错误适配
+     */
+    public static final boolean IS_RENDER_ZOOM_INCURRECT
+            = IS_MI_2 || IS_MI_2S || IS_MI_2A || IS_HUAWEI_U8860 || IS_NEXUS_4 || IS_HTC_ONE;
+
+    /**
+     * 是否使用 mCamera.startSmoothZoom(params.getZoom()); 进行变焦适配
+     *
+     * @return
+     * @version 0.1 目前判斷魅族設備M9 MX
+     * @author lizhipeng
+     */
+    public static final boolean IS_UER_START_SMOOTH_ZOOM = IS_MEIZU_M9 || IS_MEIZU_M032;
+    public static final boolean IS_NOT_SUPPORT_ZOOM = IS_MOTO_DEFY;
+
+    public static final boolean IS_MTK = (HARDWARE.startsWith(HARDWARE_MT6589) || HARDWARE.startsWith(HARDWARE_MT6577));
+
+    public static final boolean IS_MI_SERIES = MODEL.startsWith("MI ");   //小米系列
+
+    /**
+     * 不支持拍照后停止预览
+     * @return
+     */
+    public static boolean unSupportStopPreview() {
+        return IS_OLD_I9100G || IS_LG_404 || IS_XT912;
+    }
+
+    /**
+     * 根据设备获取默认照片存储路径
+     *
+     * @return
+     * @version 0.1 魅族M9 为了在系统图库及时显示图片 特殊处理 默认路径为/Photo
+     * @version 0.2 添加魅族MX 支持路径同M9
+     * @version 0.3 统一使用系统api获取Dcim路径
+     * @author lizhipeng
+     */
+    public static String getSystemPhotoPath() {
+        String dcimPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + File.separator;
+        if (IS_USE_DCIM) {
+            return dcimPath;
+        } else {
+            return dcimPath + "Camera" + File.separator;
+        }
+    }
+
+    public static boolean isArmabi() {
+        return Build.CPU_ABI.contains("armeabi");
+    }
+}
+

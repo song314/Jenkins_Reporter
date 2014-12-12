@@ -1,0 +1,643 @@
+/*
+ * Copyright (C) 2010 The Android Open Source Project Licensed under the Apache
+ * License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.gallery.ui;
+
+import android.content.Context;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.animation.DecelerateInterpolator;
+import com.pinguo.edit.sdk.gallery.AlbumActivity;
+import com.pinguo.edit.sdk.gallery.anim.Animation;
+import com.pinguo.edit.sdk.gallery.data.MediaSet;
+import com.pinguo.edit.sdk.gallery.ui.layout.BaseSlotLayout;
+import com.pinguo.edit.sdk.gallery.ui.layout.ContractSlotLayout;
+import com.pinguo.edit.sdk.gallery.ui.layout.ExpandSlotLayout;
+import com.pinguo.edit.sdk.gallery.ui.layout.ListSlotLayout;
+import com.pinguo.edit.sdk.gallery.util.Utils;
+
+import java.util.ArrayList;
+
+public class SlotView extends GLView {
+
+    @SuppressWarnings("unused")
+    private static final String TAG = "SlotView";
+    public static final int SLOT_TYPE_EXPAND_SLOT = 0;
+    public static final int SLOT_TYPE_CONTRACT_SLOT = 1;
+    public static final int SLOT_TYPE_LIST_SLOT = 2;
+    public static final int RENDER_MORE_PASS = 1;
+    public static final int RENDER_MORE_FRAME = 2;
+    public static final int INDEX_NONE = -1;
+    public static final boolean WIDE_SCROLLING = false; // 改动前true ,表示横向滑动
+
+    public interface Listener {
+
+        public void onDown(int index);
+
+        public void onUp(boolean followedByLongPress);
+
+        public void onSingleTapUp(int index);
+
+        public void onSingleTagTapUp(int index);
+
+        public void onLongTap(int index);
+
+        public void onScrollPositionChanged(int position, int total);
+    }
+
+    public static class SimpleListener implements Listener {
+
+        @Override
+        public void onDown(int index) {
+        }
+
+        @Override
+        public void onUp(boolean followedByLongPress) {
+        }
+
+        @Override
+        public void onSingleTapUp(int index) {
+        }
+
+        @Override
+        public void onLongTap(int index) {
+        }
+
+        @Override
+        public void onScrollPositionChanged(int position, int total) {
+        }
+
+        @Override
+        public void onSingleTagTapUp(int index) {
+            // TODO Auto-generated method stub
+        }
+    }
+
+    public static interface SlotRenderer {
+
+        public void prepareDrawing();
+
+        // for slots
+        public void onVisibleSlotRangeChanged(int visibleStart, int visibleEnd);
+
+        public void onSlotSizeChanged(int width, int height);
+
+        public int renderSlot(GLCanvas canvas, int index, int width, int height);
+
+        // for tags
+        public void initSortTagMetrics(int width, int height);
+
+        public void onVisibleTagRangeChanged(int visibleStart, int visibleEnd);
+
+        public int renderSortTag(GLCanvas canvas, int index, int width,
+                                 int height);
+    }
+
+    private final GestureDetector mGestureDetector;
+    private final ScrollerHelper mScroller;
+    private final Paper mPaper = new Paper(); // paper 滚动的效果(如3D翻转)
+    private Listener mListener;
+    private UserInteractionListener mUIListener;
+    private boolean mMoreAnimation = false;
+    private SlotAnimation mAnimation = null;
+    private BaseSlotLayout mLayout = null;
+    private int mStartIndex = INDEX_NONE;
+    // whether the down action happened while the view is scrolling.
+    private boolean mDownInScrolling;
+    private int mOverscrollEffect = OVERSCROLL_NONE;
+    private final Handler mHandler;
+    private SlotRenderer mRenderer;
+    private int[] mRequestRenderSlots = new int[16];
+    public static final int OVERSCROLL_3D = 0;
+    public static final int OVERSCROLL_SYSTEM = 1;
+    public static final int OVERSCROLL_NONE = 2;
+    // to prevent allocating memory
+    private final Rect mTempRect = new Rect();
+
+    public SlotView(AlbumActivity activity, SlotView.Spec spec, int slotType) {
+        if (slotType == SLOT_TYPE_EXPAND_SLOT) {
+            mLayout = new ExpandSlotLayout();
+        } else if (slotType == SLOT_TYPE_CONTRACT_SLOT) {
+            mLayout = new ContractSlotLayout();
+        } else if (slotType == SLOT_TYPE_LIST_SLOT) {
+            mLayout = new ListSlotLayout();
+        }
+        mGestureDetector = new GestureDetector((Context) activity,
+                new MyGestureListener());
+        mScroller = new ScrollerHelper((Context) activity);
+        mHandler = new SynchronizedHandler(activity.getGLRoot());
+        setSlotSpec(spec); // 设置layoutview的布局属性
+    }
+
+    public void setSlotRenderer(SlotRenderer slotDrawer) {
+        mRenderer = slotDrawer;
+        if (mRenderer != null) {
+            mLayout.setSlotRender(mRenderer);
+            mRenderer.onSlotSizeChanged(mLayout.getSlotWidth(),
+                    mLayout.getSlotHeight());
+            mRenderer.onVisibleSlotRangeChanged(mLayout.getVisibleSlotStart(),
+                    mLayout.getVisibleSlotEnd());
+            if (mLayout instanceof ExpandSlotLayout) {
+                ExpandSlotLayout expandSlotLayout = (ExpandSlotLayout) mLayout;
+                mRenderer.onVisibleTagRangeChanged(
+                        expandSlotLayout.getVisibleTagStart(),
+                        expandSlotLayout.getVisibleTagEnd());
+            }
+        }
+    }
+
+    public void setCenterIndex(int index) {
+        int slotCount = mLayout.getSlotCount();
+        if (index < 0 || index >= slotCount) {
+            return;
+        }
+        Rect rect = mLayout.getSlotRect(index, mTempRect);
+        int position = WIDE_SCROLLING ? (rect.left + rect.right - getWidth()) / 2
+                : (rect.top + rect.bottom - getHeight()) / 2;
+        setScrollPosition(position);
+    }
+
+    public void makeSlotVisible(int index) {
+        Rect rect = mLayout.getSlotRect(index, mTempRect);
+        int visibleBegin = WIDE_SCROLLING ? mScrollX : mScrollY;
+        int visibleLength = WIDE_SCROLLING ? getWidth() : getHeight();
+        int visibleEnd = visibleBegin + visibleLength;
+        int slotBegin = WIDE_SCROLLING ? rect.left : rect.top;
+        int slotEnd = WIDE_SCROLLING ? rect.right : rect.bottom;
+        int position = visibleBegin;
+        if (visibleLength < slotEnd - slotBegin) {
+            position = visibleBegin;
+        } else if (slotBegin < visibleBegin) {
+            position = slotBegin;
+        } else if (slotEnd > visibleEnd) {
+            position = slotEnd - visibleLength;
+        }
+        setScrollPosition(position);
+    }
+
+    public void setScrollPosition(int position) {
+        position = Utils.clamp(position, 0, mLayout.getScrollLimit());
+        mScroller.setPosition(position);
+        updateScrollPosition(position, false);
+    }
+
+    public void setSlotSpec(SlotView.Spec spec) {
+        mLayout.setSlotSpec(spec);
+    }
+
+    @Override
+    public void addComponent(GLView view) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void onLayout(boolean changeSize, int l, int t, int r, int b) {
+        if (!changeSize)
+            return;
+        // Make sure we are still at a resonable scroll position after the size
+        // is changed (like orientation change). We choose to keep the center
+        // visible slot still visible. This is arbitrary but reasonable.
+        int visibleIndex = (mLayout.getVisibleSlotStart() + mLayout
+                .getVisibleSlotEnd()) / 2;
+        mLayout.setSize(r - l, b - t); // 设置Opengl绘制页面大小
+        makeSlotVisible(visibleIndex);
+        if (mOverscrollEffect == OVERSCROLL_3D) {
+            mPaper.setSize(r - l, b - t);
+        }
+    }
+
+    public void startScatteringAnimation(RelativePosition position) {
+        mAnimation = new ScatteringAnimation(position);
+        mAnimation.start();
+        if (mLayout.getSlotCount() != 0)
+            invalidate();
+    }
+
+    public void startRisingAnimation() {
+        mAnimation = new RisingAnimation();
+        mAnimation.start();
+        if (mLayout.getSlotCount() != 0)
+            invalidate();
+    }
+
+    private void updateScrollPosition(int position, boolean force) {
+        if (!force
+                && (WIDE_SCROLLING ? position == mScrollX
+                : position == mScrollY))
+            return;
+        if (WIDE_SCROLLING) {
+            mScrollX = position;
+        } else {
+            mScrollY = position;
+        }
+        mLayout.setScrollPosition(position);
+        onScrollPositionChanged(position);
+    }
+
+    protected void onScrollPositionChanged(int newPosition) {
+        int limit = mLayout.getScrollLimit();
+        mListener.onScrollPositionChanged(newPosition, limit);
+    }
+
+    public Rect getSlotRect(int slotIndex) {
+        return mLayout.getSlotRect(slotIndex, new Rect());
+    }
+
+    @Override
+    protected boolean onTouch(MotionEvent event) {
+        if (mUIListener != null)
+            mUIListener.onUserInteraction();
+        mGestureDetector.onTouchEvent(event);
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mDownInScrolling = !mScroller.isFinished();
+                mScroller.forceFinished();
+                break;
+            case MotionEvent.ACTION_UP:
+                mPaper.onRelease();
+                invalidate();
+                break;
+        }
+        return true;
+    }
+
+    public void setListener(Listener listener) {
+        mListener = listener;
+    }
+
+    public void setUserInteractionListener(UserInteractionListener listener) {
+        mUIListener = listener;
+    }
+
+    public void setOverscrollEffect(int kind) {
+        mOverscrollEffect = kind;
+        mScroller.setOverfling(kind == OVERSCROLL_SYSTEM);
+    }
+
+    private static int[] expandIntArray(int array[], int capacity) {
+        while (array.length < capacity) {
+            array = new int[array.length * 2];
+        }
+        return array;
+    }
+
+    @Override
+    protected void render(GLCanvas canvas) {
+        super.render(canvas);
+        if (mRenderer == null)
+            return;
+        mRenderer.prepareDrawing();
+        long animTime = AnimationTime.get();
+        boolean more = mScroller.advanceAnimation(animTime);
+        more |= mLayout.advanceAnimation(animTime);
+        int oldX = mScrollX;
+        updateScrollPosition(mScroller.getPosition(), false);
+        boolean paperActive = false;
+        if (mOverscrollEffect == OVERSCROLL_3D) {
+            // Check if an edge is reached and notify mPaper if so.
+            int newX = mScrollX;
+            int limit = mLayout.getScrollLimit();
+            if (oldX > 0 && newX == 0 || oldX < limit && newX == limit) {
+                float v = mScroller.getCurrVelocity();
+                if (newX == limit)
+                    v = -v;
+                // I don't know why, but getCurrVelocity() can return NaN.
+                if (!Float.isNaN(v)) {
+                    mPaper.edgeReached(v);
+                }
+            }
+            paperActive = mPaper.advanceAnimation();
+        }
+        more |= paperActive;
+        if (mAnimation != null) {
+            more |= mAnimation.calculate(animTime);
+        }
+        canvas.translate(-mScrollX, -mScrollY);
+        if (mLayout instanceof ExpandSlotLayout) {
+            // 绘制展开分类标签
+            ExpandSlotLayout expandLayout = (ExpandSlotLayout) mLayout;
+            ArrayList<MediaSet.SortTag> tags = expandLayout.getSortTags();
+            if (tags != null && tags.size() > 0) {
+                for (int i = expandLayout.getVisibleTagStart(); i < expandLayout.getVisibleTagEnd(); i++) {
+                    renderSortTag(canvas, i, tags.get(i).pos);
+                }
+            }
+        }
+        int requestCount = 0;
+        int requestedSlot[] = expandIntArray(mRequestRenderSlots,
+                mLayout.getVisibleSlotEnd() - mLayout.getVisibleSlotStart());
+        for (int i = mLayout.getVisibleSlotEnd() - 1; i >= mLayout
+                .getVisibleSlotStart(); --i) {
+            int r = renderItem(canvas, i, 0, paperActive);
+            if ((r & RENDER_MORE_FRAME) != 0)
+                more = true;
+            if ((r & RENDER_MORE_PASS) != 0)
+                requestedSlot[requestCount++] = i;
+        }
+        for (int pass = 1; requestCount != 0; ++pass) {
+            int newCount = 0;
+            for (int i = 0; i < requestCount; ++i) {
+                int r = renderItem(canvas, requestedSlot[i], pass, paperActive);
+                if ((r & RENDER_MORE_FRAME) != 0)
+                    more = true;
+                if ((r & RENDER_MORE_PASS) != 0)
+                    requestedSlot[newCount++] = i;
+            }
+            requestCount = newCount;
+        }
+        canvas.translate(mScrollX, mScrollY);
+        if (more)
+            invalidate();
+        final UserInteractionListener listener = mUIListener;
+        if (mMoreAnimation && !more && listener != null) {
+            mHandler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    listener.onUserInteractionEnd();
+                }
+            });
+        }
+        mMoreAnimation = more;
+    }
+
+    private void renderSortTag(GLCanvas canvas, int index, Rect rect) {
+        canvas.save(GLCanvas.SAVE_FLAG_ALPHA | GLCanvas.SAVE_FLAG_MATRIX);
+        canvas.translate(rect.left, rect.top, 0);
+        mRenderer.renderSortTag(canvas, index, rect.right - rect.left,
+                rect.bottom - rect.top);
+        canvas.restore();
+    }
+
+    private int renderItem(GLCanvas canvas, int index, int pass,
+                           boolean paperActive) {
+        canvas.save(GLCanvas.SAVE_FLAG_ALPHA | GLCanvas.SAVE_FLAG_MATRIX);
+        Rect rect = mLayout.getSlotRect(index, mTempRect);
+        if (paperActive) {
+            canvas.multiplyMatrix(mPaper.getTransform(rect, mScrollY), 0);
+        } else {
+            canvas.translate(rect.left, rect.top, 0);
+        }
+        if (mAnimation != null && mAnimation.isActive()) {
+            mAnimation.apply(canvas, index, rect);
+        }
+        int result = mRenderer.renderSlot(canvas, index,
+                rect.right - rect.left, rect.bottom - rect.top);
+        canvas.restore();
+        return result;
+    }
+
+    public static abstract class SlotAnimation extends Animation {
+
+        protected float mProgress = 0;
+
+        public SlotAnimation() {
+            setInterpolator(new DecelerateInterpolator(4));
+            setDuration(1500);
+        }
+
+        @Override
+        protected void onCalculate(float progress) {
+            mProgress = progress;
+        }
+
+        abstract public void apply(GLCanvas canvas, int slotIndex, Rect target);
+    }
+
+    public static class RisingAnimation extends SlotAnimation {
+
+        private static final int RISING_DISTANCE = 128;
+
+        @Override
+        public void apply(GLCanvas canvas, int slotIndex, Rect target) {
+            canvas.translate(0, 0, RISING_DISTANCE * (1 - mProgress));
+        }
+    }
+
+    public static class ScatteringAnimation extends SlotAnimation {
+
+        private int PHOTO_DISTANCE = 1000;
+        private RelativePosition mCenter;
+
+        public ScatteringAnimation(RelativePosition center) {
+            mCenter = center;
+        }
+
+        @Override
+        public void apply(GLCanvas canvas, int slotIndex, Rect target) {
+            canvas.translate((mCenter.getX() - target.centerX())
+                    * (1 - mProgress), (mCenter.getY() - target.centerY())
+                    * (1 - mProgress), slotIndex * PHOTO_DISTANCE
+                    * (1 - mProgress));
+            canvas.setAlpha(mProgress);
+        }
+    }
+
+    // This Spec class is used to specify the size of each slot in the SlotView.
+    // There are two ways to do it:
+    //
+    // (1) Specify slotWidth and slotHeight: they specify the width and height
+    // of each slot. The number of rows and the gap between slots will be
+    // determined automatically.
+    // (2) Specify rowsLand, rowsPort, and slotGap: they specify the number
+    // of rows in landscape/portrait mode and the gap between slots. The
+    // width and height of each slot is determined automatically.
+    //
+    // The initial value of -1 means they are not specified.
+    public static class Spec {
+
+        public int slotWidth = -1;
+        public int slotHeight = -1;
+        public int slotGap = -1;
+        public int columsLand = -1;
+        public int columsPort = -1;
+        public int tagWidth = -1;
+        public int tagHeight = -1;
+        public int paddingLeft = -1;
+        public int paddingRight = -1;
+        public int paddingTop = -1;
+        public int paddingBottom = -1;
+        public int header_bar_height = -1;
+    }
+
+    public void setStartIndex(int index) {
+        mStartIndex = index;
+    }
+
+    // Return true if the layout parameters have been changed
+    public boolean setSlotCount(int slotCount) {
+        boolean changed = mLayout.setSlotCount(slotCount);
+        // mStartIndex is applied the first time setSlotCount is called.
+        if (mStartIndex != INDEX_NONE) {
+            setCenterIndex(mStartIndex);
+            mStartIndex = INDEX_NONE;
+        }
+        // Reset the scroll position to avoid scrolling over the updated limit.
+        setScrollPosition(WIDE_SCROLLING ? mScrollX : mScrollY);
+        return changed;
+    }
+
+    // temp will delete future
+    public void setSortTags(ArrayList<MediaSet.SortTag> tags) {
+        if (mLayout instanceof ExpandSlotLayout) {
+            ((ExpandSlotLayout) mLayout).setSortTags(tags);
+        }
+    }
+
+    public ArrayList<MediaSet.SortTag> getSortTags() {
+        if (mLayout instanceof ExpandSlotLayout) {
+            return ((ExpandSlotLayout) mLayout).getSortTags();
+        }
+        return null;
+    }
+
+    public ArrayList<BaseSlotLayout.SlotPos> getSlotPos() {
+        if (mLayout instanceof ExpandSlotLayout) {
+            return ((ExpandSlotLayout) mLayout).getSlotPos();
+        }
+        return null;
+    }
+
+    public int getVisibleTagStart() {
+        return ((ExpandSlotLayout) mLayout).getVisibleTagStart();
+    }
+
+    public int getVisibleTagEnd() {
+        return ((ExpandSlotLayout) mLayout).getVisibleTagEnd();
+    }
+
+    public int getVisibleSlotStart() {
+        return mLayout.getVisibleSlotStart();
+    }
+
+    public int getVisibleSlotEnd() {
+        return mLayout.getVisibleSlotEnd();
+    }
+
+    public int getSlotCount() {
+        return mLayout.getSlotCount();
+    }
+
+    public int getScrollX() {
+        return mScrollX;
+    }
+
+    public int getScrollY() {
+        return mScrollY;
+    }
+
+    /*
+     * 手势识别
+     */
+    private class MyGestureListener implements
+            GestureDetector.OnGestureListener {
+
+        private boolean isDown;
+
+        // We call the listener's onDown() when our onShowPress() is called and
+        // call the listener's onUp() when we receive any further event.
+        @Override
+        public void onShowPress(MotionEvent e) {
+            GLRoot root = getGLRoot();
+            root.lockRenderThread();
+            try {
+                if (isDown)
+                    return;
+                int index = mLayout.getSlotIndexByPosition(e.getX(), e.getY());
+                if (index != INDEX_NONE) {
+                    isDown = true;
+                    mListener.onDown(index);
+                }
+            } finally {
+                root.unlockRenderThread();
+            }
+        }
+
+        private void cancelDown(boolean byLongPress) {
+            if (!isDown)
+                return;
+            isDown = false;
+            mListener.onUp(byLongPress);
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return false;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+                               float velocityY) {
+            cancelDown(false);
+            int scrollLimit = mLayout.getScrollLimit();
+            if (scrollLimit == 0)
+                return false;
+            float velocity = WIDE_SCROLLING ? velocityX : velocityY;
+            // GMLogger.i(TAG,
+            // "--------------------------------------------------fling");
+            mScroller.fling((int) -velocity, 0, scrollLimit);
+            if (mUIListener != null)
+                mUIListener.onUserInteractionBegin();
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                                float distanceX, float distanceY) {
+            cancelDown(false);
+            float distance = WIDE_SCROLLING ? distanceX : distanceY;
+            // GMLogger.i(TAG,
+            // "--------------------------------------------------Scroll");
+            int overDistance = mScroller.startScroll(Math.round(distance), 0,
+                    mLayout.getScrollLimit());
+            if (mOverscrollEffect == OVERSCROLL_3D && overDistance != 0) {
+                mPaper.overScroll(overDistance);
+            }
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            cancelDown(false);
+            if (mDownInScrolling)
+                return true;
+            int index = mLayout.getSlotIndexByPosition(e.getX(), e.getY());
+            if (index != INDEX_NONE)
+                mListener.onSingleTapUp(index);
+            else if (mLayout instanceof ExpandSlotLayout) {
+                index = ((ExpandSlotLayout) mLayout).getTagIndexByPosition(
+                        e.getX(), e.getY());
+                if (index != INDEX_NONE)
+                    mListener.onSingleTagTapUp(index);
+            }
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            cancelDown(true);
+            if (mDownInScrolling)
+                return;
+            lockRendering();
+            try {
+                int index = mLayout.getSlotIndexByPosition(e.getX(), e.getY());
+                if (index != INDEX_NONE)
+                    mListener.onLongTap(index);
+            } finally {
+                unlockRendering();
+            }
+        }
+    }
+}

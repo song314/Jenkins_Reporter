@@ -1,0 +1,49 @@
+package com.pinguo.edit.sdk.login.lib;
+
+/**
+ * Created by liubo on 7/3/13.
+ */
+public final class Debug {
+    public static final boolean DEBUG = true;
+
+    /**
+     * 性能测试窗口
+     */
+    public static final boolean PERFORMANCE_DEBUG = false;
+    public static final int PERFORMANCE_REFRESH_TIME = 5 * 1000;
+
+    /**
+     * 日志单独提出
+     */
+    public static final boolean DEBUG_LOG = true;
+
+    /**
+     * 是否需要添加应用推荐项
+     * 打包时注意
+     */
+    public static final boolean mIsNeedAddRecommdationItem = true;
+
+    public static final int ENGIN_VERSION = 35;
+    public static final String ENGIN_CRC32 = "480b1e1c";
+
+    /**
+     * 这个开关控制是否需要在当前版本刚启动时显示小红点引导(且是在用户新装APP的情况下，不是升级用户)，
+     * 目的是解决当前版本内置了新特效时引导用户进商店。
+     */
+    public static final boolean NEED_SHOW_RED_POINT_OF_THIS_VERSION_FOR_NEW_USER = true;
+
+    /**
+     * 升级用户是否需要强制刷新特效商店
+     */
+    public static final boolean NEED_EFFECT_ACTIVITY_FORCE_UPDATE_OF_THIS_VERSION_FOR_UPDATE_USER = true;
+
+    /**
+     * 升级用户,是否强制使用内置的商店列表
+     */
+    public static final boolean NEED_SHOW_ASSETS_CAMERA_SHOP_LIST_FOR_UPDATE = true;
+
+    /**
+     * MAA移动加速
+     */
+    public static final boolean MAA = false;
+}

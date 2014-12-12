@@ -1,0 +1,184 @@
+package us.pinguo.android.effect.group.sdk.androidsdk;
+
+import android.content.Context;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by pinguo on 14-5-30.
+ */
+public class SeniorAdjustmentEnum {
+
+    public final static String ADVANCE_EFFECT = "Effect=LightZ_Base|Effect=LightZ_HSL";
+
+    public final static String ADVANCE_KEY = "LightZ_Base|LightZ_HSL";
+
+    public static Map<String, String> childEffectParams = new HashMap<String, String>();
+
+    static {
+        SeniorAdjustment[] seniorAdjustments = SeniorAdjustment.values();
+        for (SeniorAdjustment seniorAdjustment : seniorAdjustments) {
+            childEffectParams.put(seniorAdjustment.name(), seniorAdjustment.getChildEffect());
+        }
+    }
+
+    public static int getValueForProgress(float currentValue, SeniorAdjustment seniorAdjustment) {
+        return Math.round((currentValue - seniorAdjustment.getMin()) / (seniorAdjustment.getMax() - seniorAdjustment.getMin()) * 100);
+    }
+
+//    public static class SeniorAdjustmentInfo{
+//
+//        private float currentValue;
+//        private SeniorAdjustment seniorAdjustment;
+//
+//        public float getCurrentValue() {
+//            return currentValue;
+//        }
+//
+//        public SeniorAdjustment getSeniorAdjustment() {
+//            return seniorAdjustment;
+//        }
+//
+//        public void setCurrentValue(float currentValue) {
+//            this.currentValue = currentValue;
+//        }
+//
+//        public void setSeniorAdjustment(SeniorAdjustment seniorAdjustment) {
+//            this.seniorAdjustment = seniorAdjustment;
+//            setCurrentValue(seniorAdjustment.getDef());
+//        }
+//
+//        public int getCurrentValueForProgress(){
+//            return Math.round((currentValue - seniorAdjustment.getMin()) / (seniorAdjustment.getMax() - seniorAdjustment.getMin()) * 100);
+//        }
+//
+//        public void setCurrentValueForProgress(int progress){
+//            this.currentValue = progress/100f * (seniorAdjustment.getMax() - seniorAdjustment.getMin()) + seniorAdjustment.getMin() ;
+//        }
+//    }
+
+
+    public static enum SeniorAdjustment {
+
+        Exposure(-5, 5, 0, 0, 0, "LightZ_Base", "Exposure"),  //曝光度
+        Contrast(-100, 100, 0, 0, 0, "LightZ_Base", "Contrast"), //对比度
+        Vibrance(-100, 100, 0, 0, 0, "LightZ_Base", "Vibrance"),   //鲜艳度
+        Saturation(-100, 100, 0, 0, 0, "LightZ_Base", "Saturation"),  //饱和度
+
+        Highlight(-100, 100, 0, 0, 0, "LightZ_HSL", "Highlight"),   //高光
+        Shadow(-100, 100, 0, 0, 0, "LightZ_HSL", "Lighting");  //阴影
+
+
+        private int mMin;
+        private int mMax;
+        private int mDef;
+
+        private int mImageResouce;
+        private int mNameResouce;
+
+        private String mChildEffect;
+        private String mParams;
+
+        private SeniorAdjustment(int min, int max, int def, int imageResouce, int nameResouce, String childEffect, String params) {
+            this.mMin = min;
+            this.mMax = max;
+            this.mDef = def;
+
+            this.mImageResouce = imageResouce;
+            this.mNameResouce = nameResouce;
+
+            this.mChildEffect = childEffect;
+            this.mParams = params;
+        }
+
+        public int getMin() {
+            return mMin;
+        }
+
+        public int getMax() {
+            return mMax;
+        }
+
+        public int getDef() {
+            return mDef;
+        }
+
+        public int getImageResouce() {
+            return mImageResouce;
+        }
+
+        public void setImageResource(int imageResource) {
+            mImageResouce = imageResource;
+        }
+
+        public int getNameResouce() {
+            return mNameResouce;
+        }
+
+        public void setNameResource(int nameResource) {
+            mNameResouce = nameResource;
+        }
+
+        public String getChildEffect() {
+            return mChildEffect;
+        }
+
+        public String getParamsValue(float value) {
+            return String.valueOf(Math.round((mMax - mMin) * value + mMin));
+        }
+    }
+
+    public static SeniorAdjustment[] getSeniorAdjustmentArray(Context context) {
+
+        int imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_exposure");
+        int nameResource = ResourceHelper.getString(
+                context, "composite_sdk_exposure");
+        SeniorAdjustment.Exposure.setImageResource(imageResource);
+        SeniorAdjustment.Exposure.setNameResource(nameResource);
+
+        imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_contrast");
+        nameResource = ResourceHelper.getString(
+                context, "composite_sdk_contrast");
+        SeniorAdjustment.Contrast.setImageResource(imageResource);
+        SeniorAdjustment.Contrast.setNameResource(nameResource);
+
+        imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_vibrance");
+        nameResource = ResourceHelper.getString(
+                context, "composite_sdk_vibrance");
+        SeniorAdjustment.Vibrance.setImageResource(imageResource);
+        SeniorAdjustment.Vibrance.setNameResource(nameResource);
+
+        imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_saturation");
+        nameResource = ResourceHelper.getString(
+                context, "composite_sdk_saturation");
+        SeniorAdjustment.Saturation.setImageResource(imageResource);
+        SeniorAdjustment.Saturation.setNameResource(nameResource);
+
+        imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_highlight");
+        nameResource = ResourceHelper.getString(
+                context, "composite_sdk_highlight");
+        SeniorAdjustment.Highlight.setImageResource(imageResource);
+        SeniorAdjustment.Highlight.setNameResource(nameResource);
+
+        imageResource = ResourceHelper.getDrawable(
+                context, "composite_sdk_senior_adjustment_shadow");
+        nameResource = ResourceHelper.getString(
+                context, "composite_sdk_shadow");
+        SeniorAdjustment.Shadow.setImageResource(imageResource);
+        SeniorAdjustment.Shadow.setNameResource(nameResource);
+
+        return new SeniorAdjustment[]{SeniorAdjustment.Contrast, SeniorAdjustment.Exposure
+                , SeniorAdjustment.Vibrance, SeniorAdjustment.Saturation, SeniorAdjustment.Highlight,
+                SeniorAdjustment.Shadow};
+    }
+
+
+}

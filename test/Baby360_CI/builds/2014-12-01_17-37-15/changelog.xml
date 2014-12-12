@@ -1,0 +1,17 @@
+commit 846e39e3ccac1abc5f11620a8edb7a7628091897
+tree 9473194e50191599dbb0e4eea6dbb621763d9adf
+parent e6ac7a5a11893d7cca1d9b9538fc78f1f12c5435
+author pinguo-zhongzheng <zhongzheng@camera360.com> 1417426618 +0800
+committer pinguo-zhongzheng <zhongzheng@camera360.com> 1417426618 +0800
+
+    [钟铮]调整设置UI
+
+:000000 100644 0000000000000000000000000000000000000000 c52d00122f18a0a868c5e6978a01dc3b94fa7efa A	res/drawable-xhdpi/composite_sdk_option_person_info_big_default.png
+:100644 100644 ac6ac535de4b8231c970c5a0179576d7f8ca9930 b2381cadb534810f1e90df6a90a33baf6cf55d1f M	res/layout/composite_sdk_option_main.xml
+:100644 100644 c5f40849ccd8247ad7b7c332b9e158e8eb062b11 f88486edecc76fd3787c1a9e6565be195a34ade7 M	res/layout/composite_sdk_personal_information.xml
+:100644 100644 17d9b207c5451c04c9223d84c483fe0f78d03a09 81b71dec915b2d494631e10df7a0d39c6151ff6e M	res/layout/layout_setting_item_more.xml
+:100644 100644 017143a4e2979a7d21622b54171fe540be8cc012 1dc3c5cef8e0267c33ef78988a380ed8aa566646 M	res/values-zh-rCN/login_strings.xml
+:100644 100644 9f079fa178e75061e99c8996b1c0aa53d9e282aa 6fcd836fb6f15e665c0a8d2cb4ac07e84f5bff29 M	res/values/composite_sdk_dimens.xml
+:100644 100644 b02bee4ca5646489fd6d14b7f50c49c6b5c73f70 9931bcbe89eae6b9bc2696895d9a4dd0063a14c2 M	res/values/composite_sdk_styles.xml
+:100644 100644 2ef1c455f9cae29d2c6fa934ab5e6809aaac08dd c89eb126afe7af470a60ae3b24aff23f5085d62f M	src/com/pinguo/edit/sdk/login/activity/PersonalInformation.java
+:100755 100755 a8b52f2aeeb37b55846c995303ffbd8d8c8e9225 a406760fdbffd6b1c422c787a01f2ffd05c1c5fe M	src/com/pinguo/edit/sdk/option/fragment/OptionsSettings.java

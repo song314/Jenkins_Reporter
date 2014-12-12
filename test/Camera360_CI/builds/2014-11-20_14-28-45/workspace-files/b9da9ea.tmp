@@ -1,0 +1,50 @@
+package com.pinguo.edit.sdk.filter.square.Info;
+
+import android.os.Bundle;
+
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+
+import org.json.JSONException;
+
+/**
+ * Created by taoli on 14-10-22.
+ */
+public class GetFilterInfo extends BaseRequest {
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        GetFilterInfoBean getFilterInfoBean = (GetFilterInfoBean) bean;
+        Bundle bundle = new Bundle();
+        bundle.putString(ApiConstants.PARAM_FILTER_ORIGIN_ETAG, getFilterInfoBean.getOriginEtag());
+        bundle.putString(ApiConstants.PARAM_FILTER_EDIT_ETAG, getFilterInfoBean.getEditEtag());
+        bundle.putString(ApiConstants.PARAM_FILTER_INFO, getFilterInfoBean.getInfo());
+        bundle.putString(ApiConstants.PARAM_FILTER_USER_ID, getFilterInfoBean.getUserId());
+        bundle.putString(ApiConstants.PARAM_FILTER_AVATAR, getFilterInfoBean.getAvatar());
+        bundle.putString(ApiConstants.PARAM_FILTER_NICK_NAME, getFilterInfoBean.getNickName());
+        bundle.putString(ApiConstants.PARAM_FILTER_NAME, getFilterInfoBean.getFilterName());
+        return bundle;
+    }
+
+    @Override
+    protected Object getResultData(BaseBean bean) {
+        return null;
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+        GetFilterInfoBean getFilterInfoBean = new GetFilterInfoBean();
+        try {
+            getFilterInfoBean.parseJsonToObj(jsonString);
+            return getFilterInfoBean;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}

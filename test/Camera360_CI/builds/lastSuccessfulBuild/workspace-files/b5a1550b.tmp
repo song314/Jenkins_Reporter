@@ -1,0 +1,229 @@
+package com.pinguo.edit.sdk.filter.square.view;
+
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+
+import com.handmark.pulltorefresh.library.OverscrollHelper;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.pinguo.edit.sdk.R;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by hlf on 14-11-28.
+ * 顶部可以缩放，可以支持颈部，底部是listview的view
+ */
+@TargetApi(9)
+public abstract class HeadZoomMultipleListView<T> extends LinearLayout {
+
+    protected ViewGroup mHeadParentView;
+    protected ViewGroup mNeckParentView;
+    protected ViewPager mBodyViewPager;
+    protected Context mContext;
+    protected BodyViewPagerAdapter mPagerAdapter;
+
+    private float mHeadStartHeight;
+    private float mHeadEndHeight;
+
+    public abstract ListAdapter newAdapter(List<T> list);
+
+    public HeadZoomMultipleListView(Context context) {
+        super(context);
+
+        init(context);
+    }
+
+    public HeadZoomMultipleListView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        init(context);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+    }
+
+    protected void init(Context context) {
+        mContext = context;
+        LayoutInflater.from(context).inflate(R.layout.composite_sdk_head_zoom_multiple_listview, this, true);
+        mHeadParentView = (ViewGroup) findViewById(R.id.head);
+        mNeckParentView = (ViewGroup) findViewById(R.id.neck);
+        mBodyViewPager = (ViewPager) findViewById(R.id.body);
+
+    }
+
+    /**
+     * 生成底部的listview
+     *
+     * @param count 生成的个数
+     */
+    public void addListViews(int count) {
+        mPagerAdapter = new BodyViewPagerAdapter();
+        List<HeadZoomPullToRefreshListView> list = new ArrayList<HeadZoomPullToRefreshListView>();
+        for (int i = 0;
+             i < count;
+             i++) {
+            HeadZoomPullToRefreshListView pullToRefreshListView = new HeadZoomPullToRefreshListView(mContext);
+            pullToRefreshListView.setMode(PullToRefreshBase.Mode.BOTH);
+            list.add(pullToRefreshListView);
+        }
+        mPagerAdapter.setListViews(list);
+        mBodyViewPager.setAdapter(mPagerAdapter);
+    }
+
+    /**
+     * 第一次加入数据的时候调用此方法
+     *
+     * @param index
+     * @param list
+     */
+    public void initListViewModel(int index, List<T> list) {
+        HeadZoomPullToRefreshListView listView = mPagerAdapter.getListViews().get(index);
+        listView.setAdapter(newAdapter(list));
+
+        currentViewPagerItem(index);
+    }
+
+    public void setHeadZoomSize(float headStartHeight, float headEndHeight) {
+        mHeadStartHeight = headStartHeight;
+        mHeadEndHeight = headEndHeight;
+    }
+
+    public void currentViewPagerItem(int index) {
+        mBodyViewPager.setCurrentItem(index);
+    }
+
+
+    public static class BodyViewPagerAdapter extends PagerAdapter {
+
+        public List<HeadZoomPullToRefreshListView> mListViews;
+
+        @Override
+        public boolean isViewFromObject(View arg0, Object arg1) {
+            return arg0 == arg1;
+        }
+
+        @Override
+        public int getCount() {
+            return mListViews.size();
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position,
+                                Object object) {
+            container.removeView(mListViews.get(position));
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            container.addView(mListViews.get(position));
+
+
+            return mListViews.get(position);
+        }
+
+        public void setListViews(List<HeadZoomPullToRefreshListView> list) {
+            mListViews = list;
+        }
+
+        public List<HeadZoomPullToRefreshListView> getListViews() {
+            return mListViews;
+        }
+    }
+
+    public static class HeadZoomPullToRefreshListView extends PullToRefreshListView {
+
+        private ListAdapter mAdapter;
+
+        public HeadZoomPullToRefreshListView(Context context) {
+            super(context);
+        }
+
+        public HeadZoomPullToRefreshListView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        public HeadZoomPullToRefreshListView(Context context, Mode mode) {
+            super(context, mode);
+        }
+
+        public HeadZoomPullToRefreshListView(Context context, Mode mode, AnimationStyle style) {
+            super(context, mode, style);
+        }
+
+        @Override
+        protected ListView createListView(Context context, AttributeSet attrs) {
+            final ListView lv = new HeadZoomInternalListViewSDK9(context, attrs);
+
+            return lv;
+        }
+
+        public ListAdapter getAdapter() {
+            return mAdapter;
+        }
+
+        public void setAdapter(ListAdapter adapter) {
+            super.setAdapter(adapter);
+            mAdapter = adapter;
+        }
+
+        protected class HeadZoomInternalListViewSDK9 extends InternalListView {
+
+            private float mStartY;
+
+            public HeadZoomInternalListViewSDK9(Context context, AttributeSet attrs) {
+                super(context, attrs);
+            }
+
+            @Override
+            protected boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
+                                           int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+
+                final boolean returnValue = super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX,
+                        scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+
+                // Does all of the hard work...
+                OverscrollHelper.overScrollBy(HeadZoomPullToRefreshListView.this, deltaX, scrollX, deltaY, scrollY, isTouchEvent);
+                return returnValue;
+            }
+
+            @Override
+            public boolean onTouchEvent(MotionEvent ev) {
+
+                if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    mStartY = ev.getY();
+                }
+
+                if (!isEnabled()) {
+                    // A disabled view that is clickable still consumes the touch
+                    // events, it just doesn't respond to them.
+                    return isClickable() || isLongClickable();
+                }
+
+                if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                    int pointerIndex = ev.findPointerIndex(0);
+                    final int y = (int) ev.getY(pointerIndex);
+
+                    return super.onTouchEvent(ev);
+                }
+
+                return super.onTouchEvent(ev);
+            }
+
+        }
+    }
+}

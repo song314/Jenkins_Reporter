@@ -1,0 +1,72 @@
+package com.pinguo.edit.sdk.wxapi;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+/**
+ * Created by taoli on 14-6-10.
+ */
+public class WXDataReceiver extends BroadcastReceiver {
+
+    public static final int EVENT_GET_USER_INFO = 0x00000001;
+    public static final int EVENT_SHARE_PICTURE = 0x00000010;
+
+    public static final String ACTION_GET_USER_INFO = "get_user_info";
+    public static final String ACTION_SHARE_PICTURE = "share_picture";
+
+    private IWXDataObserver mObserver;
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+
+        if (null != mObserver) {
+            mObserver.onWXDataReceived(intent);
+        }
+    }
+
+    public void registerCallback(Context context, int events, IWXDataObserver observer) {
+        IntentFilter intentFilter = new IntentFilter();
+
+        if ((events & EVENT_GET_USER_INFO) != 0) {
+            intentFilter.addAction("get_user_info");
+        }
+
+        if ((events & EVENT_SHARE_PICTURE) != 0) {
+            intentFilter.addAction("share_picture");
+        }
+
+        context.registerReceiver(this, intentFilter);
+        mObserver = observer;
+    }
+
+    public void unregisterCallback(Context context) {
+        context.unregisterReceiver(this);
+    }
+
+    public static void notifyDataChange(Context context, int events, Object... param) {
+        if ((events & EVENT_GET_USER_INFO) != 0) {
+            Intent intent = new Intent();
+            intent.setAction(ACTION_GET_USER_INFO);
+            intent.putExtra("code", (String) param[0]);
+            intent.putExtra("scene", (Integer) param[1]);
+            intent.putExtra("errCode", (Integer) param[2]);
+            context.sendBroadcast(intent);
+        }
+
+        if ((events & EVENT_SHARE_PICTURE) != 0) {
+            Intent intent = new Intent();
+            intent.setAction(ACTION_SHARE_PICTURE);
+            intent.putExtra("scene", (Integer) param[0]);
+            intent.putExtra("errCode", (Integer) param[1]);
+            context.sendBroadcast(intent);
+        }
+    }
+
+    public interface IWXDataObserver {
+        void onWXDataReceived(Intent intent);
+    }
+}

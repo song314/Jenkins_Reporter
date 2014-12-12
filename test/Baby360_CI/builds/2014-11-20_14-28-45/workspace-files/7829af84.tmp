@@ -1,0 +1,137 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamColorBalanceItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamCurveItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public class AdvanceBase extends Effect {
+    private static final String TAG = AdvanceBase.class.getSimpleName();
+
+    // param key
+    public static final String PARAM_KEY_TEMPERATURE = "Temperature";    //色温，默认值：0，范围：－100～100
+    public static final String PARAM_KEY_HUE = "Hue"; // 色调，默认值：0，范围：－100～100
+    public static final String PARAM_KEY_EXPOSURE = "Exposure"; // 曝光度,默认值:0,范围:-5~5 (不宜调整过大)
+    public static final String PARAM_KEY_CONTRAST = "Contrast"; // 对比度,默认值:0,范围:-100~100
+    public static final String PARAM_KEY_VIBRANCE = "Vibrance"; // 鲜艳度,默认值:0,范围,-100~100
+    public static final String PARAM_KEY_SATURATION = "Saturation"; // 饱和度,默认值:0,范围,-100~100
+    public static final String PARAM_KEY_CURVE = "Curve";   // 曲线,可以调整4个通道,每个通道调整格式: <通道名称>输入值1=输出值1,输入值2=输出值2</通道名称>
+                                                                    // <A></A>  -- RGB通道
+                                                                    // <R></R>  -- R通道  <G></G>  -- G通道  <B></B>  -- B通道
+                                                                    // 例子:Curve=<R>63=11,166=180</R>
+
+    public static final String PARAM_KEY_COLOR_BALANCE = "ColorBalance"; // 色彩平衡,后面跟10个数字,分别为 阴影(青品黄),中间调(青品黄),高光(青品黄),是否保持明度(是为1,不是为0)
+
+    // effect key
+    public static final String EFFECT_KEY_LIGHTZ_BASE = "LightZ_Base";
+
+    // param name string name
+    public static final String PARAM_NAME_TEMPERATURE = "composite_sdk_advance_base_param_temperature";
+    public static final String PARAM_NAME_HUE = "composite_sdk_advance_base_param_hue";
+    public static final String PARAM_NAME_EXPOSURE = "composite_sdk_advance_base_param_exposure";
+    public static final String PARAM_NAME_CONTRAST = "composite_sdk_advance_base_param_contrast";
+    public static final String PARAM_NAME_VIBRANCE = "composite_sdk_advance_base_param_vibrance";
+    public static final String PARAM_NAME_SATURATION = "composite_sdk_advance_base_param_saturation";
+    public static final String PARAM_NAME_CURVE = "composite_sdk_advance_base_param_curve";
+    public static final String PARAM_NAME_COLOR_BALANCE = "composite_sdk_advance_base_param_color_balance";
+
+
+    public AdvanceBase() {
+        this.type = Type.AdvanceBase.name();
+        this.key = AdvanceBase.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.ADVANCE_BASE_CMD.toCharArray()) ;
+
+        // param
+        param = new Param();
+        ParamFloatItem temperature = new ParamFloatItem(PARAM_KEY_TEMPERATURE, EFFECT_KEY_LIGHTZ_BASE, -100f, 100f, 1f, 0f, 0f, "composite_sdk_advance_base_param_temperature",PARAM_NAME_TEMPERATURE);
+        ParamFloatItem hue = new ParamFloatItem(PARAM_KEY_HUE, EFFECT_KEY_LIGHTZ_BASE, -100f, 100f, 1f, 0f, 0f, "composite_sdk_advance_base_param_hue", PARAM_NAME_HUE);
+        ParamFloatItem exposure = new ParamFloatItem(PARAM_KEY_EXPOSURE, EFFECT_KEY_LIGHTZ_BASE, -5f, 5f, 0.05f, 0f, 0f, "composite_sdk_advance_base_param_exposure", PARAM_NAME_EXPOSURE);
+        ParamFloatItem contrast = new ParamFloatItem(PARAM_KEY_CONTRAST, EFFECT_KEY_LIGHTZ_BASE, -100f, 100f, 1f, 0f, 0f, "composite_sdk_advance_base_param_contrast", PARAM_NAME_CONTRAST);
+        ParamFloatItem vibrance = new ParamFloatItem(PARAM_KEY_VIBRANCE, EFFECT_KEY_LIGHTZ_BASE, -100f, 100f, 1f, 0f, 0f, "composite_sdk_advance_base_param_vibrance", PARAM_NAME_VIBRANCE);
+        ParamFloatItem saturation = new ParamFloatItem(PARAM_KEY_SATURATION, EFFECT_KEY_LIGHTZ_BASE, -100f, 100f, 1f, 0f, 0f, "composite_sdk_advance_base_param_saturation", PARAM_NAME_SATURATION);
+        ParamCurveItem curve = new ParamCurveItem(PARAM_KEY_CURVE, EFFECT_KEY_LIGHTZ_BASE, "<R>0=0</R><G>0=0</G><B>0=0</B><A>0=0</A>", "<R>0=0</R><G>0=0</G><B>0=0</B><A>0=0</A>", "composite_sdk_advance_base_param_curve", PARAM_NAME_CURVE);
+        ParamColorBalanceItem colorBalance = new ParamColorBalanceItem(PARAM_KEY_COLOR_BALANCE, EFFECT_KEY_LIGHTZ_BASE, "0,0,0,0,0,0,0,0,0,1", "0,0,0,0,0,0,0,0,0,1", "composite_sdk_advance_base_param_color_balance", PARAM_NAME_COLOR_BALANCE);
+
+        param.addParamItem(temperature);
+        param.addParamItem(hue);
+        param.addParamItem(exposure);
+        param.addParamItem(contrast);
+        param.addParamItem(vibrance);
+        param.addParamItem(saturation);
+        param.addParamItem(curve);
+        param.addParamItem(colorBalance);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        AdvanceBase base = null;
+
+        try {
+            base = (AdvanceBase) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != base )
+            return base;
+        else
+            return new AdvanceBase();
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        if (null != param) {
+            List<ParamItem> paramItemList = param.getParamItemList();
+            for (ParamItem item:paramItemList) {
+                if (item instanceof ParamFloatItem) {
+                    if (((ParamFloatItem) item).value
+                            == ((ParamFloatItem) item).defaultValue) {
+                        continue;
+                    }
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("key", item.key);
+                        jsonObject.put("packName", "");
+                        jsonObject.put("name", "");
+                        jsonObject.put("value", Math.round(((ParamFloatItem) item).value / ((ParamFloatItem) item).step));
+                        jsonObject.put("minValue", Math.round(((ParamFloatItem) item).min));
+                        jsonObject.put("type", 1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    list.add(jsonObject);
+                }
+            }
+        }
+
+        return list;
+    }
+}

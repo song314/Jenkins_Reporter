@@ -1,0 +1,128 @@
+package com.pinguo.edit.sdk.filter.square.page.list;
+
+import android.view.MotionEvent;
+import android.view.View;
+
+import com.pinguo.Camera360Lib.eventbus.BaseEvent;
+import com.pinguo.edit.sdk.filter.square.view.TransparentHeadPTRListView;
+
+/**
+ * Created by taoli on 14-4-16.
+ */
+public abstract class BaseTopEffectControll implements
+        View.OnTouchListener, TransparentHeadPTRListView.OnFlingListener {
+
+    private static final String TAG = BaseTopEffectControll.class.getName();
+
+    protected boolean mForceLoadData = false;
+    private TransparentHeadPTRListView.OnFlingListener mOnFlingListener;
+
+//    public void initMenuBar(CCMenuBar CCMenuBar) {
+//
+//    }
+
+    public void reLoadData() {
+        if (mForceLoadData/* || !isDataLoaded()*/) {
+            loadData();
+            mForceLoadData = false;
+        }
+    }
+
+    /**
+     * 数据是否已经拉取成功 如果未成功 即使FragmentActivity
+     * 没有onResume也要重新自动拉取
+     *
+     * @return
+     */
+    public boolean isDataLoaded() {
+        return true;
+    }
+
+    public void loadData() {
+
+    }
+
+    public void requestLoadData() {
+        mForceLoadData = true;
+    }
+
+    public void onEvent(BaseEvent event) {
+
+    }
+
+    public boolean onBackClick() {
+        return false;
+    }
+
+    public void dispatchTouchEvent(MotionEvent ev) {
+
+    }
+
+    public interface IGetListListener {
+        public void OnGetListSuccess(Object... params);
+
+        public void OnGetListFailed();
+    }
+
+
+    @Override
+    public void onFlingUp() {
+        if (null != mOnFlingListener) {
+            mOnFlingListener.onFlingUp();
+        }
+    }
+
+    @Override
+    public void onFlingDown() {
+        if (null != mOnFlingListener) {
+            mOnFlingListener.onFlingDown();
+        }
+    }
+
+    public void setOnFlingListener(TransparentHeadPTRListView.OnFlingListener onFlingListener) {
+        mOnFlingListener = onFlingListener;
+    }
+
+
+    private float mLastY;
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mLastY = event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (0 == mLastY) {
+                    mLastY = event.getY();
+                    break;
+                }
+                if (event.getY() - mLastY > 10) {
+                    if (null != mOnFlingListener) {
+                        mOnFlingListener.onFlingDown();
+                    }
+                } else if (event.getY() - mLastY < -10) {
+                    if (null != mOnFlingListener) {
+                        mOnFlingListener.onFlingUp();
+                    }
+                }
+                mLastY = event.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (event.getY() - mLastY > 10) {
+                    if (null != mOnFlingListener) {
+                        mOnFlingListener.onFlingDown();
+                    }
+                } else if (event.getY() - mLastY < -10) {
+                    if (null != mOnFlingListener) {
+                        mOnFlingListener.onFlingUp();
+                    }
+                }
+                mLastY = 0;
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+}

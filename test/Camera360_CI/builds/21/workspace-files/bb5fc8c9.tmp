@@ -1,0 +1,76 @@
+package com.pinguo.edit.sdk.utils;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Created by huowaa on 13-12-9.
+ */
+public abstract class LocaleSupport<T> {
+
+    public static final Locale zh_CN = new Locale("zh", "CN");
+    public static final Locale zh_HK = new Locale("zh", "HK");
+    public static final Locale zh_TW = new Locale("zh", "TW");
+    public static final Locale en_US = new Locale("en", "US");
+    public static final Locale th_TH = new Locale("th", "TH");
+
+    private static final int zh_CN_INDEX = 0;
+    private static final int zh_TW_INDEX = 1;
+    private static final int en_US_INDEX = 2;
+
+    private static Map<Locale, Integer> sLocaleMap;
+
+    public static final Locale[] sSupportLocales = new Locale[]{zh_CN, zh_TW, en_US};
+    public static final Set<String> sSupportLocaleNames;
+
+    public static final String LOCAL_SEPERATOR = "\\|"; //多语言分隔符，分隔name, description等
+
+    static {
+        sLocaleMap = new HashMap<Locale, Integer>();
+        sLocaleMap.put(zh_CN, zh_CN_INDEX);
+        sLocaleMap.put(zh_TW, zh_TW_INDEX);
+        sLocaleMap.put(en_US, en_US_INDEX);
+
+        sSupportLocaleNames = new HashSet<String>();
+        for (Locale locale : sSupportLocales)
+            sSupportLocaleNames.add(getLocaleString(locale));
+    }
+
+    public static int getIndex(Locale locale) {
+        Integer idx = sLocaleMap.get(locale);
+        if (null != idx) {
+            return idx;
+        } else {
+            // zh_HK, 返回zh_TW
+            // zh，均返回zh_CN
+            // en, 均返回en_US
+            // default, english
+
+            if (locale.toString().equals(new Locale("zh", "HK").toString())) {
+                return zh_TW_INDEX;
+            } else if (locale.getLanguage().equals("zh")) {
+                return zh_CN_INDEX;
+            } else if (locale.getLanguage().equals("en")) {
+                return en_US_INDEX;
+            } else {
+                return en_US_INDEX;
+            }
+        }
+    }
+
+    public static String getLocaleString(Locale locale) {
+        int idx = getIndex(locale);
+        return sSupportLocales[idx].toString();
+    }
+
+    /**
+     * 返回特定Locale的对象
+     *
+     * @param locale
+     * @return
+     */
+    public abstract T getLocaleObject(Locale locale);
+}

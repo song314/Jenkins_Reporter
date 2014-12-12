@@ -1,0 +1,39 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.texture.Texture;
+
+/**
+ * Created by huowaa on 14-7-3.
+ */
+public interface IEffect {
+
+    /**
+     * 获取参数对象
+     * forceBuild：是否强制根据paramStr build
+     */
+    Param getParam(boolean forceBuild);
+
+    Param getParam();
+
+    /**
+     * 获取ParamItem对象
+     * @param paramKey
+     * @param effectKey
+     * @return
+     */
+    ParamItem getParamItem(String paramKey, String effectKey);
+
+    /**
+     * 获取纹理对象
+     * @return
+     */
+    Texture getTexture();
+
+    /**
+     * 获取特效使用需求对象
+     * @return
+     */
+    Requirement getRequirement();
+}

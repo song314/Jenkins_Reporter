@@ -1,0 +1,66 @@
+
+package com.pinguo.edit.sdk.gallery.data;
+
+import com.pinguo.edit.sdk.gallery.util.Utils;
+
+import java.lang.ref.WeakReference;
+
+public class Path {
+
+    private static final String TAG = "Path";
+    private WeakReference<MediaObject> mObject;
+    private int mType;
+    private String mPath;
+    private long date_token;
+
+    public Path(int type, String path, long mills) {
+        mType = type;
+        mPath = path;
+        date_token = mills;
+    }
+
+    public Path(int type, String path) {
+        mType = type;
+        mPath = path;
+    }
+
+    public void setObject(MediaObject object) {
+        synchronized (Path.class) {
+            Utils.assertTrue(mObject == null || mObject.get() == null);
+            mObject = new WeakReference<MediaObject>(object);
+        }
+    }
+
+    public MediaObject getObject() {
+        synchronized (Path.class) {
+            return (mObject == null) ? null : mObject.get();
+        }
+    }
+
+    public int getType() {
+        return mType;
+    }
+
+    // bucket_id or photo filePath
+    public String getPathId() {
+        return mPath;
+    }
+
+    public long getTokenMills() {
+        return date_token;
+    }
+
+    @Override
+    public String toString() {
+        return "media-type:" + mType + " media-path-id:" + mPath;
+    }
+
+    @Override
+    public boolean equals(Object path) {
+        if ( path == null || !(path instanceof Path) ) {
+            return false;
+        }
+        Path p = (Path) path;
+        return p.mPath.compareTo(mPath) == 0 && p.date_token == date_token && p.mType == mType;
+    }
+}

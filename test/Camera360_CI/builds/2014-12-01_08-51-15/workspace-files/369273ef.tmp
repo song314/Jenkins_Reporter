@@ -1,0 +1,68 @@
+package com.pinguo.edit.sdk.filter.square.model;
+
+import android.content.Context;
+import android.database.DatabaseErrorHandler;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+/**
+ * Created by hlf on 14-11-26.
+ * 最新，最热数据库
+ */
+public class CompositeModelHelper extends SQLiteOpenHelper {
+
+    private final static String DB_NAME = "composite_info.db";
+    private final static int VERSION = 1;
+
+    public final static String NEWEST_COMPOSITE_TABLE = "newest_composite";
+    public final static String HOTTEST_COMPOSITE_TABLE = "hottest_composite";
+
+    private final static String CREATE_NEWEST_COMPOSITE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS " + NEWEST_COMPOSITE_TABLE + "(\n" +
+            "    originEtag TEXT,\n" +
+            "    editEtag TEXT,\n" +
+            "    info TEXT,\n" +
+            "    userId TEXT,\n" +
+            "    avatar TEXT,\n" +
+            "    nickName TEXT,\n" +
+            "    filterName TEXT,\n" +
+            "    data TEXT,\n" +
+            "    downloadCnt TEXT,\n" +
+            "    id TEXT\n" +
+            ")";
+
+    private final static String CREATE_HOTTEST_COMPOSITE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS " + HOTTEST_COMPOSITE_TABLE +"(\n" +
+            "    originEtag TEXT,\n" +
+            "    editEtag TEXT,\n" +
+            "    info TEXT,\n" +
+            "    userId TEXT,\n" +
+            "    avatar TEXT,\n" +
+            "    nickName TEXT,\n" +
+            "    filterName TEXT,\n" +
+            "    data TEXT,\n" +
+            "    downloadCnt TEXT,\n" +
+            "    id TEXT\n" +
+            ")";
+
+    public CompositeModelHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+    }
+
+    public CompositeModelHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version, DatabaseErrorHandler errorHandler) {
+        super(context, name, factory, version, errorHandler);
+    }
+
+    public CompositeModelHelper(Context context) {
+        super(context, DB_NAME, null, VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_NEWEST_COMPOSITE_TABLE_SQL);
+        db.execSQL(CREATE_HOTTEST_COMPOSITE_TABLE_SQL);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+}

@@ -1,0 +1,88 @@
+package com.pinguo.mix.api;
+
+import android.util.Log;
+
+import com.pinguo.Camera360Lib.network.HttpMultipartRequest;
+import com.pinguo.Camera360Lib.network.MultipartEntity;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-4-22.
+ */
+public class UploadRequest {
+
+    private static final String TAG = UploadRequest.class.getName();
+
+    private HttpMultipartRequest mRequest;
+
+    public UploadRequest(final String url,
+                         final Map<String, String> params,
+                         final String filePath,
+                         final ApiCallback callback) {
+
+        MultipartEntity entity = new MultipartEntity();
+        entity.addPart("file", new File(filePath), MultipartEntity.IMAGE_JPG);
+        mRequest = new HttpMultipartRequest(url, entity) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                return params;
+            }
+
+            @Override
+            protected void onResponse(String s) {
+                Log.i(TAG, "Get server response for url:" + url);
+                Log.i(TAG, "Get server response data:" + s);
+                try {
+                    JSONObject json = new JSONObject(s);
+                    int status = json.getInt("status");
+                    String message = "";
+                    if (json.has("message")) {
+                        message = json.getString("message");
+                    }
+
+                    if (200 != status) {
+                        if (null != callback) {
+                            Log.i(TAG, "Get server response error:" + message);
+                            callback.onError(message);
+                        }
+                        return;
+                    }
+
+                    if (json.has("data")) {
+                        Object data = json.get("data");
+                        if (null != callback) {
+                            callback.onResponse(data.toString());
+                        }
+                    } else {
+                        if (null != callback) {
+                            callback.onResponse(message);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                if (null != callback) {
+                    callback.onError(e.getMessage());
+                }
+            }
+        };
+    }
+
+    public void execute() {
+        mRequest.execute();
+    }
+
+    public void cancel() {
+        mRequest.cancel();
+    }
+}

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/id_pg_login_home_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include
+        layout="@layout/composite_sdk_login_head_view"
+        android:id="@+id/pg_login_head" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0"
+        android:layout_marginLeft="@dimen/pg_login_page_padding"
+        android:layout_marginRight="@dimen/pg_login_page_padding">
+
+        <Button
+            android:id="@+id/id_pg_login_home_register"
+            android:layout_marginBottom="@dimen/pg_login_home_register_button_bottom"
+            android:textSize="@dimen/pg_login_button_text_size"
+            android:layout_alignParentBottom="true"
+            android:layout_width="@dimen/pg_login_button_width"
+            android:layout_centerInParent="true"
+            android:layout_height="@dimen/pg_login_button_height"
+            android:background="@drawable/pg_register_btn_background"
+            android:gravity="center"
+            android:text="@string/pg_login_home_register"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/id_pg_login_home_login"
+            android:layout_marginBottom="@dimen/pg_login_home_login_button_bottom"
+            android:layout_above="@id/id_pg_login_home_register"
+            android:layout_width="@dimen/pg_login_button_width"
+            android:layout_centerInParent="true"
+            android:layout_height="@dimen/pg_login_button_height"
+            android:background="@drawable/pg_login_btn_background"
+            android:gravity="center"
+            android:text="@string/pg_login_home_login"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/pg_login_button_text_size" />
+
+        <ImageView
+            android:src="@drawable/composite_sdk_title"
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textSize="@dimen/pg_login_home_account_title_text_size"
+            android:gravity="center"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="@dimen/pg_login_home_account_title_top" />
+
+        <TextView
+            android:padding="0dp"
+            android:id="@+id/id_login_home_mix_account"
+            android:layout_below="@id/title"
+            android:layout_marginTop="@dimen/pg_login_home_account_sub_title_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/mix_account_service"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/pg_login_sub_title_text_size" />
+
+        <ImageView
+            android:id="@+id/id_login_home_camera360_account_icon"
+            android:layout_below="@id/id_login_home_mix_account"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="@dimen/pg_login_home_account_icon_top"
+            android:layout_width="@dimen/pg_login_home_account_icon_width"
+            android:layout_height="@dimen/pg_login_home_account_icon_height"
+            android:src="@drawable/composite_sdk_login_icon" />
+
+
+        <TextView
+            android:id="@+id/id_login_home_mix_account_introduce"
+            android:layout_below="@id/id_login_home_camera360_account_icon"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/pg_login_home_account_introduce_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="@dimen/pg_login_home_account_text_line_gap"
+            android:text="@string/pg_login_home_introduce"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/pg_login_introduce_text_size"
+            android:layout_marginLeft="@dimen/pg_login_home_account_text_line_padding"
+            android:layout_marginRight="@dimen/pg_login_home_account_text_line_padding" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/id_login_home_mix_account_note"
+        android:layout_marginBottom="@dimen/pg_login_home_bottom_note_bottom"
+        android:textSize="@dimen/pg_login_node_text_size"
+        android:gravity="center"
+        android:singleLine="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:lineSpacingExtra="@dimen/pg_login_home_account_text_line_gap"
+        android:text="@string/mix_bottom_note"
+        android:textColor="#44ffffff" />
+</LinearLayout>
+

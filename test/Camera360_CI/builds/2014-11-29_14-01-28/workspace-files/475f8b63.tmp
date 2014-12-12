@@ -1,0 +1,144 @@
+package com.pinguo.mix;
+
+import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.widget.IndicatorView;
+
+import java.util.ArrayList;
+
+/**
+ * Created by taoli on 14-8-18.
+ */
+public class MixGuideFragment extends Fragment {
+
+    private OnGuideFinishListener mOnGuideFinishListener;
+    private static final ArrayList<Integer> mImageIds = new ArrayList<Integer>();
+    private static final ArrayList<Integer> mDescViewIds = new ArrayList<Integer>();
+
+    private IndicatorView mIndicatorView;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View view = View.inflate(getActivity(), R.layout.composite_sdk_mix_guide, null);
+        mIndicatorView = (IndicatorView) view.findViewById(R.id.indicator_view);
+        mIndicatorView.setIndex(0);
+
+        mImageIds.add(R.drawable.composite_sdk_guide_bg_1);
+        mImageIds.add(R.drawable.composite_sdk_guide_bg_2);
+        mImageIds.add(R.drawable.composite_sdk_guide_bg_3);
+        mImageIds.add(R.drawable.composite_sdk_guide_bg_4);
+        mImageIds.add(R.drawable.composite_sdk_guide_bg_5);
+
+        mDescViewIds.add(R.layout.composite_sdk_guide_page_desc_1);
+        mDescViewIds.add(R.layout.composite_sdk_guide_page_desc_2);
+        mDescViewIds.add(R.layout.composite_sdk_guide_page_desc_3);
+        mDescViewIds.add(R.layout.composite_sdk_guide_page_desc_4);
+        mDescViewIds.add(R.layout.composite_sdk_guide_page_desc_5);
+
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        if (dm.widthPixels < 480) {
+            mImageIds.remove(2);
+            mDescViewIds.remove(2);
+            mIndicatorView.removeViewAt(2);
+        }
+
+        ViewPager viewPager = (ViewPager) view.findViewById(R.id.view_pager);
+        viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i2) {
+
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                mIndicatorView.setIndex(i);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+
+            }
+        });
+
+        GuidePageAdapter adapter = new GuidePageAdapter(mImageIds, mDescViewIds);
+        viewPager.setAdapter(adapter);
+
+        Button startBtn = (Button) view.findViewById(R.id.start_btn);
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mOnGuideFinishListener) {
+                    mOnGuideFinishListener.onGuideFinish();
+                }
+            }
+        });
+
+        return view;
+    }
+
+    public void setOnGuideFinishListener(OnGuideFinishListener listener) {
+        mOnGuideFinishListener = listener;
+    }
+
+    public interface OnGuideFinishListener {
+        void onGuideFinish();
+    }
+
+    private class GuidePageAdapter extends PagerAdapter {
+
+        private ArrayList<Integer> mImageIds;
+        private ArrayList<Integer> mDescViewIds;
+
+        public GuidePageAdapter(ArrayList<Integer> imageIds, ArrayList<Integer> descViewIds) {
+            mImageIds = imageIds;
+            mDescViewIds = descViewIds;
+        }
+
+        @Override
+        public int getCount() {
+            return mImageIds.size();
+        }
+
+        @Override
+        public boolean isViewFromObject(View view, Object o) {
+            return view == o;
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            View view = (View) object;
+            ImageView imageView = (ImageView) view.findViewById(R.id.image_bg);
+            imageView.setImageBitmap(null);
+            container.removeView(view);
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, final int position) {
+
+            View view = LayoutInflater.from(container.getContext()).inflate(
+                    mDescViewIds.get(position), null);
+
+            ImageView imageView = (ImageView) view.findViewById(R.id.image_bg);
+            imageView.setImageResource(mImageIds.get(position));
+
+            container.addView(view);
+
+            return view;
+        }
+    }
+}

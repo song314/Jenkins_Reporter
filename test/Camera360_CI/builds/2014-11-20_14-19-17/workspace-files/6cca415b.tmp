@@ -1,0 +1,12 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+
+public class Requirement {
+    private static final String TAG = EffectRequirement.class.getSimpleName();
+
+    public int sdkMin = 500;
+    public int sdkMax = Integer.MAX_VALUE;
+    public int engineMin = 10;
+    public int engineMax = Integer.MAX_VALUE;
+
+}

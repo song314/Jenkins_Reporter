@@ -1,0 +1,220 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.ConnectivityManager;
+import android.os.Build;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.HttpUtils;
+import com.pinguo.Camera360Lib.utils.NetworkUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.lib.Debug;
+import com.pinguo.edit.sdk.option.push.utils.PushPreference;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+
+public class Camera360FeedbackNetworkUtils {
+    //下面这些参数跟FeedbackUploadService.java文件中的要保持一致
+    private static final String KEY_SIGN = "/sign/";
+    private static final Object KEY_APPKEY = "/appkey/";
+
+    private static final Object KEY_TIME = "/time/";
+    private static final String APPID = "ea8d04692735bc1f";
+    private static String SECRET = "vCGG9QZ94tcGxTjangCc_b_VuXwmfGd2";
+
+    //反馈参数
+    public static final String IMEI = "eid";
+    public static final String FEEDBACK_MESSAGE = "feedback";
+    public static final String TIME_STAMP = "timestamp";
+    public static final String LAST_KNOWN_LOCATION = "pref_last_known_location";
+    public static final String KEY_LOCATION_LAT = "lat";
+    public static final String KEY_LOCATION_LON = "lon";
+
+    /**
+     * 对参数进行签名
+     *
+     * @param time
+     * @return
+     */
+    private static String getSign(long time) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(KEY_APPKEY).append(APPID);
+        sb.append(KEY_TIME).append(time);
+        return Constant.md5(sb.toString(), SECRET);
+    }
+
+    public static String getQueryFeedbackUrl() {
+        StringBuffer sb = new StringBuffer(Constant.HOST_FEEDBACK);
+        long time = System.currentTimeMillis();
+        String sign = getSign(time);
+        sb.append(KEY_APPKEY).append(APPID)
+                .append(KEY_TIME).append(time)
+                .append(KEY_SIGN).append(sign);
+        return sb.toString();
+    }
+
+    /**
+     * 通用的请求头，一定要跟个推的通用头保持一直，尤其是cid参数
+     *
+     * @param context
+     * @return
+     */
+    public static HashMap<String, String> getCommonParams(Context context) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        String language = Locale.getDefault().getLanguage() + '-' + Locale.getDefault().getCountry();
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        int screenWidth = dm.widthPixels;
+        int screenHeight = dm.heightPixels;
+        String net = NetworkUtils.getNetworkType(connectivityManager);
+        String rom = Build.DEVICE + '_' + Build.VERSION.RELEASE;
+        String cclient = getCclient(context);
+        String channel = context.getString(R.string.channel);
+        String latitude = context.getSharedPreferences(LAST_KNOWN_LOCATION, Context.MODE_PRIVATE).getString(KEY_LOCATION_LAT, "");
+        String longitude = context.getSharedPreferences(LAST_KNOWN_LOCATION, Context.MODE_PRIVATE).getString(KEY_LOCATION_LON, "");
+        String cuid = Constant.getCloudUserId(context);
+        String cid = new PushPreference(context).getString("clientId", "_");
+        GLogger.v("test", "个推的cid=" + cid);
+        params.put("clang", HttpUtils.encodeUrlInputParams(language));
+        params.put("cnet", HttpUtils.encodeUrlInputParams(net));
+        params.put("cclient", HttpUtils.encodeUrlInputParams(cclient));
+        params.put("cdeivce", HttpUtils.encodeUrlInputParams(rom));
+        params.put("channel", HttpUtils.encodeUrlInputParams(channel));
+        if (latitude.length() > 2 && longitude.length() > 2) {
+            params.put("clatitude", HttpUtils.encodeUrlInputParams(latitude));
+            params.put("clongitude", HttpUtils.encodeUrlInputParams(longitude));
+        }
+        params.put("cuid", HttpUtils.encodeUrlInputParams(cuid));
+        params.put("cid", HttpUtils.encodeUrlInputParams(cid));
+        params.put("w", HttpUtils.encodeUrlInputParams(Integer.toString(screenWidth)));
+        params.put("h", HttpUtils.encodeUrlInputParams(Integer.toString(screenHeight)));
+        params.put("debug", HttpUtils.encodeUrlInputParams(Boolean.toString(Debug.DEBUG)));
+        return params;
+    }
+
+    /**
+     * @param @param  context
+     * @param @return
+     * @return 返回类型
+     * @throws
+     * @author zengchuanmeng
+     * @date 2013-9-6
+     */
+    private static String getCclient(Context context) {
+        // 从AndroidManifest.xml的meta-data中读取SDK配置信息
+        String packageName = context.getApplicationContext().getPackageName();
+        String versionName = "";
+        try {
+            PackageManager pm = context.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(packageName, 0);
+            versionName = "Camera360_Android_" + pi.versionName;
+
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return versionName;
+    }
+
+    /**
+     * Append given map as query parameters to the base URL
+     * <p/>
+     * Each map entry's key will be a parameter name and the value's
+     * {@link Object#toString()} will be the parameter value.
+     *
+     * @param url
+     * @param params
+     * @return URL with appended query params
+     */
+    public static String append(final CharSequence url, final Map<?, ?> params) {
+        final String baseUrl = url.toString();
+        if (params == null || params.isEmpty())
+            return baseUrl;
+
+        final StringBuilder result = new StringBuilder(baseUrl);
+
+        addPathSeparator(baseUrl, result);
+        addParamPrefix(baseUrl, result);
+
+        Map.Entry<?, ?> entry;
+        Object value;
+        Iterator<?> iterator = params.entrySet().iterator();
+        entry = (Map.Entry<?, ?>) iterator.next();
+        result.append(entry.getKey().toString());
+        result.append('=');
+        value = entry.getValue();
+        if (value != null)
+            result.append(value);
+
+        while (iterator.hasNext()) {
+            result.append('&');
+            entry = (Map.Entry<?, ?>) iterator.next();
+            result.append(entry.getKey().toString());
+            result.append('=');
+            value = entry.getValue();
+            if (value != null)
+                result.append(value);
+        }
+
+        return result.toString();
+    }
+
+    private static StringBuilder addPathSeparator(final String baseUrl,
+                                                  final StringBuilder result) {
+        // Add trailing slash if the base URL doesn't have any path segments.
+        //
+        // The following test is checking for the last slash not being part of
+        // the protocol to host separator: '://'.
+        if (baseUrl.indexOf(':') + 2 == baseUrl.lastIndexOf('/'))
+            result.append('/');
+        return result;
+    }
+
+    private static StringBuilder addParamPrefix(final String baseUrl,
+                                                final StringBuilder result) {
+        // Add '?' if missing and add '&' if params already exist in base url
+        final int queryStart = baseUrl.indexOf('?');
+        final int lastChar = result.length() - 1;
+        if (queryStart == -1)
+            result.append('?');
+        else if (queryStart < lastChar && baseUrl.charAt(lastChar) != '&')
+            result.append('&');
+        return result;
+    }
+
+    public static String encode(final CharSequence url) throws IOException {
+        URL parsed;
+        try {
+            parsed = new URL(url.toString());
+        } catch (IOException e) {
+            throw e;
+        }
+
+        String host = parsed.getHost();
+        int port = parsed.getPort();
+        if (port != -1)
+            host = host + ':' + Integer.toString(port);
+        try {
+            return new URI(parsed.getProtocol(), host, parsed.getPath(),
+                    parsed.getQuery(), null).toASCIIString();
+        } catch (URISyntaxException e) {
+            IOException io = new IOException("Parsing URI failed");
+            io.initCause(e);
+            throw io;
+        }
+    }
+
+}

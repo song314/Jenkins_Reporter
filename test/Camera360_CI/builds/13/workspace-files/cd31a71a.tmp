@@ -1,0 +1,78 @@
+package com.pinguo.edit.sdk.filter.square.Info;
+
+import com.pinguo.mix.api.BaseBean;
+
+/**
+ * Created by taoli on 14-10-10.
+ */
+public class GetFilterInfoBean extends BaseBean<GetFilterInfoBean> {
+
+    private String originEtag;
+    private String editEtag;
+    private String info;
+    private String userId;
+    private String avatar;
+    private String nickName;
+    private String filterName;
+
+    @Override
+    protected boolean isValid(GetFilterInfoBean obj) {
+        return true;
+    }
+
+    public String getOriginEtag() {
+        return originEtag;
+    }
+
+    public void setOriginEtag(String originEtag) {
+        this.originEtag = originEtag;
+    }
+
+    public String getEditEtag() {
+        return editEtag;
+    }
+
+    public void setEditEtag(String editEtag) {
+        this.editEtag = editEtag;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public void setinfo(String info) {
+        this.info = info;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public String getFilterName() {
+        return filterName;
+    }
+
+    public void setFilterName(String filterName) {
+        this.filterName = filterName;
+    }
+}

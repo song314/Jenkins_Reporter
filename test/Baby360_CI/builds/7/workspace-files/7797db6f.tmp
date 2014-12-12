@@ -1,0 +1,120 @@
+package com.pinguo.edit.sdk.camera.model;
+
+import android.hardware.Camera;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.setting.CameraSettingModel;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+/**
+ * Created by marui on 13-10-18.
+ * 基础预览模块, 非实时预览
+ */
+public class PreviewModel implements IPreviewModel {
+
+    private static final String TAG = PreviewModel.class.getSimpleName();
+    private SurfaceHolder mHolder;
+
+    /**
+     * 初始化
+     *
+     * @param surfaceView
+     * @param callback
+     */
+    @Override
+    public void init(SurfaceView surfaceView, SurfaceView liveSurfaceView, SurfaceHolder.Callback callback) {
+        Log.d(TAG, "init");
+        mHolder = surfaceView.getHolder();
+        mHolder.addCallback(callback);
+        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+//        setSurfaceVisibility(surfaceView, liveSurfaceView);
+    }
+
+    /**
+     * 销毁及回收
+     */
+    @Override
+    public void destroy() {
+        Log.d(TAG, "destroy");
+        mHolder = null;
+    }
+
+    @Override
+    public void preStartPreview() {
+
+    }
+
+    @Override
+    public SurfaceHolder getSurfaceHolder() {
+        return mHolder;
+    }
+
+    @Override
+    public void startPreview(CameraManager.CameraProxy camera) {
+        Log.d(TAG, "startPreview  mHolder" + mHolder);
+        camera.setPreviewDisplay(mHolder);
+        camera.startPreview();
+    }
+
+    @Override
+    public void stopPreview(CameraManager.CameraProxy camera) {
+        Log.d(TAG, "stopPreview");
+
+        if (null != camera) {
+            camera.stopPreview();
+//            camera.setPreviewDisplay(null);
+        }
+    }
+
+    /**
+     * 初始化预览View的状态
+     */
+    @Override
+    public void setSurfaceVisibility(SurfaceView surfaceView, SurfaceView liveSurfaceView) {
+        surfaceView.setVisibility(View.VISIBLE);
+        if (liveSurfaceView != null) {
+            liveSurfaceView.setVisibility(View.GONE);
+        }
+        ViewGroup.LayoutParams params = surfaceView.getLayoutParams();
+        resetPreviewSize(params);
+        surfaceView.setLayoutParams(params);
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera) {
+
+    }
+
+    /**
+     * 根据预览尺寸大小计算实际的SurfaceView大小
+     *
+     * @param params
+     */
+    private void resetPreviewSize(ViewGroup.LayoutParams params) {
+        CMLogger.i(TAG, "resetPreviewSize size:" + CameraSettingModel.instance().getPreviewSize());
+        if (CameraSettingModel.instance().getPreviewSize() == null) {
+            return;
+        }
+
+        SizeInfo previewSize = new SizeInfo(CameraSettingModel.instance()
+                .getPreviewSize()
+                .getHeight(), CameraSettingModel.instance().getPreviewSize().getWidth());
+
+
+        SizeInfo screenSize = new SizeInfo(CameraModuleUtil.getDisplaySize().getWidth(), CameraModuleUtil.getDisplaySize().getHeight());
+        CMLogger.i(TAG, "screenSize:" + screenSize);
+        SizeInfo scaledSize = CameraModuleUtil.scaleSizeToBound(previewSize, screenSize);
+
+        params.width = scaledSize.getWidth();
+        params.height = scaledSize.getHeight();
+
+        CMLogger.i(TAG, "params.width:" + params.width
+                + ",params.height:" + params.height);
+    }
+
+}

@@ -1,0 +1,316 @@
+package com.pinguo.edit.sdk.widget;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Scroller;
+
+/**
+ * Created by taoli on 14-7-26.
+ */
+public class TiltShiftSeekBar extends View {
+    private Paint mTextPaint;
+    private float mSeekLength;
+    private float mSeekLineStart;
+    private float mSeekLineEnd;
+
+    private float[] mPositions;
+
+    private Drawable mThumbDrawable;
+
+    private String[] mTags;
+    private float mTagWidth;
+
+    private float mTagPadding = 2.0f;
+    private float mTextPadding = 10.0f;
+    private float mThumbPadding = 20.0f;
+    private float mNailRadius = 8.0f;
+    private float mLineHeight = 6.0f;
+    private float mTextHeight = 30.0f;
+
+    private Paint mNailPaint;
+    private Paint mLinePaint;
+    private int mThumbX = 0;
+    private int mThumbY = 0;
+    private float mThumbOffset;
+    private GestureDetector mGestureDetector;
+    private SeekBarGestureListener mGestureListener;
+    private Scroller mScroller;
+    private int mCurIndex = 0;
+    private Paint mTextHighlightPaint;
+    private Paint mNailHighlightPaint;
+    private OnSeekChangeListener mListener;
+
+    public TiltShiftSeekBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        mTextPadding = 10.0f;
+        mThumbPadding = 20.0f;
+        mNailRadius = 8.0f;
+        mLineHeight = 4.0f;
+        mTextHeight = 30.0f;
+
+        init();
+    }
+
+    private void init() {
+        mScroller = new Scroller(getContext());
+
+        mGestureListener = new SeekBarGestureListener();
+        mGestureDetector = new GestureDetector(getContext(), mGestureListener);
+
+        mTextPaint = new Paint();
+        mTextPaint.setAntiAlias(true);
+        mTextPaint.setColor(Color.parseColor("#596268"));
+        mTextPaint.setTextSize(mTextHeight);
+
+        mTextHighlightPaint = new Paint();
+        mTextHighlightPaint.setAntiAlias(true);
+        mTextHighlightPaint.setColor(Color.parseColor("#ffe049"));
+        mTextHighlightPaint.setTextSize(mTextHeight);
+
+        mNailPaint = new Paint();
+        mNailPaint.setAntiAlias(true);
+        mNailPaint.setColor(Color.parseColor("#596268"));
+        mNailPaint.setAlpha(200);
+
+        mNailHighlightPaint = new Paint();
+        mNailHighlightPaint.setAntiAlias(true);
+        mNailHighlightPaint.setColor(Color.parseColor("#ffe049"));
+        mNailHighlightPaint.setAlpha(200);
+
+        mLinePaint = new Paint();
+        mLinePaint.setAntiAlias(true);
+        mLinePaint.setColor(Color.parseColor("#596268"));
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+        int hmode = MeasureSpec.getMode(heightMeasureSpec);
+        if (hmode == MeasureSpec.AT_MOST) {
+            int hsize = Math.round(mNailRadius * 2 + mTextHeight + mTextPadding + mThumbPadding);
+            if (null != mThumbDrawable) {
+                hsize += mThumbDrawable.getIntrinsicHeight();
+            }
+            hsize += getPaddingTop() + getPaddingBottom();
+
+            int wsize = MeasureSpec.getSize(widthMeasureSpec);
+            setMeasuredDimension(wsize, hsize);
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (0 == mSeekLength) {
+            final int width = getWidth();
+            mSeekLength = width - getPaddingLeft() - getPaddingRight();
+            mSeekLineStart = getPaddingLeft();
+            mSeekLineEnd = width - getPaddingRight();
+            mTagWidth = mSeekLength / mTags.length;
+
+            mPositions = new float[mTags.length];
+        }
+
+        float top = getMeasuredHeight() / 2 - (mTextHeight + mNailRadius * 2 +
+            mThumbDrawable.getIntrinsicHeight() + mTextPadding + mThumbPadding) / 2;
+        Rect textRect = new Rect();
+        for (int i = 0; i < mTags.length; i++) {
+            mTextPaint.getTextBounds(mTags[i], 0, mTags[i].length(), textRect);
+            float textWidth = textRect.width();
+
+            float textX = (mTagWidth * i + (mTagWidth - textWidth) / 2) + getPaddingLeft();
+            float circleX = textX + textWidth / 2;
+            if (mCurIndex == i) {
+                canvas.drawText(mTags[i], textX, mTextHeight + top, mTextHighlightPaint);
+                canvas.drawCircle(circleX, mTextHeight + top + mNailRadius + mTextPadding,
+                        mNailRadius, mNailHighlightPaint);
+            } else {
+                canvas.drawText(mTags[i], textX, mTextHeight + top, mTextPaint);
+                canvas.drawCircle(circleX, mTextHeight + top + mNailRadius + mTextPadding,
+                        mNailRadius, mNailPaint);
+            }
+
+            mPositions[i] = textX + textWidth / 2;
+        }
+
+        if (0 == mThumbOffset) {
+            mThumbOffset = mPositions[mCurIndex];
+        }
+
+        if (mThumbDrawable != null) {
+            int tdWidth = mThumbDrawable.getIntrinsicWidth();
+            int tdHeight = mThumbDrawable.getIntrinsicHeight();
+
+            mThumbX = Math.round(mThumbOffset) - tdWidth / 2;
+            mThumbY = Math.round(mTextHeight + mNailRadius * 2 + mTextPadding + mThumbPadding);
+
+            final int thumbDrawableLeft = mThumbX;
+            final int thumbDrawableTop = Math.round(mThumbY + top + 10);
+            final int thumbDrawableRight = mThumbX + tdWidth;
+            final int thumbDrawableBottom = thumbDrawableTop + tdHeight;
+
+            float lineLeft = getPaddingLeft();
+            float lineRight = lineLeft + mSeekLength;
+            float lineTop = mTextHeight + mNailRadius * 2 + mTextPadding + tdHeight / 2 + mThumbPadding + top + 10;
+            float lineBottom = lineTop + mLineHeight;
+            canvas.drawRect(lineLeft, lineTop, lineRight, lineBottom, mLinePaint);
+
+            mThumbDrawable.setBounds(thumbDrawableLeft, thumbDrawableTop, thumbDrawableRight, thumbDrawableBottom);
+            mThumbDrawable.draw(canvas);
+        }
+
+        if (mScroller.computeScrollOffset()) {
+            mThumbOffset = mScroller.getCurrX();
+            invalidate();
+        }
+
+        super.onDraw(canvas);
+    }
+
+    public void setTags(String[] tags) {
+        mTags = tags;
+    }
+
+    public void setThumbDrawable(Drawable thumbDrawable) {
+        mThumbDrawable = thumbDrawable;
+
+    }
+
+    public void setPosition(String tag) {
+        for (int i = 0; i < mTags.length; i++) {
+            if (mTags[i].equals(tag)) {
+                mCurIndex = i;
+                invalidate();
+                return;
+            }
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (mGestureDetector.onTouchEvent(event)) {
+            return true;
+        }
+
+        if (MotionEvent.ACTION_UP == event.getAction()) {
+            mGestureListener.onUp(event);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void reset() {
+        mSeekLength = 0;
+        mSeekLineStart = 0;
+        mSeekLineEnd = 0;
+        mThumbOffset = 0;
+        mCurIndex = 0;
+        mScroller.abortAnimation();
+    }
+
+    private class SeekBarGestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        public boolean onUp(MotionEvent e) {
+
+            float destOffset = updatePosition(mThumbOffset);
+            mScroller.startScroll(Math.round(mThumbOffset), 0,
+                    Math.round(destOffset - mThumbOffset), 400);
+
+            if (null != mListener) {
+                mListener.onSeekStopped(mTags[mCurIndex], mCurIndex);
+            }
+
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                                float distanceX, float distanceY) {
+            mThumbOffset -= distanceX;
+            if (mThumbOffset < mSeekLineStart) {
+                mThumbOffset = mSeekLineStart;
+            }
+
+            if (mThumbOffset > mSeekLineEnd) {
+                mThumbOffset = mSeekLineEnd;
+            }
+
+            updatePosition(mThumbOffset);
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            float destOffset = updatePosition(e.getX());
+            mScroller.startScroll(Math.round(mThumbOffset), 0,
+                    Math.round(destOffset - mThumbOffset), 400);
+
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+
+        }
+    }
+
+    private float updatePosition(float offset) {
+        int startIndex = mPositions.length - 1;
+        if (offset > mPositions[0]) {
+            for (int i = 0; i < mPositions.length; i++) {
+
+                if (offset <= mPositions[i]) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            if (startIndex < mPositions.length - 1) {
+                float positionStart = mPositions[startIndex - 1];
+                float positionEnd = mPositions[startIndex];
+
+                if (Math.abs(positionStart - offset)
+                        < Math.abs(positionEnd - offset)) {
+                    startIndex = startIndex - 1;
+                }
+            }
+        } else {
+            startIndex = 0;
+        }
+
+        mCurIndex = startIndex;
+        if (null != mListener) {
+            mListener.onSeekChanged(mTags[startIndex], startIndex);
+        }
+
+        return mPositions[startIndex];
+    }
+
+    public interface OnSeekChangeListener {
+        void onSeekChanged(String tag, int index);
+        void onSeekStopped(String tag, int index);
+    }
+
+    public void setOnSeekChangeListener(OnSeekChangeListener listener) {
+        mListener = listener;
+    }
+}

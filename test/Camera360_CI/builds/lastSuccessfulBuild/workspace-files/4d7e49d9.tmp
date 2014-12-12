@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:SettingItem="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/composite_sdk_option_item_bg"
+    android:orientation="vertical"
+    android:id="@+id/option_main_root">
+    <!-- **************顶部标题***************** -->
+    <include
+        android:id="@+id/option_head"
+        layout="@layout/composite_sdk_login_head_view" />
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
+
+            <!-- **************用户信息***************** -->
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                SettingItem:showUpDivider="false"
+                android:id="@+id/option_personal_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_personal_phone_bind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+
+            <!-- **************功能设置***************** -->
+            <TextView
+                android:id="@+id/option_camera_title"
+                style="@style/OptionsClassTitleStyle"
+                android:text="@string/funnction_setting" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                SettingItem:showUpDivider="false"
+                android:id="@+id/option_item_picture_quality"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_item_save_path"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <!-- **************关于***************** -->
+            <TextView
+                android:id="@+id/option_picture_title"
+                style="@style/OptionsClassTitleStyle"
+                android:text="@string/funnction_about" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                SettingItem:showUpDivider="false"
+                android:id="@+id/option_item_opinion_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_item_version_update"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_item_care_instagram"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_item_care_facebook"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.pinguo.edit.sdk.option.view.SettingItemMore
+                android:id="@+id/option_item_inspire"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:layout_width="@dimen/option_button_width"
+                android:layout_height="@dimen/option_button_height"
+                android:layout_marginTop="@dimen/option_button_top"
+                android:background="@drawable/composite_sdk_option_button_select"
+                android:text="@string/option_button_text"
+                android:layout_gravity="center"
+                android:id="@+id/login_in_and_out"
+                android:textSize="@dimen/option_button_text_size" />
+
+            <TextView
+                android:id="@+id/version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/option_version_text_top"
+                android:textSize="@dimen/option_version_text_size"
+                android:textColor="@color/composite_sdk_option_new_text_color"
+                android:text="@string/option_button_text"
+                android:layout_gravity="center" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/option_bottom_control_top">
+
+                <TextView
+                    android:id="@+id/go_to_mix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/option_bottom_control_text_size"
+                    android:textColor="@color/composite_sdk_option_new_text_color"
+                    android:text="www.mix4ins.com"
+                    android:layout_marginRight="@dimen/option_bottom_control_inner_magin" />
+
+                <View
+                    android:id="@+id/middle"
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:background="#ffffff"></View>
+
+                <TextView
+                    android:id="@+id/go_to_email_pinguo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/option_bottom_control_inner_magin"
+                    android:textSize="@dimen/option_bottom_control_text_size"
+                    android:textColor="@color/composite_sdk_option_new_text_color"
+                    android:text="support@pinguo.us" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

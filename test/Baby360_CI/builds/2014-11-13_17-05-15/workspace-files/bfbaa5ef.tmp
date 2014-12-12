@@ -1,0 +1,28 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.annotations.Expose;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class ParamStringItem extends ParamItem{
+    private static final String TAG = ParamStringItem.class.getSimpleName();
+
+    @Expose
+    public String defaultValue = ""; // 默认值
+    @Expose
+    public String noEffectValue = ""; // 无特效值
+    @Expose
+    public String value = ""; // 特效值
+
+    public ParamStringItem(String key, String effectKey, String defaultValue, String noEffectValue) {
+        super(key, effectKey, Type.StringItem);
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+    }
+
+    public ParamStringItem() {
+
+    }
+}

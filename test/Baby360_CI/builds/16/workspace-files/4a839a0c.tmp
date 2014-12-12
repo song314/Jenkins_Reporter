@@ -1,0 +1,91 @@
+package com.pinguo.edit.sdk.option.view;
+
+import android.app.Dialog;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import java.util.List;
+
+/**
+ * Created by zhongzheng on 14-11-26.
+ */
+public class SelectDialog extends Dialog {
+    private int mTitle;
+    private int mMessage;
+    private String mExtraMessage;
+    private List<String> mListTexts;
+    private OnListItemClick mListener;
+
+    public SelectDialog(Context context) {
+        super(context, ResourceHelper.getStyle(context, "CompositeSDKFullScreenDialog"));
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.composite_sdk_login_select_dialog);
+
+        ListView listView = (ListView) findViewById(
+                R.id.list_view);
+        listView.setAdapter(new ArrayAdapter<String>(getContext(),
+                android.R.layout.simple_expandable_list_item_1, mListTexts));
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dismiss();
+                if (mListener != null) {
+                    mListener.onClick(mListTexts.get(position));
+                }
+            }
+        });
+
+        TextView message = (TextView) findViewById(
+                ResourceHelper.getId(getContext(), "dialog_tv"));
+        if (0 != mMessage) {
+            String text = "";
+            if (0 != mMessage) {
+
+                if (mExtraMessage != null && !mExtraMessage.isEmpty()) {
+                    text = getContext().getString(mMessage, mExtraMessage);
+                } else {
+                    text = getContext().getString(mMessage, mExtraMessage);
+                }
+            }
+            message.setText(text);
+        }
+    }
+
+    public void setExtraMessage(String mes) {
+        mExtraMessage = mes;
+    }
+
+    public void setTitle(int text) {
+        mTitle = text;
+    }
+
+    public void setMessage(int text) {
+        mMessage = text;
+    }
+
+    public void setList(List<String> list) {
+        mListTexts = list;
+    }
+
+    public void setListItemClick(OnListItemClick listener) {
+        mListener = listener;
+    }
+
+    public interface OnListItemClick {
+        public void onClick(String data);
+    }
+}
+

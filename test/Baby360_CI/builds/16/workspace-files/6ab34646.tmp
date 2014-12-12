@@ -1,0 +1,30 @@
+package com.handmark.pulltorefresh.library.internal;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.R;
+
+/**
+ * Created by wangpeng on 14-5-30.
+ */
+public class HeaderRotateLoadingLayout extends RotateLoadingLayout {
+
+    public HeaderRotateLoadingLayout(Context context, PullToRefreshBase.Mode mode, PullToRefreshBase.Orientation scrollDirection, TypedArray attrs) {
+        super(context, mode, scrollDirection, attrs);
+    }
+
+    @Override
+    protected void pullToRefreshImpl() {
+        // NO-OP
+        mHeaderImage.clearAnimation();
+        mHeaderImage.setImageResource(R.drawable.fetch_at_icon_down);
+    }
+
+    @Override
+    protected void releaseToRefreshImpl() {
+        // NO-OP
+        mHeaderImage.clearAnimation();
+        mHeaderImage.setImageResource(R.drawable.fetch_at_icon_up);
+    }
+}

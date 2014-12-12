@@ -1,0 +1,46 @@
+package com.pinguo.edit.sdk.camera.save;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.location.Location;
+import android.net.Uri;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.ImageColumns;
+import android.util.Log;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+public class Storage {
+    private static final String TAG = "CameraStorage";
+
+    public static Uri addImage(ContentResolver resolver, String title, String savePath, long date,
+                               Location location, int orientation, byte[] jpeg) {
+        CMLogger.d(TAG, "save file orientation:" + orientation);
+        // Insert into MediaStore.
+        ContentValues values = new ContentValues(9);
+        values.put(ImageColumns.TITLE, title);
+        values.put(ImageColumns.DISPLAY_NAME, title + ".jpg");
+        values.put(ImageColumns.DATE_TAKEN, date);
+        values.put(ImageColumns.MIME_TYPE, "image/jpeg");
+        values.put(ImageColumns.ORIENTATION, orientation);
+        values.put(ImageColumns.DATA, savePath);
+        values.put(ImageColumns.SIZE, jpeg.length);
+
+        if (location != null) {
+            values.put(ImageColumns.LATITUDE, location.getLatitude());
+            values.put(ImageColumns.LONGITUDE, location.getLongitude());
+        }
+
+        Uri uri = null;
+        try {
+            uri = resolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values);
+        } catch (Throwable th) {
+            // This can happen when the external volume is already mounted, but
+            // MediaScanner has not notify MediaProvider to add that volume.
+            // The picture is still safe and MediaScanner will find it and
+            // insert it into MediaProvider. The only problem is that the user
+            // cannot click the thumbnail to review the picture.
+            Log.e(TAG, "Failed to write MediaStore" + th);
+        }
+        return uri;
+    }
+}

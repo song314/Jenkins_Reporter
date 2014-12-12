@@ -1,0 +1,497 @@
+package com.pinguo.edit.sdk.camera.util;
+
+
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+/**
+ * 相机模块使用到的工具方法
+ *
+ * @author Tsmile
+ */
+public class CameraModuleUtil {
+    private static final String TAG = CameraModuleUtil.class.getSimpleName();
+
+    public static final int NOT_FINDED = -1;
+    // 震动时间35ms
+    public static final int VIBRATE_TIME = 35;
+    // 默认重复次数
+    public static final int VIBRATE_REPEAT = -1;
+    public static final String LAST_THUMB_FILENAME = "last_thumb";
+
+    private static float sPixelDensity = 1;
+
+    private static final ImageFileNamer sImageFileNamer = new ImageFileNamer("'IMG'_yyyyMMdd_HHmmss");
+
+    private CameraModuleUtil() {
+
+    }
+
+    public static void init(Context context) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        wm.getDefaultDisplay().getMetrics(metrics);
+        sPixelDensity = metrics.density;
+    }
+
+    public static String generateFilepath(String title) {
+        return CameraBusinessSettingModel.instance().getPictureSavePath() + title + ".jpg";
+    }
+
+    public static String generateTempFilepath(String title) {
+        return CameraBusinessSettingModel.instance().getTempPictureSavePath() + title + ".jpg";
+    }
+
+    public static int dpToPixel(float dp) {
+        return Math.round(sPixelDensity * dp);
+    }
+
+    public static Bitmap rotateImage(Bitmap bitmap, int orientation) {
+        if (orientation != 0) {
+            // We only rotate the thumbnail once even if we get OOM.
+            Matrix m = new Matrix();
+            m.setRotate(orientation, bitmap.getWidth() * 0.5f,
+                    bitmap.getHeight() * 0.5f);
+
+            try {
+                Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0,
+                        bitmap.getWidth(), bitmap.getHeight(), m, true);
+                // If the rotated bitmap is the original bitmap, then it
+                // should not be recycled.
+                if (rotated != bitmap) {
+                    bitmap.recycle();
+                }
+                return rotated;
+            } catch (Throwable t) {
+                GLogger.e(TAG, t);
+            }
+        }
+        return bitmap;
+    }
+
+    /**
+     * 震动反馈
+     */
+//    public static void vibrate() {
+//        long[] vibratePattern = {
+//                0, VIBRATE_TIME
+//        };
+//        vibrate(CameraModuleManager.getAppContext(), vibratePattern, VIBRATE_REPEAT);
+//    }
+//
+//    public static void vibrate(Context context, long[] pattern, int repeat) {
+//        Vibrator mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+//        boolean isSupportVibrate = (null != mVibrator);
+//        Log.v("Test", "Vibrate: isSupportVibrate:" + isSupportVibrate);
+//        if (isSupportVibrate) {
+//            mVibrator.vibrate(pattern, repeat);
+//        }
+//    }
+
+    /**
+     * 得到语言国家.
+     *
+     * @return
+     */
+    public static String getLocationInfo() {
+        String language = Locale.getDefault().getLanguage();
+        String country = Locale.getDefault().getCountry();
+        return language + "-" + country;
+    }
+
+    public static SizeInfo scaleSizeToBound(SizeInfo srcSize, SizeInfo boundSize) {
+        float widthScale = (float) boundSize.getWidth() / srcSize.getWidth();
+        float heightScale = (float) boundSize.getHeight() / srcSize.getHeight();
+
+        int showHeight;
+        int showWidth;
+        if (widthScale < heightScale) {
+            showWidth = boundSize.getWidth();
+            showHeight = (int) (widthScale * srcSize.getHeight());
+        } else {
+            showHeight = boundSize.getHeight();
+            showWidth = (int) (heightScale * srcSize.getWidth());
+        }
+
+        return new SizeInfo(showWidth, showHeight);
+    }
+
+    public static boolean is960x640() {
+//        DisplayMetrics displayMetrics = PGCompositeSDKApi.getAppContext().getResources().getDisplayMetrics();
+//        if (displayMetrics.heightPixels == 960
+//                && displayMetrics.widthPixels == 640) {
+//            return true;
+//        }
+        return false;
+    }
+
+    public static SizeInfo getDisplaySize() {
+        DisplayMetrics displayMetrics = PGCompositeSDKApi.getAppContext().getResources().getDisplayMetrics();
+        return new SizeInfo(displayMetrics.widthPixels, displayMetrics.heightPixels);
+    }
+
+    public static void prepareMatrix(Matrix matrix, boolean mirror, int displayOrientation, int viewWidth, int viewHeight) {
+        // Need mirror for front camera.
+        matrix.setScale(mirror ? -1 : 1, 1);
+        // This is the value for android.hardware.Camera.setDisplayOrientation.
+        matrix.postRotate(displayOrientation);
+        // Camera driver coordinates range from (-1000, -1000) to (1000, 1000).
+        // UI coordinates range from (0, 0) to (width, height).
+        matrix.postScale(viewWidth / 2000f, viewHeight / 2000f);
+        matrix.postTranslate(viewWidth / 2f, viewHeight / 2f);
+    }
+
+    public static boolean objectEquals(Object a, Object b) {
+        if (a == b) {
+            return true;
+        }
+
+        if (a == null) {
+            return false;
+        }
+
+        return a.equals(b);
+    }
+
+    public static int clamp(int x, int min, int max) {
+        if (x > max) {
+            return max;
+        }
+        if (x < min) {
+            return min;
+        }
+        return x;
+    }
+
+    public static void rectFToRect(RectF rectF, Rect rect) {
+        rect.left = Math.round(rectF.left);
+        rect.top = Math.round(rectF.top);
+        rect.right = Math.round(rectF.right);
+        rect.bottom = Math.round(rectF.bottom);
+    }
+
+    /**
+     * @param array 被查找的数组
+     * @param text  要查找的文字
+     * @return NOT_FINDED (-1)，如果没有找到指定文字；否则返回索引（自然数）
+     */
+    public static int search(String[] array, String text) {
+        if (text == null || array == null) {
+            return NOT_FINDED;
+        }
+
+        for (int i = 0;
+             i < array.length;
+             i++) {
+            if (text.equals(array[i])) {
+                return i;
+            }
+        }
+
+        return NOT_FINDED;
+    }
+
+    /**
+     * @param array 被查找的数组
+     * @param text  要查找的文字
+     * @return NOT_FINDED (-1)，如果没有找到指定文字；否则返回索引（自然数）
+     */
+    public static int search(CharSequence[] array, String text) {
+        if (text == null || array == null) {
+            return NOT_FINDED;
+        }
+
+        for (int i = 0;
+             i < array.length;
+             i++) {
+            if (text.equals(array[i])) {
+                return i;
+            }
+        }
+        return NOT_FINDED;
+    }
+
+    public static int searchNumber(String[] array, String number) {
+        if (number == null || array == null) {
+            return NOT_FINDED;
+        }
+
+        try {
+            float f = Float.parseFloat(number);
+            for (int i = 0;
+                 i < array.length;
+                 i++) {
+                if (f == Float.parseFloat(array[i])) {
+                    return i;
+                }
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return NOT_FINDED;
+    }
+
+    public static int searchNumber(CharSequence[] array, String number) {
+        if (number == null || array == null) {
+            return NOT_FINDED;
+        }
+
+        try {
+            float f = Float.parseFloat(number);
+            for (int i = 0;
+                 i < array.length;
+                 i++) {
+                if (f == Float.parseFloat(String.valueOf(array[i]))) {
+                    return i;
+                }
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return NOT_FINDED;
+    }
+
+    public static int searchAuto(String[] array, String number) {
+        int index = search(array, number);
+        return index < 0 ? searchNumber(array, number) : index;
+    }
+
+    public static int searchAuto(CharSequence[] array, String number) {
+        int index = search(array, number);
+        return index < 0 ? searchNumber(array, number) : index;
+    }
+
+    public static void fadeOut(View view, float startAlpha, float endAlpha, long duration, Animation.AnimationListener listener) {
+        Animation animation = new AlphaAnimation(startAlpha, endAlpha);
+        animation.setDuration(duration);
+        animation.setAnimationListener(listener);
+        view.startAnimation(animation);
+    }
+
+    public static void fadeIn(final View view, float startAlpha, float endAlpha, long duration) {
+        Animation animation = new AlphaAnimation(startAlpha, endAlpha);
+        animation.setDuration(duration);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                view.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        view.startAnimation(animation);
+        view.setVisibility(View.VISIBLE);
+    }
+
+    public static void fadeIn(View view, long duration) {
+        fadeIn(view, 0F, 1F, duration);
+    }
+
+    public static String createJpegName(long dateTaken) {
+        synchronized (sImageFileNamer) {
+            return sImageFileNamer.generateName(dateTaken);
+        }
+    }
+
+    public static boolean isUriValid(Uri uri, ContentResolver resolver) {
+        if (uri == null) {
+            return false;
+        }
+
+        try {
+            ParcelFileDescriptor pfd = resolver.openFileDescriptor(uri, "r");
+            if (pfd == null) {
+                return false;
+            }
+            pfd.close();
+        } catch (IOException ex) {
+            return false;
+        }
+        return true;
+    }
+
+    public static void closeSilently(Closeable c) {
+        if (c == null) {
+            return;
+        }
+        try {
+            c.close();
+        } catch (Throwable t) {
+            // do nothing
+        }
+    }
+
+    public static void saveTo(File file, Bitmap bitmap) {
+        FileOutputStream f = null;
+        BufferedOutputStream b = null;
+        DataOutputStream d = null;
+        try {
+            f = new FileOutputStream(file);
+            b = new BufferedOutputStream(f, 4096);
+            d = new DataOutputStream(b);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, d);
+            d.close();
+        } catch (IOException e) {
+            GLogger.e(TAG, e);
+        } finally {
+            closeSilently(f);
+            closeSilently(b);
+            closeSilently(d);
+        }
+    }
+
+    public static Bitmap getLastThumbnail(File file) {
+        Bitmap bitmap = null;
+        FileInputStream f = null;
+        BufferedInputStream b = null;
+        DataInputStream d = null;
+        try {
+            f = new FileInputStream(file);
+            b = new BufferedInputStream(f, 4096);
+            d = new DataInputStream(b);
+            bitmap = BitmapFactory.decodeStream(d);
+            d.close();
+        } catch (IOException e) {
+            return null;
+        } finally {
+            closeSilently(f);
+            closeSilently(b);
+            closeSilently(d);
+        }
+        return bitmap;
+    }
+
+    public static Bitmap getLastThumbnail(ContentResolver resolver) {
+        Media image = getLastImageThumbnail(resolver);
+        if (image == null) {
+            return null;
+        }
+
+        Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(resolver, image.id,
+                MediaStore.Images.Thumbnails.MINI_KIND, null);
+
+        if (null == bitmap) {
+            return null;
+        }
+
+        // Ensure database and storage are in sync.
+        if (isUriValid(image.uri, resolver)) {
+            if (image.orientation != 0) {
+                bitmap = rotateImage(bitmap, image.orientation);
+            }
+            return bitmap;
+        }
+        return null;
+    }
+
+    public static Media getLastImageThumbnail(ContentResolver resolver) {
+        Uri baseUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        Uri query = baseUri.buildUpon().appendQueryParameter("limit", "1").build();
+        String[] projection = new String[]{MediaStore.Images.ImageColumns._ID, MediaStore.Images.ImageColumns.ORIENTATION,
+                MediaStore.Images.ImageColumns.DATE_TAKEN};
+        String selection = MediaStore.Images.ImageColumns.MIME_TYPE + "='image/jpeg'";
+        String order = MediaStore.Images.ImageColumns.DATE_TAKEN + " DESC," + MediaStore.Images.ImageColumns._ID + " DESC";
+
+        Cursor cursor = null;
+        try {
+            cursor = resolver.query(query, projection, selection, null, order);
+            if (cursor != null && cursor.moveToFirst()) {
+                long id = cursor.getLong(0);
+                return new Media(id, cursor.getInt(1), cursor.getLong(2),
+                        ContentUris.withAppendedId(baseUri, id));
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
+    }
+
+    private static class Media {
+        public Media(long id, int orientation, long dateTaken, Uri uri) {
+            this.id = id;
+            this.orientation = orientation;
+            this.dateTaken = dateTaken;
+            this.uri = uri;
+        }
+
+        public final long id;
+        public final int orientation;
+        public final long dateTaken;
+        public final Uri uri;
+    }
+
+    private static class ImageFileNamer {
+        private SimpleDateFormat mFormat;
+
+        // The date (in milliseconds) used to generate the last name.
+        private long mLastDate;
+
+        // Number of names generated for the same second.
+        private int mSameSecondCount;
+
+        public ImageFileNamer(String format) {
+            mFormat = new SimpleDateFormat(format);
+        }
+
+        public String generateName(long dateTaken) {
+            Date date = new Date(dateTaken);
+            String result = mFormat.format(date);
+
+            // If the last name was generated for the same second,
+            // we append _1, _2, etc to the name.
+            if (dateTaken / 1000 == mLastDate / 1000) {
+                mSameSecondCount++;
+                result += "_" + mSameSecondCount;
+            } else {
+                mLastDate = dateTaken;
+                mSameSecondCount = 0;
+            }
+
+            return result;
+        }
+    }
+}

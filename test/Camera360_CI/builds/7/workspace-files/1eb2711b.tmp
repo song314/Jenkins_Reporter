@@ -1,0 +1,198 @@
+package us.pinguo.android.effect.group.sdk.group;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.camera.entity.PictureInfo;
+import com.pinguo.edit.sdk.camera.util.Exif;
+import com.pinguo.edit.sdk.camera.util.PGExifInfo;
+import com.pinguo.edit.sdk.utils.ImageManager;
+import com.pinguo.edit.sdk.utils.ToolUtils;
+import com.pinguo.mix.StatisticManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Random;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.EffectGroupSavePathRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+
+/**
+ * Created by pinguo on 14-7-24.
+ */
+public class PhotoSaveController {
+
+    public static void saveBigPhoto(final Activity activity,
+                                    final String bigPhoto,
+                                    SDKManager sdkManager,
+                                    MakePhotoModel[] makePhotoModelArray,
+                                    final SaveCallback saveCallback) {
+        if (makePhotoModelArray == null) {
+            if (null != saveCallback) {
+                saveCallback.onSaveFinished(bigPhoto);
+            }
+            return;
+        }
+
+        final PictureInfo pictureInfo = new PictureInfo();
+        pictureInfo.setTakenTime(System.currentTimeMillis());
+        final String tempPath = ToolUtils.getCompositeDiskCachePath(activity.getApplicationContext(), "tmp_save");
+        pictureInfo.generateAndSetFileSavePath();
+        final String savePath = pictureInfo.getFileSavePath();
+
+        final EffectGroupSavePathRendererMethod savePathRendererMethod = new EffectGroupSavePathRendererMethod();
+        savePathRendererMethod.setPath(bigPhoto);
+        savePathRendererMethod.setSavePath(tempPath);
+        MakePhotoModel[] newMakePhotoModelArray = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(makePhotoModelArray, new HashSet<Integer>());
+
+        if (newMakePhotoModelArray == null) {
+            savePathRendererMethod.setEffectModeArray(makePhotoModelArray);
+        } else {
+            savePathRendererMethod.setEffectModeArray(newMakePhotoModelArray);
+        }
+
+        savePathRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+            @Override
+            public void success(Bitmap bitmap) {
+                int orientation = 0;
+                String mimeType = ImageManager.IMAGE_JPEG_TYPE;
+                if (savePathRendererMethod.isJpegFile()) {
+                    try {
+                        orientation = Exif.getPhotoOrientation(bigPhoto);
+                        byte[] exif = Exif.getExifData(tempPath);
+                        PGExifInfo pgExifInfo = new PGExifInfo(exif);
+                        pgExifInfo.setOrientation(orientation);
+                        Exif.exifToJpegFile(tempPath, savePath, pgExifInfo.getExifData());
+                    } catch (Exception e1) {
+                        StatisticManager.onEvent(activity,
+                                StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                                "Save_Photo_Failed_By_Write_Exif_Failed");
+                        e1.printStackTrace();
+                        try {
+                            FileUtils.copySingleFile(tempPath, savePath);
+                        } catch (IOException e2) {
+                            StatisticManager.onEvent(activity,
+                                    StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                                    "Save_Photo_Failed_By_Copy_File_Failed");
+                            e2.printStackTrace();
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (null != saveCallback) {
+                                        saveCallback.onSaveFailed();
+                                    }
+                                }
+                            });
+                            return;
+                        }
+                    }
+                } else {
+                    mimeType = ImageManager.IMAGE_PNG_TYPE;
+                    try {
+                        FileUtils.copySingleFile(tempPath, savePath);
+                    } catch (IOException e2) {
+                        StatisticManager.onEvent(activity,
+                                StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                                "Save_Photo_Failed_By_Copy_File_Failed");
+                        e2.printStackTrace();
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (null != saveCallback) {
+                                    saveCallback.onSaveFailed();
+                                }
+                            }
+                        });
+                        return;
+                    }
+                }
+
+                //加入系统相册
+                Uri uri = ImageManager.addImage(activity.getApplicationContext().getContentResolver(),
+                        savePath, pictureInfo.getTakenTime(),
+                        mimeType, orientation, new File(savePath), null);
+                if (uri == null) {
+                    StatisticManager.onEvent(activity,
+                            StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                            "Save_Photo_Failed_By_Add_Image_Failed");
+                    Intent scanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
+                    File scanFile = new File(savePath);
+                    Uri pathUri = null;
+                    if (scanFile.exists()) {
+                        pathUri = Uri.fromFile(scanFile);
+                        scanIntent.setData(pathUri);
+                        activity.getApplicationContext().sendBroadcast(scanIntent);
+                    } else {
+                        StatisticManager.onEvent(activity,
+                                StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                                "Save_Photo_Failed_By_Scan_Failed");
+                    }
+                }
+
+                if (null != activity && !activity.isFinishing()) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (null != saveCallback) {
+                                saveCallback.onSaveFinished(savePath);
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void fail() {
+                StatisticManager.onEvent(activity,
+                        StatisticManager.KEY_ERROR_SAVE_PHOTO,
+                        "Save_Photo_Failed_By_Effect_Make_Failed");
+                if (null != activity && !activity.isFinishing()) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (null != saveCallback) {
+                                saveCallback.onSaveFailed();
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void successForGLSurfaceView() {
+
+            }
+        });
+        sdkManager.makePhoto(savePathRendererMethod);
+
+    }
+
+    public static String getCompositeName() {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            int randomInt = random.nextInt(36);
+            if (randomInt >= 0 && randomInt <= 9) {
+                sb.append(randomInt);
+
+            } else {
+                char a = 'A';
+                a += randomInt - 10;
+                sb.append(a);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public interface SaveCallback {
+        void onSaveFinished(String photoPath);
+        void onSaveFailed();
+    }
+}

@@ -1,0 +1,149 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.SeekBar;
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceHSL;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by pinguo on 14-7-12.
+ */
+public class AdvanceHSLHighlightShadowMenu extends BaseMenu {
+
+
+    private Effect mAdvanceHSL;
+    private ParamFloatItem mParamItem;
+    private float mLastValue;
+
+    private SeekBar mEditSeekBar;
+    private View mAjustSeekbarLayout;
+
+    private EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener = new EffectGroupRendererMethod.RendererMethodActionListener() {
+
+
+        @Override
+        public void success(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void fail() {
+
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+
+    public AdvanceHSLHighlightShadowMenu(Context context, SDKManager sdkManager, GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context, sdkManager, compositeRendererMethod);
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.AdvanceHSL.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.AdvanceHSL;
+    }
+
+    @Override
+    protected boolean isOnClickShowScroll() {
+        return false;
+    }
+
+    @Override
+    public void hideScrollView() {
+        mEditSeekBar.reset();
+    }
+
+    @Override
+    public void showSecondMenu() {
+
+        mAdvanceHSL = EffectDataManager.getInstance().getEffect(
+                AdvanceHSL.class.getSimpleName());
+        setMakePhotoModel(mAdvanceHSL);
+
+        mLastValue = mParamItem.value;
+        mEditSeekBar = (SeekBar) mAjustSeekbarLayout.findViewById(
+                ResourceHelper.getId(mContext, "adjust_seek_bar"));
+        mEditSeekBar.setOnSeekChangeListener(null);
+
+        mEditSeekBar.setSeekLength(Math.round(mParamItem.min), Math.round(mParamItem.max), Math.round(mParamItem.noEffectValue), mParamItem.step);
+        mEditSeekBar.setValue(mParamItem.value);
+        mEditSeekBar.setOnSeekChangeListener(new SeekBar.OnSeekChangeListener() {
+            @Override
+            public void onSeekChanged(float currentValue, float step) {
+                if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+                    setParamsModel(mParamItem.effectKey, mParamItem.key, String.valueOf(currentValue));
+                    mParamItem.value = currentValue;
+                    makePhoto();
+
+                }
+
+                setAutoHideTextViewValue(currentValue / step);
+            }
+
+            @Override
+            public void onSeekStopped(float currentValue, float step) {
+
+                if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+
+                    setParamsModel(mParamItem.effectKey, mParamItem.key, String.valueOf(currentValue));
+                    mParamItem.value = currentValue;
+                    mAutoHideTextView.hideForNow();
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    mScreenLayout.setVisibility(View.VISIBLE);
+                    makePhoto(rendererMethodActionListener);
+                }
+            }
+        });
+    }
+
+    protected final static int MAKE_PHOTO_FINISH = 100;
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+
+    @Override
+    public void quitScrollView() {
+
+        mParamItem.value = mLastValue;
+        setParamsModel(mParamItem.effectKey, mParamItem.key, String.valueOf(mLastValue));
+        makePhoto();
+    }
+
+    public void setParamItem(ParamFloatItem paramFloatItem) {
+        this.mParamItem = paramFloatItem;
+
+    }
+
+
+    public void setAdjustSeekBarLayout(View adjustSeekBarLayout) {
+        this.mAjustSeekbarLayout = adjustSeekBarLayout;
+    }
+}

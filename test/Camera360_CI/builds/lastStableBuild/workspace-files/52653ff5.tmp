@@ -1,0 +1,173 @@
+package us.pinguo.android.effect.group.sdk.group.menu;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Message;
+import android.view.View;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.SeekBar;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.EnhanceHdr;
+import us.pinguo.android.effect.group.sdk.group.BaseMenu;
+
+/**
+ * Created by pinguo on 14-7-3.
+ */
+public class HDRMenu extends BaseMenu {
+
+    private Effect mEnhanceHdr;
+
+    private ParamFloatItem mHighLightParamItem;
+    private ParamFloatItem mShadowParamItem;
+    private ParamFloatItem mLevelParamItem;
+    private float mLastValue;
+
+    private SeekBar mEditSeekBar;
+
+    private EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener = new EffectGroupRendererMethod.RendererMethodActionListener() {
+
+
+        @Override
+        public void success(Bitmap bitmap) {
+
+        }
+
+        @Override
+        public void fail() {
+
+        }
+
+        @Override
+        public void successForGLSurfaceView() {
+            mHandler.sendEmptyMessage(MAKE_PHOTO_FINISH);
+        }
+    };
+
+    private View mAjustSeekbarLayout;
+
+    public HDRMenu(Context context, SDKManager sdkManager, GLSurfaceViewCompositeRendererMethod compositeRendererMethod) {
+        super(context, sdkManager, compositeRendererMethod);
+    }
+
+    @Override
+    protected int getEffectModelArrayIndex() {
+        return Effect.Type.EnhanceHdr.ordinal();
+    }
+
+    @Override
+    protected Effect.Type getEffectType() {
+        return Effect.Type.EnhanceHdr;
+    }
+
+    @Override
+    protected boolean isOnClickShowScroll() {
+        return false;
+    }
+
+    @Override
+    public void hideScrollView() {
+        mEditSeekBar.reset();
+    }
+
+    @Override
+    public void showSecondMenu() {
+
+        mEnhanceHdr = EffectDataManager.getInstance().getEffect(EnhanceHdr.class.getSimpleName());
+        setMakePhotoModel(mEnhanceHdr);
+
+
+        mHighLightParamItem = (ParamFloatItem) mEnhanceHdr.getParamItem(
+                EnhanceHdr.PARAM_KEY_HIGHLIGHT, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+        mShadowParamItem = (ParamFloatItem) mEnhanceHdr.getParamItem(
+                EnhanceHdr.PARAM_KEY_SHADOW, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+        mLevelParamItem = (ParamFloatItem) mEnhanceHdr.getParamItem(
+                EnhanceHdr.PARAM_KEY_LEVEL, EnhanceHdr.EFFECT_KEY_HDR_AUTO_LEVEL);
+        mLastValue = mHighLightParamItem.value;
+
+
+        mEditSeekBar = (SeekBar) mAjustSeekbarLayout.findViewById(
+                ResourceHelper.getId(mContext, "adjust_seek_bar"));
+        mEditSeekBar.setOnSeekChangeListener(null);
+        mEditSeekBar.setSeekLength(Math.round(mHighLightParamItem.min), Math.round(mHighLightParamItem.max), Math.round(mHighLightParamItem.noEffectValue), mHighLightParamItem.step);
+        mEditSeekBar.setValue(mHighLightParamItem.value);
+        mEditSeekBar.setOnSeekChangeListener(new SeekBar.OnSeekChangeListener() {
+            @Override
+            public void onSeekChanged(float currentValue, float step) {
+                if (!mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+
+//                    mHighLightParamItem.value = currentValue;
+                    setParamItem(currentValue);
+                    makePhoto();
+
+                }
+
+                setAutoHideTextViewValue(currentValue / step);
+            }
+
+            @Override
+            public void onSeekStopped(float currentValue, float step) {
+
+                if (mEffectModelArray[getEffectModelArrayIndex()].isScrollStopMake()) {
+
+//                    mHighLightParamItem.value = currentValue;
+                    setParamItem(currentValue);
+                    mAutoHideTextView.hideForNow();
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    mScreenLayout.setVisibility(View.VISIBLE);
+                    makePhoto(rendererMethodActionListener);
+                }
+            }
+        });
+    }
+
+    protected final static int MAKE_PHOTO_FINISH = 100;
+
+    @Override
+    protected void handlerDispatchMessage(Message msg) {
+        if (msg.what == MAKE_PHOTO_FINISH) {
+            mScreenLayout.setVisibility(View.GONE);
+            mProgressBar.setVisibility(View.GONE);
+
+        } else {
+            super.handlerDispatchMessage(msg);
+
+        }
+    }
+
+
+    protected void setParamItem(float currentValue) {
+        setParamItem(String.valueOf(currentValue));
+
+    }
+
+
+    protected void setParamItem(String currentValue) {
+        float value = Float.parseFloat(currentValue);
+
+        mHighLightParamItem.value = value;
+        mShadowParamItem.value = value;
+        mLevelParamItem.value = value * 2;
+
+        setParamsModel(mHighLightParamItem.effectKey, mHighLightParamItem.key, currentValue);
+        setParamsModel(mShadowParamItem.effectKey, mShadowParamItem.key, currentValue);
+        setParamsModel(mLevelParamItem.effectKey, mLevelParamItem.key, String.valueOf(Math.abs(value * 2)));
+    }
+
+
+    @Override
+    public void quitScrollView() {
+        setParamItem(mLastValue);
+        makePhoto();
+    }
+
+    public void setAdjustSeekBarLayout(View adjustSeekBarLayout) {
+        this.mAjustSeekbarLayout = adjustSeekBarLayout;
+    }
+}

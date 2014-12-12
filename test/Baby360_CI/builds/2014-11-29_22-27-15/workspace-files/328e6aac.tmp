@@ -1,0 +1,70 @@
+package com.pinguo.edit.sdk.option.view;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+
+
+/**
+ * Created by zengchumeng on 14-9-2.
+ */
+public class SettingItemSwitcher extends RelativeLayout {
+    private TextView mTitle;
+    private TextView mSummary;
+    private CheckBox mCheckBox;
+    private ImageView mIcon;
+
+
+    public SettingItemSwitcher(Context context) {
+        super(context);
+
+    }
+
+    public SettingItemSwitcher(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    public SettingItemSwitcher(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        initView(context, attributeSet);
+    }
+
+    private void initView(Context context, AttributeSet attributeSet) {
+        TypedArray a = context.obtainStyledAttributes(attributeSet, R.styleable.SettingItem);
+        float textSize = a.getDimension(R.styleable.SettingItem_showTextSize, 15f);
+        int textColor = a.getColor(R.styleable.SettingItem_showTextColor, Color.parseColor("#7b8085"));
+
+        View root = LayoutInflater.from(context).inflate(R.layout.layout_setting_item_switcher, this);
+        mTitle = (TextView) root.findViewById(R.id.title);
+        mTitle.setTextSize(textSize);
+        mTitle.setTextColor(textColor);
+        mIcon = (ImageView) root.findViewById(R.id.option_item_icon);
+        mSummary = (TextView) root.findViewById(R.id.summary);
+        mCheckBox = (CheckBox) root.findViewById(R.id.checkbox);
+    }
+
+    public ImageView getmIcon() {
+        return mIcon;
+    }
+
+    public TextView getTitle() {
+        return mTitle;
+    }
+
+    public TextView getSummary() {
+        return mSummary;
+    }
+
+    public CheckBox getCheckBox() {
+        return mCheckBox;
+    }
+}

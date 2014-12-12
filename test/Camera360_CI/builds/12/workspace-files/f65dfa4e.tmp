@@ -1,0 +1,39 @@
+package com.pinguo.edit.sdk.filter.square.page.refresh;
+
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by zhongzheng on 14-10-29.
+ */
+public class RefreshFragment extends Fragment {
+
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        System.out.println("LeftFragment onCreateView");
+        // 第一个参数是这个Fragment将要显示的界面布局,第二个参数是这个Fragment所属的Activity,第三个参数是决定此fragment是否附属于Activity
+        return inflater.inflate(R.layout.composite_sdk_filter_square_list_refresh, container, false);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+}
+

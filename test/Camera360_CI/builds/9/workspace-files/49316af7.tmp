@@ -1,0 +1,221 @@
+package com.pinguo.edit.sdk.camera.focus;
+
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Handler;
+import android.os.Message;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+/**
+ * 根据角度传感器，计算是否调用聚焦
+ *
+ * @author tangsong
+ * @modify tangzhen 2013-06-19 重构
+ * @modify wangqinlong 2013-11-01 refactor
+ */
+public class FocusDistanceChecker implements SensorEventListener {
+    private static final String TAG = "DistanceChecker";
+
+    // 每个坐标轴上的方向角度阈值
+    private static final float TRIGGER_FOCUS_ANGLE = 30.0f;
+    // 所有坐标轴上角度值总和的阈值
+    private static final float TRIGGER_FOCUS_SUM_ANGLE = 30.0f;
+    // 每个坐标轴上的方向角度稳定阈值
+    private static final float STABILIZE_ANGLE = 3.0f;
+    // 所有坐标轴上角度值总和的稳定阈值
+    private static final float STABILIZE_SUM_ANGLE = 5.0f;
+
+
+    private static final int MSG_FOR_SENSOR_FOCUS = 11;
+
+    // 传感器超过阈值当时的方向值,使用这个值来做稳定性判断
+    float[] mStabilizeSensorValue;
+    // 传感器移动是否超过了规定的最大角度
+    private boolean mIsBeyondSensorThreshold;
+
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            // 开始传感器聚焦
+            if (mListener != null && mListener.preCheck()) {
+                mStabilizeSensorValue = null;
+                mIsBeyondSensorThreshold = false;
+                updateLastSensorValues();
+                CMLogger.i(TAG, "start onDistanceChanged");
+                mListener.onDistanceChanged();
+            }
+
+        }
+    };
+
+    /**
+     * mTempSensorValues用于保存每次Sensor Change后的值
+     */
+    private float[] mTempSensorValues = new float[3];
+    /**
+     * mLastSensorValues用于保存最后一次完成传感器动作的值
+     */
+    private float[] mLastSensorValues = new float[3];
+    private DistanceCheckerListener mListener;
+
+    // 连续稳定500ms后,触发传感器聚焦
+    private static final int STABLE_TIME = 400;
+
+    public interface DistanceCheckerListener {
+        /**
+         * if function return true, checker can check the distance changes,
+         * if not, checker must return immediate.
+         *
+         * @return
+         */
+        public boolean preCheck();
+
+        public void onDistanceChanged();
+    }
+
+    public FocusDistanceChecker(Context context, DistanceCheckerListener listener) {
+        mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        mListener = listener;
+    }
+
+    public void register() {
+        if (mSensor == null) {
+            mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+            if (mSensor != null) {
+                // 不支持的话，register动作在部分设备上会导致程序异常
+                mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                CMLogger.d(TAG, "Sensor type : " + mSensor.getType() + "/");
+            }
+
+        }
+    }
+
+    public void unRegister() {
+        try {
+            if (mSensor != null) {
+                mSensorManager.unregisterListener(this);
+                mSensor = null;
+            }
+        } catch (Exception e) {
+            CMLogger.e(TAG, "un-register the focus sensor error, just ignore it !!!");
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    public void reset() {
+        mLastSensorValues = new float[3];
+        mIsBeyondSensorThreshold = false;
+        mStabilizeSensorValue = null;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        System.arraycopy(event.values, 0, mTempSensorValues, 0,
+                mTempSensorValues.length);
+
+        if (mListener != null && !mListener.preCheck()) {
+            // 这段代码很重要,因为存在这种case,当前传感器聚焦的消息已经在
+            // 延时发送过程中，加入此时进入拍照状态,preCheck肯定不过,
+            // 如果此时不取消等待中的传感器聚焦消息,，那么可能导致在拍照过程
+            // 中还收到传感器聚焦消息,导致软件崩溃 wql add it.
+            if (mHandler.hasMessages(MSG_FOR_SENSOR_FOCUS)) {
+                mHandler.removeMessages(MSG_FOR_SENSOR_FOCUS);
+            }
+            return;
+        }
+
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ORIENTATION:
+
+                if (!mIsBeyondSensorThreshold) {
+                    mIsBeyondSensorThreshold = checkRange(event.values, mLastSensorValues, TRIGGER_FOCUS_ANGLE, TRIGGER_FOCUS_SUM_ANGLE);
+                    // 当前传感器角度超过了阈值
+                    if (mIsBeyondSensorThreshold) {
+                        // 延时500ms发送消息进行传感器聚焦
+                        mHandler.sendEmptyMessageDelayed(MSG_FOR_SENSOR_FOCUS, STABLE_TIME);
+                        // 拷贝当前的角度值用来进行稳定性判断
+                        if (mStabilizeSensorValue == null) {
+                            mStabilizeSensorValue = new float[3];
+                            System.arraycopy(event.values, 0, mStabilizeSensorValue, 0,
+                                    mStabilizeSensorValue.length);
+                        }
+                    }
+                    return;
+                }
+
+                // 如果在500ms内有任何坐标轴上的角度超过了3度或者三个坐标轴的角度差总和超过了
+                // 5度就取消当前的传感器聚焦
+                if (checkRange(mStabilizeSensorValue, event.values, STABILIZE_ANGLE, STABILIZE_SUM_ANGLE)) {
+                    if (mHandler.hasMessages(MSG_FOR_SENSOR_FOCUS)) {
+                        mHandler.removeMessages(MSG_FOR_SENSOR_FOCUS);
+                    }
+                    // 取消上一次传感器聚焦后继续发送传感器聚焦消息
+                    mHandler.sendEmptyMessageDelayed(MSG_FOR_SENSOR_FOCUS, STABLE_TIME);
+                    // 重新拷贝当前的角度值进行稳定性判断
+                    System.arraycopy(event.values, 0, mStabilizeSensorValue, 0,
+                            mStabilizeSensorValue.length);
+                }
+
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    public void updateLastSensorValues() {
+        System.arraycopy(mTempSensorValues, 0, mLastSensorValues, 0,
+                mTempSensorValues.length);
+    }
+
+    /**
+     * 检查两个Sensor Values
+     * 当一个反向值变化超过STABILIZE_DISTANCE或者3个反向超过STABILIZE_DISTANCE_SUM
+     * 时，判定为超过范围
+     *
+     * @param newValues 传感器值, float[3]
+     * @param oldValues 传感器值, float[3]
+     * @return true表示超过范围，false表示没有超过
+     */
+    private boolean checkRange(float[] newValues, float[] oldValues, float stabilizeDistance, float stabilizeDistanceSum) {
+        boolean isBeyond = false;
+        if (newValues.length < 3 || oldValues.length < 3) {
+            return isBeyond;
+        }
+
+        float sum = 0.0f;
+        float delta;
+
+        for (int i = 0; i < 3; i++) {
+            delta = Math.abs(newValues[i] - oldValues[i]);
+            if (delta > 180) {
+                // 求补
+                delta = 360 - delta;
+            }
+            // 判断一个坐标轴上的位置
+            if (delta > stabilizeDistance) {
+                isBeyond = true;
+                break;
+            }
+            // 累加多个坐标轴上的位置，然后进行判断
+            sum += delta;
+            if (sum > stabilizeDistanceSum) {
+                isBeyond = true;
+                break;
+            }
+        }
+        return isBeyond;
+    }
+}

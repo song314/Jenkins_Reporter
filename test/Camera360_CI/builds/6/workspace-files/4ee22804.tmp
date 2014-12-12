@@ -1,0 +1,70 @@
+package com.pinguo.mix.api;
+
+import android.os.Bundle;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by taoli on 14-4-9.
+ */
+public abstract class BaseRequest<T> {
+
+    protected abstract void paramValidCheck(Bundle bundle) throws IllegalArgumentException;
+
+    protected abstract Bundle getResultParam(BaseBean bean);
+
+    protected abstract T getResultData(BaseBean bean);
+
+    protected abstract BaseBean parse(String jsonString);
+
+    private HttpRequest mRequest;
+
+    public void execute(final String url, final Bundle bundle, final ApiCallback callback) {
+
+        paramValidCheck(bundle);
+
+        Map<String, String> params = buildParam(bundle);
+
+        GLogger.i("", "Get server execute:" + url);
+
+        mRequest = new HttpRequest(url, params, new ApiCallback<String>() {
+
+            @Override
+            public void onResponse(String data, Object... params) {
+                BaseBean bean = parse(data);
+                if (null != callback) {
+                    callback.onResponse(getResultData(bean), getResultParam(bean));
+                }
+
+            }
+
+            @Override
+            public void onError(String error) {
+                if (null != callback) {
+                    callback.onError(error);
+                }
+            }
+        });
+        mRequest.execute();
+    }
+
+    public void cancel() {
+        mRequest.cancel();
+    }
+
+    protected Map<String, String> buildParam(Bundle bundle) {
+
+        Map<String, String> params = new HashMap<String, String>();
+        if (null != bundle) {
+            for (Object key : bundle.keySet()) {
+                String value = bundle.getString((String) key);
+                params.put((String)key, value);
+                GLogger.i("", "11111 put param:" + key + "/" + value);
+            }
+        }
+        return params;
+    }
+}

@@ -1,0 +1,191 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.content.Context;
+import android.os.Environment;
+import android.os.StatFs;
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+/**
+ * Created by liubo on 7/30/13.
+ * SDCrad工具类
+ */
+public final class SDCardUtils {
+    private static final String TAG = SDCardUtils.class.getSimpleName();
+    public static final File EXTERNAL_STORAGE_DIRECTORY = Environment.getExternalStorageDirectory();
+
+    private static final String EXT_STORAGE_ROOT_PREFIX = "/Android/data/";
+    private static final String EXT_STORAGE_ROOT_SUFFIX = "/files/";
+
+    private static final String ALTERNATE_SDCARD_MOUNTS[] = {
+            "/emmc",				// Internal storage on Droid Incredible, Nook Color/CyanogenMod, some other devices
+            "/sdcard/ext_sd",		// Newer (2011) HTC devices (Flyer, Rezound)
+            "/sdcard-ext",			// Some Motorola devices (RAZR)
+            "/sdcard/sd",			// Older Samsung Galaxy S (Captivate)
+            "/sdcard/sdcard"		// Archos tablets
+    };
+
+    private SDCardUtils() {
+    }
+
+    public static String getSDCardPath() {
+        if (hasSDCard() && EXTERNAL_STORAGE_DIRECTORY != null) {
+            return EXTERNAL_STORAGE_DIRECTORY.getPath();
+        }
+        return null;
+    }
+
+    /**
+     * @return 返回SD卡的总容量(byte), 当出现异常时返回-1
+     */
+    public static long getTotalStorage() {
+        String storageDirectory = getSDCardPath();
+        if (storageDirectory == null) {
+            return -1;
+        }
+        final StatFs stat = new StatFs(storageDirectory);
+        return (long) stat.getBlockCount() * (long) stat.getBlockSize();
+    }
+
+    /**
+     * 获取存储卡的剩余容量，单位为字节
+     *
+     * @return 返回该路径剩余容量（byte） 为0证明该卡不可访问
+     */
+    public static long getAvailableStorage() {
+        String pPath = getSDCardPath();
+        if (pPath == null) {
+            return 0L;
+        }
+        long availableStorage = 0L;
+        try {
+            // 判断path文件是否存在
+            File dir = new File(pPath);
+            if (dir.isFile()) {
+                GLogger.e(TAG, " path is a file !!!!!!!");
+                return -1;
+            }
+
+            if (!dir.exists()) {
+                GLogger.e(TAG, " path not exits !!!!!!!");
+                return -2;
+            }
+
+            final StatFs stat = new StatFs(pPath);
+            availableStorage = (long) stat.getAvailableBlocks() * (long) stat.getBlockSize();
+        } catch (Exception e) {
+            GLogger.i(TAG, e);
+        }
+
+        return availableStorage;
+    }
+
+    /**
+     * 检查SD卡是否存在
+     *
+     * @return true：存在； false：不存在
+     */
+    public static boolean hasSDCard() {
+        String status = Environment.getExternalStorageState();
+        if (status.equals(Environment.MEDIA_MOUNTED)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 返回一个File对象，这个File对象含有一个在外部存储器SD卡上的可写目录；
+     * 创建目录失败则返回null
+     *
+     * @param context
+     * @param dirName name of sub-folder within the SD card root.
+     * @return
+     */
+    public static File getSDCardDir(Context context, String dirName) {
+        File sdCardDir = null;
+
+        // Check to see if SD Card is mounted and read/write accessible
+        if ( Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ) {
+            // Get the directory on the SD card to store content
+            // Attempt to use getExternalFilesDir() if we are on Android 2.2 or newer
+            // Data stored in this location will auto-delete with app uninstall
+            Method getExternalFilesDirMethod = null;
+            try {
+                getExternalFilesDirMethod = Context.class.getMethod( "getExternalFilesDir", String.class );
+                sdCardDir = (File) getExternalFilesDirMethod.invoke( context, dirName );
+            } catch (NoSuchMethodException e) {
+                // Android 2.1 and earlier - use old APIs
+                sdCardDir = buildDirPath(context, Environment.getExternalStorageDirectory(), dirName);
+            } catch (IllegalArgumentException e) {
+                sdCardDir = buildDirPath(context, Environment.getExternalStorageDirectory(), dirName);
+            } catch (IllegalAccessException e) {
+                sdCardDir = buildDirPath(context, Environment.getExternalStorageDirectory(), dirName);
+            } catch (InvocationTargetException e) {
+                sdCardDir = buildDirPath(context, Environment.getExternalStorageDirectory(), dirName);
+            }
+        }
+
+        if ( sdCardDir == null ) {
+            // Attempting to find the default external storage was a failure.
+            // Look for another suitable external filesystem where we can store our crap
+            for ( int i = 0; i < ALTERNATE_SDCARD_MOUNTS.length; i++ ) {
+                File alternateDir = new File( ALTERNATE_SDCARD_MOUNTS[i] );
+                if ( alternateDir.exists() && alternateDir.isDirectory() &&
+                        alternateDir.canRead() && alternateDir.canWrite() ) {
+                    sdCardDir = buildDirPath(context, alternateDir, dirName);
+                    break;
+                }
+            }
+        }
+
+        // Attempt to create folder on external storage if it does not exist
+        if ( sdCardDir != null && !sdCardDir.exists() ) {
+            if ( !sdCardDir.mkdirs() ) {
+                sdCardDir = null;		// Failed to create folder
+            }
+        }
+
+        return sdCardDir;
+    }
+
+    /**
+     * Use older Android APIs to put data in the same relative directory location
+     * as the 2.2 API.
+     *
+     * When device upgrades to 2.2, data will auto-delete with app uninstall.
+     *
+     * @param mountPoint
+     * @return
+     */
+    private static File buildDirPath(Context context, File mountPoint, String dirName) {
+        StringBuilder sb = new StringBuilder();
+        sb.setLength(0);
+        sb.append(EXT_STORAGE_ROOT_PREFIX);
+        sb.append(context.getPackageName());
+        sb.append(EXT_STORAGE_ROOT_SUFFIX );
+        sb.append(dirName);
+        return new File( mountPoint, sb.toString());
+    }
+
+    /**
+     * 清空SD卡上对应文件夹的文件
+     *
+     * @param context
+     */
+    public static void clearSDDir(Context context, String dirName) {
+        File cacheDir = getSDCardDir( context, dirName );
+        File[] files = cacheDir.listFiles();
+        for (File f : files) {
+            if (!f.delete()) {
+                GLogger.e(TAG, "Delete file failed!");
+            }
+        }
+        if (!cacheDir.delete()) {
+            GLogger.w(TAG, "Delete file failed!");
+        }
+    }
+}

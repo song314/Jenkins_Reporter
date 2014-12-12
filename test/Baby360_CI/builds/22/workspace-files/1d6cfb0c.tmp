@@ -1,0 +1,370 @@
+package com.pinguo.edit.sdk.camera.model;
+
+import android.content.Context;
+import android.hardware.Camera;
+import android.os.Handler;
+import android.os.Message;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.camera.model.CameraManager.CameraProxy;
+import com.pinguo.edit.sdk.camera.model.CameraManager.CameraState;
+import com.pinguo.edit.sdk.camera.setting.CameraSettingModel;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.Exif;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import vStudio.Android.GPhoto.GPhotoJNI;
+
+
+public class CameraModel implements ICameraModel {
+
+    //常量
+    private static final String TAG = CameraModel.class.getSimpleName();
+    private static final int TAKE_OVER_TIME = 8000;//拍照超时时间
+    private static final int HANDLER_MSG_ID_TAKE_OVERTIME = 1;//MSG_ID
+    private static final int HANDLER_MSG_ID_ERROR_JPEG = 2;
+
+    private CameraProxy mCameraDevice;
+    private int mCurCameraId = 0;//当前相机id
+    private CameraState mCameraState = CameraState.CAMERA_STOPPED;//相机状态 (线程安全）
+    private IPreviewModel mPreviewModel;
+    private CameraHandler mHandler;
+    private boolean mPictureTakenFail;//标识当前是否拍照失败//
+    private static AtomicInteger mCurrentMsgId = new AtomicInteger(0);
+    //回调接口
+    private TakePictureFailCallBack mTakePictureFailCallBack;//拍照失败回调异步
+    private CameraProcessCallback mProcessCallback;//相机流程同步回调接口
+
+
+    public CameraModel() {
+        mHandler = new CameraHandler();
+    }
+
+    @Override
+    public synchronized CameraProxy openCamera(int cameraId) {
+        CMLogger.i(TAG, "openCamera enter!mCameraState:" + mCameraState + ", camera id:" + cameraId);
+        mProcessCallback.preCameraOpen();
+        try {
+            mCameraDevice = CameraManager.instance().openCamera(cameraId);
+        } catch (CameraHardwareException e) {
+            e.printStackTrace();
+            mProcessCallback.onCameraOpenFail(new RuntimeException("Open camera fail! null instance return"));
+            return null;
+        }
+
+        if (null == mCameraDevice) {
+            mProcessCallback.onCameraOpenFail(new RuntimeException("Open camera fail! null instance return"));
+            return null;
+        }
+        mCameraState = CameraState.PREVIEW_STOPPED;
+        mCurCameraId = cameraId;
+        CMLogger.i(TAG, "openCamera exit!mCameraState:" + mCameraState);
+        mProcessCallback.onCameraOpen(cameraId, mCameraDevice);
+        return mCameraDevice;
+    }
+
+    @Override
+    public synchronized void startPreview() {
+        CMLogger.i(TAG, "startPreview enter!" + "mCameraState:" + mCameraState);
+        mProcessCallback.preStartPreview();
+        try {
+            mPreviewModel.startPreview(mCameraDevice);
+            mCameraState = CameraState.IDLE;
+            CMLogger.i(TAG, "startPreview exit!" + "mCameraState:" + mCameraState);
+            mProcessCallback.onStartPreview();
+        } catch (Exception e) {
+            mProcessCallback.onStartPreviewFail(e);
+        }
+    }
+
+    @Override
+    public synchronized void stopPreview() {
+        CMLogger.i(TAG, "stopPreview enter!" + "mCameraState:" + mCameraState);
+        mPreviewModel.stopPreview(mCameraDevice);
+        mCameraState = CameraState.PREVIEW_STOPPED;
+        CMLogger.i(TAG, "stopPreview exit!" + "mCameraState:" + mCameraState);
+        mProcessCallback.onStopPreview();
+    }
+
+    @Override
+    public synchronized void releaseCamera() {
+        mHandler.removeMessages(HANDLER_MSG_ID_TAKE_OVERTIME);
+        CMLogger.i(TAG, "releaseCamera enter" + "mCameraState:" + mCameraState);
+        mProcessCallback.onPreReleaseCamera();
+        CameraManager.instance().releaseCamera();
+        mCameraDevice = null;
+        mCameraState = CameraState.CAMERA_STOPPED;
+        CMLogger.i(TAG, "releaseCamera exit" + "mCameraState:" + mCameraState);
+        mProcessCallback.onReleaseCamera();
+    }
+
+    @Override
+    public synchronized void switchCamera(Context context) {
+        CMLogger.i(TAG, "switchCamera enter" + "mCameraState:" + mCameraState);
+
+        int cameraCount = CameraManager.instance().getCameraCount();
+        if (cameraCount <= 1) {
+            CMLogger.i(TAG, "cannot switch Camera, camera count:" + "cameraCount");
+            return;
+        }
+
+        // 切换摄像头需要重置变焦值.为什么在这里加呢？主要是考虑到美肤自拍也要切换摄像头。
+        // 也要走这个方法。所以，统一在这里处理
+        CameraSettingModel.instance().resetZoomValue();
+
+        if (mCameraState == CameraState.IDLE) {
+            stopPreview();
+        }
+        if (mCameraState == CameraState.PREVIEW_STOPPED) {
+            releaseCamera();
+        }
+        mCurCameraId = CameraManager.instance().switchCamera(mCurCameraId);
+        if (mCameraState == CameraState.CAMERA_STOPPED) {
+            mCameraDevice = openCamera(mCurCameraId);
+        }
+
+        if (mCameraState == CameraState.PREVIEW_STOPPED) {
+            startPreview();
+        }
+        mProcessCallback.onSwitchCamera(isFrontCamera());
+        CMLogger.i(TAG, "switchCamera exit!" + "mCameraState:" + mCameraState);
+    }
+
+    @Override
+    public synchronized void setDisplayOrientation(int orientation) {
+        CMLogger.i(TAG, "setDisplayOrientation orientation =" + orientation);
+        if (mCameraDevice != null) {
+            mCameraDevice.setDisplayOrientation(orientation);
+        }
+    }
+
+    @Override
+    public synchronized void addCallbackBuffer(byte[] data) {
+        mCameraDevice.addCallbackBuffer(data);
+    }
+
+    @Override
+    public synchronized void setPreviewCallbackWithBuffer(Camera.PreviewCallback callback) {
+        if (null != mCameraDevice) {
+            mCameraDevice.setPreviewCallbackWithBuffer(callback);
+        }
+    }
+
+    @Override
+    public void makePreviewPicture(byte[] data, Camera camera) {
+
+    }
+
+    @Override
+    public synchronized void cancelTakePicture() {
+
+    }
+
+    @Override
+    public synchronized void takePicture(Camera.ShutterCallback shutter, Camera.PictureCallback raw,
+                                         Camera.PictureCallback post, final TakePictureCallBack callBack
+            , int uiOrientaion) {
+
+        CMLogger.i(TAG, "takePicture enter" + "mCameraState:" + mCameraState);
+        mCameraState = CameraState.SNAP_IN_PROGRESS;
+        mPictureTakenFail = false;
+        Message msg = new Message();
+        msg.what = HANDLER_MSG_ID_TAKE_OVERTIME;
+        msg.arg1 = mCurrentMsgId.incrementAndGet();
+        mHandler.sendMessageDelayed(msg, TAKE_OVER_TIME);
+        final int orientationRotate = CameraSettingModel.instance().setJpegOrientation(uiOrientaion);
+
+        Camera.PictureCallback pictureCallback = new Camera.PictureCallback() {
+
+            @Override
+            public void onPictureTaken(byte[] bytes, Camera camera) {
+                mHandler.removeMessages(HANDLER_MSG_ID_TAKE_OVERTIME);
+                // 当相机已经释放后,不再处理拍照数据
+                CMLogger.i(TAG, "mCameraState =" + mCameraState);
+                if (mCameraState == CameraState.CAMERA_STOPPED) {
+                    return;
+                }
+                if (!mPictureTakenFail) {
+                    CMLogger.i(TAG, "onPictureTaken enter" + "mCameraState:" + mCameraState);
+                    mCameraState = CameraState.PREVIEW_STOPPED;
+                    CMLogger.i(TAG, "onPictureTaken exit" + "mCameraState:" + mCameraState);
+
+                    if (Exif.isJpeg(bytes)) {
+                        byte[] exifData = Exif.getExifData(bytes);
+                        callBack.onPictureTaken(bytes, exifData, camera, orientationRotate);
+                    } else {
+                        mHandler.sendEmptyMessage(HANDLER_MSG_ID_ERROR_JPEG);
+                    }
+                } else {
+                    CMLogger.i(TAG, "onPictureTaken enter with taken overtime");
+                    //这里CameraHandler消息会处理拍照失败的情况
+                }
+            }
+        };
+        if (mCameraDevice != null) {
+            mCameraDevice.takePicture(shutter, raw, post, pictureCallback);
+        }
+        CMLogger.i(TAG, "takePicture exit" + "mCameraState:" + mCameraState);
+    }
+
+    @Override
+    public synchronized CameraState getCameraState() {
+        return mCameraState;
+    }
+
+    @Override
+    public synchronized void setCameraState(CameraState state) {
+        mCameraState = state;
+    }
+
+    public void setPreviewModel(IPreviewModel livePreviewModel) {
+        mPreviewModel = livePreviewModel;
+    }
+
+    public IPreviewModel getPreviewModel() {
+        return mPreviewModel;
+    }
+
+    public synchronized CameraProxy getCameraDevice() {
+        return mCameraDevice;
+    }
+
+    public int getCurCameraId() {
+        //return mCurCameraId;
+
+        if (mCameraDevice != null) // 相机已开启
+        {
+            return mCurCameraId;
+        } else                       // 相机未开启
+        {
+            return CameraSettingModel.instance().getCameraId();
+        }
+    }
+
+    public synchronized void autoFocus(Camera.AutoFocusCallback callback) {
+        //        if (mCameraState == CameraState.IDLE) {
+        if (mCameraDevice != null) {
+            mCameraDevice.autoFocus(callback);
+        }
+        //        }
+    }
+
+    public synchronized void cancelAutoFocus() {
+        mCameraDevice.cancelAutoFocus();
+    }
+
+    private class CameraHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case HANDLER_MSG_ID_TAKE_OVERTIME:
+                    //id想等切相机没有release
+                    if (msg.arg1 == mCurrentMsgId.get() && getCameraState() != CameraState.CAMERA_STOPPED) {
+                        //拍照超时
+                        CMLogger.i(TAG, "on handler msg:HANDLER_MSG_TAKE_OVERTIME");
+                        mPictureTakenFail = true;
+                        if (mTakePictureFailCallBack != null) {
+                            mTakePictureFailCallBack.onPictureTakenFail();
+                        }
+                    }
+                    break;
+                case HANDLER_MSG_ID_ERROR_JPEG:
+                    if (mTakePictureFailCallBack != null) {
+                        mTakePictureFailCallBack.onPictureTakenFail();
+                    }
+                    break;
+                default:
+                    CMLogger.w(TAG, "Invalid message:" + msg.what);
+                    break;
+            }
+        }
+    }
+
+    public void setTakePictureFailCallBack(TakePictureFailCallBack takePictureFailCallBack) {
+        mTakePictureFailCallBack = takePictureFailCallBack;
+    }
+
+    public interface TakePictureFailCallBack {
+        public void onPictureTakenFail();
+    }
+
+    public void setCameraProcessCallback(CameraProcessCallback callback) {
+        mProcessCallback = callback;
+    }
+
+    /**
+     * 当前相机是否前置摄像头
+     *
+     * @return
+     */
+    public boolean isFrontCamera() {
+        if (mCameraDevice != null) // 相机已开启
+        {
+            return CameraManager.instance().isFrontCamera(mCurCameraId);
+        } else                       // 相机未开启
+        {
+            return CameraSettingModel.instance().getCameraId() == Camera.CameraInfo.CAMERA_FACING_FRONT;
+        }
+    }
+
+    protected static final String MIRROR_X = "effect=mirror,1,0";
+
+    protected static final String MIRROR_Y = "effect=mirror,0,1";
+
+    public byte[] setCameraMirror(Context context, byte[] orgData, int orientation) {
+        byte[] mirrorData = orgData;
+        GPhotoJNI prevMaker = new GPhotoJNI();
+        try {
+            String tempFilePath = context.getFilesDir() + File.separator + "temp_front_pic";
+            FileUtils.saveFile(mirrorData, tempFilePath);
+            String saveFileName = context.getFilesDir() + File.separator + "temp_mirror_front_pic";
+            final String mirrorParam;
+            if (orientation == 90
+                    || orientation == 270) {
+                mirrorParam = MIRROR_Y;
+            } else {
+                mirrorParam = MIRROR_X;
+            }
+            prevMaker.MakeEffectImageEX(tempFilePath, saveFileName, mirrorParam, null, 0, 0);
+            mirrorData = FileUtils.getFileData(saveFileName);
+        } catch (FileNotFoundException e) {
+            GLogger.e(TAG, "Make picture data mirror error.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return mirrorData;
+    }
+
+    /**
+     * 相机流程回调(同步流程)
+     */
+    public interface CameraProcessCallback {
+        public void preCameraOpen();
+
+        public void onCameraOpen(int cameraId, CameraProxy cameraDevice);
+
+        public void onCameraOpenFail(Exception e);
+
+        public void preStartPreview();
+
+        public void onStartPreview();
+
+        public void onStartPreviewFail(Exception e);
+
+        public void onSwitchCamera(boolean isFront);
+
+        public void onStopPreview();
+
+        public void onPreReleaseCamera();
+
+        public void onReleaseCamera();
+    }
+
+}

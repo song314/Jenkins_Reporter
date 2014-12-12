@@ -1,0 +1,905 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.utils.LocaleSupport;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.Product;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Created by huowaa on 14-5-26.
+ */
+public class EffectResourceManager implements IEffectResourceManager{
+    private static final String TAG = EffectResourceManager.class.getSimpleName();
+    private Context mContext;
+    private EffectModel mEffectModel;
+    private EffectDatabaseHelper mDBHelper;
+    private String mEffectRootPath; //特效安装根目录
+
+    /*特效类型子目录*/
+    private final static String[] EFFECT_TYPE_DIRS = new String[] {
+        Effect.Type.Filter.name().toLowerCase(),
+        Effect.Type.Lighting.name().toLowerCase(),
+        Effect.Type.Frame.name().toLowerCase()
+    };
+
+    /*特效安装子目录*/
+    private final static String[] EFFECT_SUB_DIRS = new String[]{"icon", "texture"};
+
+    public EffectResourceManager(Context context, EffectModel effectModel) {
+        mContext = context;
+        mEffectModel = effectModel;
+    }
+
+    @Override
+    public void init() {
+        mEffectRootPath = mContext.getFilesDir().getAbsolutePath() + File.separator + "effect" + File.separator;
+        initEffectInstalledDir();
+        mDBHelper = new EffectDatabaseHelper(mContext, EffectDatabaseHelper.DB_NAME, null, EffectDatabaseHelper.VERSION);
+    }
+
+    protected void initEffectInstalledDir() {
+        for ( int i = 0; i < EFFECT_TYPE_DIRS.length; i++ ) {
+            String path = mEffectRootPath + File.separator + EFFECT_TYPE_DIRS[i] + File.separator;
+            FileUtils.checkFolder(path);
+            for (int j = 0; j < EFFECT_SUB_DIRS.length; j++) {
+                FileUtils.checkFolder(path + EFFECT_SUB_DIRS[j] + File.separator);
+            }
+        }
+    }
+
+    @Override
+    public File getEffectInstalledDir(String type) {
+        File installedDir = new File(mEffectRootPath + File.separator + type.toLowerCase() + File.separator);
+        if (!installedDir.exists())
+            initEffectInstalledDir();
+        return installedDir;
+    }
+
+    private String getTagsStr(String[] strArr) {
+        StringBuffer sb = new StringBuffer();
+
+        sb.append("(");
+        int idx = 0;
+        for ( String str : strArr ) {
+            sb.append("'").append(str).append("'");
+
+            if ( idx < (strArr.length - 1) ) {
+                sb.append(",");
+            }
+            idx += 1;
+        }
+        sb.append(")");
+
+        return sb.toString();
+    }
+
+    @Override
+    public List<CompositeEffect> getCompositeEffectsByTags(String[] tags) {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        String localeStr = LocaleSupport.getLocaleString(Locale.getDefault());
+        List<CompositeEffect> ces = new ArrayList<CompositeEffect>();
+
+        String tagsStr = getTagsStr(tags);
+        try {
+            db = mDBHelper.getWritableDatabase();
+
+            cursor = db.rawQuery("SELECT key, name, locale, isDefault, jsonStr, tags FROM composite_effect_lib WHERE " +
+                    "key IN (SELECT DISTINCT key FROM composite_effect_lib_meta WHERE tag IN " + tagsStr + ") " +
+                    "AND locale = ?", new String[]{localeStr});
+
+            if ( null != cursor ) {
+                while (cursor.moveToNext()) {
+                    CompositeEffect ce = new CompositeEffect();
+                    ce.key = cursor.getString(0);
+                    ce.name = cursor.getString(1);
+                    ce.locale = cursor.getString(2);
+                    ce.isDefault = cursor.getInt(3);
+                    ce.jsonStr = cursor.getString(4);
+                    ce.tags = cursor.getString(5);
+                    ces.add(ce);
+                }
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            GLogger.e(TAG, e);
+        } finally {
+            if (null != cursor)
+                cursor.close();
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        // init ce in ces
+        for ( CompositeEffect ce : ces ) {
+            ce.init();
+        }
+
+        return ces;
+    }
+
+    @Override
+    public List<CompositeEffect> getCompositeEffectsByRandom(int count) {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        String localeStr = LocaleSupport.getLocaleString(Locale.getDefault());
+        List<CompositeEffect> ces = new ArrayList<CompositeEffect>();
+
+        try {
+            db = mDBHelper.getWritableDatabase();
+
+            cursor = db.rawQuery("SELECT key, name, locale, isDefault, jsonStr, tags FROM composite_effect_lib " +
+                    "WHERE locale = ? ORDER BY RANDOM() LIMIT ?", new String[]{localeStr, String.valueOf(count)});
+
+            if ( null != cursor ) {
+                while (cursor.moveToNext()) {
+                    CompositeEffect ce = new CompositeEffect();
+                    ce.key = cursor.getString(0);
+                    ce.name = cursor.getString(1);
+                    ce.locale = cursor.getString(2);
+                    ce.isDefault = cursor.getInt(3);
+                    ce.jsonStr = cursor.getString(4);
+                    ce.tags = cursor.getString(5);
+                    ces.add(ce);
+                }
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            GLogger.e(TAG, e);
+        } finally {
+            if (null != cursor)
+                cursor.close();
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        // init ce in ces
+        for ( CompositeEffect ce : ces ) {
+            ce.init();
+        }
+
+        return ces;
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
+    @Override
+    public EffectDict loadEffectDict(Locale locale) {
+        GLogger.i(TAG, "Load effect dict with locale: " + locale.toString());
+        String localeStr = LocaleSupport.getLocaleString(locale);
+        EffectDict dict = new EffectDict();
+
+        // add no-type effcts
+        dict.getEffectMap().put(Effect.Type.EnhanceHdr.name(), new EnhanceHdr());
+        dict.getEffectMap().put(Effect.Type.EnhanceSkin.name(), new EnhanceSkin());
+        dict.getEffectMap().put(Effect.Type.RotateStraighten.name(), new RotateStraighten());
+        dict.getEffectMap().put(Effect.Type.Sharpen.name(), new Sharpen());
+        dict.getEffectMap().put(Effect.Type.AdvanceBase.name(), new AdvanceBase());
+        dict.getEffectMap().put(Effect.Type.AdvanceHSL.name(), new AdvanceHSL());
+        dict.getEffectMap().put(Effect.Type.AdvanceVignette.name(), new AdvanceVignette());
+        TiltShift circle = new TiltShiftCircle();
+        TiltShift line = new TiltShiftLine();
+        dict.getEffectMap().put(circle.key, circle);
+        dict.getEffectMap().put(line.key, line);
+
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = mDBHelper.getWritableDatabase();
+            boolean isTypeEmpty = checkIsTypeEmpty(db);
+
+            if (!isTypeEmpty) {
+                loadEffectType(db, dict, localeStr);
+                loadEffect(db, dict, localeStr);
+                loadCompositeEffect(db, dict, localeStr);
+            }
+        } catch (Exception e) {
+            GLogger.e(TAG, e);
+        } finally {
+            if (null != cursor)
+                cursor.close();
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        // sort
+        for (EffectType type : dict.getEffectTypeMap().values()) {
+            if ( type.type.equals(Effect.Type.Composite.name()) ) {
+               if ( null != type.compositeEffects ) {
+                    Collections.sort(type.compositeEffects);
+               }
+            } else {
+                if ( null != type.effects ) {
+                    Collections.sort(type.effects);
+                }
+            }
+        }
+
+        return dict;
+    }
+
+    private boolean loadCompositeEffect(SQLiteDatabase db, EffectDict dict, String localeStr) {
+        // check param
+        if ( null == db || null == dict ) {
+            GLogger.e(TAG, "Load effect type fail! Empty db or dict");
+            return false;
+        }
+
+        // composite effect
+        Cursor cursor = db.rawQuery(
+                "SELECT key, name, author, description, locale, " +
+                        "version, icon, typeKey, createTime, lastModifyTime, " +
+                        "jsonStr, isDefault, color FROM composite_effect " +
+                        "WHERE installation = ? AND locale = ?",
+                new String[]{"1", localeStr});
+
+        if ( null != cursor ) {
+            String iconPath = ResourceManagerUtils.getIconPathByType(getEffectInstalledDir(Effect.Type.Composite.name()));
+            while (cursor.moveToNext()) {
+                CompositeEffect effect = new CompositeEffect();
+                effect.key = cursor.getString(0);
+                effect.name = cursor.getString(1);
+                effect.author = cursor.getString(2);
+                effect.description = cursor.getString(3);
+                effect.locale = cursor.getString(4);
+                effect.version = cursor.getInt(5);
+                effect.icon  = FILE_PREFIX + iconPath + File.separator + cursor.getString(6);
+                effect.typeKey = cursor.getString(7);
+                effect.createTime = Long.parseLong(cursor.getString(8));
+                effect.lastModifyTime = Long.parseLong(cursor.getString(9));
+                effect.jsonStr = cursor.getString(10);
+                effect.isDefault = Integer.parseInt(cursor.getString(11));
+                effect.color = cursor.getString(12);
+
+                EffectType effectType = dict.getEffectTypeMap().get(effect.typeKey);
+                if ( null != effect ) {
+                    effectType.addCompositeEffect(effect);
+                }
+            }
+            cursor.close();
+        }
+
+        // load complete composite effect according to json string
+        for (EffectType effectType : dict.getEffectTypeMap().values() ) {
+            if ( effectType.type.equals(Effect.Type.Composite.name()) ) {
+                for ( CompositeEffect ce : effectType.compositeEffects ) {
+                    ce.init();
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean loadEffect(SQLiteDatabase db, EffectDict dict, String localeStr) {
+        // check param
+        if ( null == db || null == dict ) {
+            GLogger.e(TAG, "Load effect type fail! Empty db or dict");
+            return false;
+        }
+
+        // effects
+        Cursor cursor = db.rawQuery("SELECT key,type,locale,name,description,version,requirementStr," +
+                "icon,realRender,preCmdStr,gpuCmdStr,cpuCmd,textureStr," +
+                "typeKey,idxInType,packKey,idxInPack," +
+                "installation,installTime,isNew,paramStr,timeLevel,color FROM effect " +
+                "WHERE installation = ? AND locale = ?", new String[]{"1", localeStr});
+
+        if ( null != cursor ) {
+            String iconPath = "";
+            while (cursor.moveToNext()) {
+                String type = cursor.getString(1);
+                Effect effect = ResourceManagerUtils.getEffectSubObjectByTypeKey(type);
+                iconPath = ResourceManagerUtils.getIconPathByType(getEffectInstalledDir(type));
+
+                effect.key = cursor.getString(0);
+                effect.type = cursor.getString(1);
+                effect.locale = cursor.getString(2);
+                effect.name = cursor.getString(3);
+                effect.description = cursor.getString(4);
+                effect.version = cursor.getInt(5);
+                effect.requirementStr = cursor.getString(6);
+                effect.icon = FILE_PREFIX + iconPath + File.separator + cursor.getString(7); // icon需要调整为datas目录下的路径
+                effect.realRender = cursor.getInt(8);
+                effect.preCmdStr = cursor.getString(9);
+                effect.gpuCmdStr = cursor.getString(10);
+                effect.cpuCmd = cursor.getString(11);
+                effect.textureStr = cursor.getString(12);
+                effect.typeKey = cursor.getString(13);
+                effect.idxInType = cursor.getInt(14);
+                effect.packKey = cursor.getString(15);
+                effect.idxInPack = cursor.getInt(16);
+                effect.installation = cursor.getInt(17);
+                effect.installTime = Long.parseLong(cursor.getString(18));
+                effect.isNew = cursor.getInt(19);
+                effect.paramStr = cursor.getString(20);
+                effect.timeLevel = cursor.getInt(21);
+                effect.color = cursor.getString(22);
+
+                EffectType effectType = dict.getEffectTypeMap().get(effect.typeKey);
+                if (null != effectType) {
+                    effectType.effects.add(effect);
+                }
+                dict.getEffectMap().put(effect.key, effect);
+            }
+            cursor.close();
+        }
+        return true;
+    }
+
+    private boolean checkIsTypeEmpty(SQLiteDatabase db) {
+        // param check
+        if ( null == db ) {
+            GLogger.e(TAG, "Check type empty fail! Null db ");
+            return false;
+        }
+
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM effect_type", null);
+        boolean isTypeEmpty = false;
+        if (null != cursor) {
+            cursor.moveToFirst();
+            isTypeEmpty = (cursor.getInt(0) == 0);
+            cursor.close();
+        }
+
+        return isTypeEmpty;
+    }
+
+    private boolean loadEffectType(SQLiteDatabase db, EffectDict dict, String localeStr) {
+        // check param
+        if ( null == db || null == dict ) {
+            GLogger.e(TAG, "Load effect type fail! Empty db or dict");
+            return false;
+        }
+
+        // effect type
+        Cursor cursor = db.rawQuery("SELECT key,type,locale,name,tag,description,icon,opTime,isNew,color " +
+                "FROM effect_type " +
+                "WHERE locale = ?", new String[]{localeStr});
+        if (null != cursor) {
+            String iconPath = "";
+            while (cursor.moveToNext()) {
+                String type = cursor.getString(1);
+                iconPath = ResourceManagerUtils.getIconPathByType(getEffectInstalledDir(type));
+
+                EffectType effectType = new EffectType();
+                effectType.key = cursor.getString(0);
+                effectType.type = cursor.getString(1);
+                effectType.locale = cursor.getString(2);
+                effectType.name = cursor.getString(3);
+                effectType.tag = cursor.getString(4);
+                effectType.description = cursor.getString(5);
+                effectType.icon = FILE_PREFIX + iconPath + File.separator + cursor.getString(6);   // icon需要调整为datas目录下的路径
+                effectType.optime = Long.parseLong(cursor.getString(7));
+                effectType.isNew = cursor.getInt(8);
+                effectType.color = cursor.getString(9);
+                effectType.effects = new ArrayList<Effect>();
+                dict.getEffectTypeMap().put(effectType.key, effectType);
+            }
+            cursor.close();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean install(Product product, IEffectModel.Callback progressCallback) {
+        // TODO publishProgress
+
+        // 0. check param
+        if ( null == product ) {
+            GLogger.e(TAG, "Install failed, param product is null. exit install!");
+            return false;
+        }
+
+        if ( !(product instanceof EffectPackage) ) {
+            GLogger.e(TAG, "Install failed, param product is EffectPackage or CompositePackage. exit install!");
+            return false;
+        }
+
+        boolean isSDCardAvalable = ResourceManagerUtils.isSDCardAvalable(mContext);
+
+        // 0. download
+        String url = product.downloadPath;
+        if ( null == url || url.isEmpty() ) {
+            GLogger.e(TAG, "Install fail! Bad download url: " + url);
+            return false;
+        }
+
+        String zipFileName = ResourceManagerUtils.getZipFileName(url);
+        if ( null == zipFileName || zipFileName.isEmpty() ) {
+            GLogger.e(TAG, "Install fail! Bad download url: " + url);
+            return false;
+        }
+
+        if (!ResourceManagerUtils.download(mContext, url, zipFileName, isSDCardAvalable)) {
+            GLogger.e(TAG, "Download package fail: " + url + ", exit install!");
+            return false;
+        }
+
+        //1. unzip
+        File unpackProductDir;
+        try {
+            unpackProductDir = ResourceManagerUtils.unzip(mContext, zipFileName, isSDCardAvalable);
+        } catch (Exception e) {
+            GLogger.e(TAG, "unzip fail, exit install!");
+            GLogger.e(TAG, e);
+            return false;
+        }
+        if (null == unpackProductDir || !unpackProductDir.exists() || !unpackProductDir.isDirectory()) {
+            GLogger.e(TAG, "Unzip fail: " + zipFileName + ", exit install!");
+            return false;
+        }
+
+        //2. 读取meta
+        File metaJsonFile = new File(unpackProductDir.getAbsoluteFile() + File.separator + "index" + File.separator + "pack.json");
+        EffectType effectType = null;
+        try {
+            effectType = ResourceManagerUtils.parseMetaJson(product.guid, metaJsonFile);
+        } catch (Exception e) {
+            GLogger.e(TAG, "Parse meta data fail, exit install!");
+            GLogger.e(TAG, e);
+            return false;
+        }
+
+        //3. 拷贝滤镜资源到对应目录
+        //if (!copyResource(unpackProductDir, effectType.type)) {
+        if (!ResourceManagerUtils.copyResource(getEffectInstalledDir(effectType.type), unpackProductDir)) {
+            GLogger.e(TAG, "Copy effect resource fail, exit install!");
+            return false;
+        }
+
+        //4. 更新数据库
+        if (!updateDBInstall(effectType)) {
+            GLogger.e(TAG, "Update database fail, exit install!");
+            return false;
+        }
+
+        //5. 删除解压的文件，zip文件暂时不删，可能借此优化安装速度
+        FileUtils.deleteFile(unpackProductDir);
+
+        //6. 失效缓存并重建缓存
+        mEffectModel.invalidEffectDict(true);
+
+        return true;
+    }
+
+    protected boolean updateDBInstall(EffectType effectType) {
+        if ( effectType.type.equals(Effect.Type.Composite.name())) {
+            return updateDBInstallCompositePackage(effectType);
+        } else if ( effectType.type.equals(Effect.Type.CompositeLib.name()) ) {
+            return updateDBInstallCompositeLibPackage(effectType);
+        } else {
+            return updateDBInstallEffectPackage(effectType);
+        }
+    }
+
+    private boolean updateDBInstallCompositeLibPackage(EffectType effectType) {
+        // check param
+        if ( null == effectType || null == effectType.compositeEffects || effectType.compositeEffects.size() == 0) {
+            Log.e(TAG, "Effect type is null or composite effect list is empty");
+            return false;
+        }
+
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = mDBHelper.getWritableDatabase();
+            db.beginTransaction();
+
+            long lastModifyTime = System.currentTimeMillis();
+
+            // insert into composite_effect_lib table
+            for ( CompositeEffect e : effectType.compositeEffects) {
+                cursor = db.rawQuery("SELECT COUNT(*) FROM composite_effect_lib WHERE key = ?", new String[]{e.key});
+                if (null != cursor) {
+                    cursor.moveToFirst();
+                    boolean effectExist = (cursor.getInt(0) != 0);
+
+                    if (effectExist) {
+                        db.execSQL("UPDATE composite_effect_lib SET " +
+                                "name = ?, author = ?, description = ?, version = ?, " +
+                                "lastModifyTime = ?, jsonStr = ?  " +
+                                "WHERE key = ?",
+                                new Object[]{
+                                        e.name, e.author, e.description, e.version,
+                                        lastModifyTime, e.toString(),
+                                        e.key
+                                });
+                    } else {
+                        db.execSQL("INSERT INTO composite_effect_lib VALUES(null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{
+                                        e.key, e.name, e.author, e.description, e.locale,
+                                        e.version, "", e.typeKey, e.createTime, lastModifyTime,
+                                        e.toString(), 1, e.isDefault, e.color, e.tags,
+                                        0, 0, "", ""
+                                });
+                    }
+
+                    cursor.close();
+                }
+
+                lastModifyTime += 100; //为区分各个滤镜的安装时间
+            }
+
+            // insert into composite_effect_lib_meta table, without different locale records
+            for ( CompositeEffect e : effectType.compositeEffects) {
+                String[] tagArr = e.tags.split(",");
+
+                if ( null == tagArr || tagArr.length == 0 ) {
+                    GLogger.e(TAG, "No tag info in composite effect object and will continue");
+                    continue;
+                }
+
+                for ( String tag : tagArr ) {
+                    tag = tag.trim();
+
+                    db.execSQL("INSERT OR REPLACE INTO composite_effect_lib_meta VALUES (null, ?,?,?,?,?,?)",
+                            new Object[]{tag, e.key, 0, 0, "", ""});
+                }
+            }
+
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (Exception ex) {
+            GLogger.e(TAG, "Update database exception occurs");
+            GLogger.e(TAG, ex);
+            return false;
+        } finally {
+            if (null != cursor)
+                cursor.close();
+
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        return true;
+    }
+
+    /**
+     * 更新组合滤镜数据库（可能是用户新建的组合滤镜）
+     *
+     * @param effectType
+     * @return
+     */
+    private boolean updateDBInstallCompositePackage(EffectType effectType) {
+        // check param
+        if ( null == effectType || null == effectType.compositeEffects || effectType.compositeEffects.size() == 0) {
+            Log.e(TAG, "Effect type is null or composite effect list is empty");
+            return false;
+        }
+
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = mDBHelper.getWritableDatabase();
+            db.beginTransaction();
+
+            long lastModifyTime = System.currentTimeMillis();
+            // type
+            cursor = db.rawQuery("SELECT COUNT(*) FROM effect_type WHERE key = ?", new String[]{effectType.key});
+            if (null != cursor) {
+                cursor.moveToFirst();
+                boolean typeExist = (cursor.getInt(0) != 0);
+
+                if (!typeExist) {
+                    for (Locale locale : LocaleSupport.sSupportLocales) {
+                        EffectType et = effectType.getLocaleObject(locale);
+                        db.execSQL("INSERT INTO effect_type VALUES(null,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{et.key, et.type, et.locale, et.name, et.tag, et.description, et.icon, lastModifyTime, 1, et.color,
+                                        0, 0, "", ""});
+                    }
+                }
+                cursor.close();
+            }
+
+            // effects
+            for ( CompositeEffect e : effectType.compositeEffects) {
+                cursor = db.rawQuery("SELECT COUNT(*) FROM composite_effect WHERE key = ?", new String[]{e.key});
+                if (null != cursor) {
+                    cursor.moveToFirst();
+                    boolean effectExist = (cursor.getInt(0) != 0);
+
+                    // adjust icon path (e.g. resave)
+                    String icon = e.icon;
+                    if ( e.icon.startsWith(FILE_PREFIX) ) {
+                        String iconPath = e.icon.substring(FILE_PREFIX.length());
+                        icon = new File(iconPath).getName();
+                    }
+
+                    if (effectExist) {
+                        db.execSQL("UPDATE composite_effect SET " +
+                                "name = ?, author = ?, description = ?, version = ?, " +
+                                "icon = ?, lastModifyTime = ?, color = ?, jsonStr = ?  " +
+                                "WHERE key = ?",
+                                new Object[]{
+                                        e.name, e.author, e.description, e.version,
+                                        icon, lastModifyTime, e.color, e.toString(),
+                                        e.key
+                                });
+                    } else {
+                        for (Locale locale : LocaleSupport.sSupportLocales) {
+                            CompositeEffect ce = e.getLocaleObject(locale);
+
+                            db.execSQL("INSERT INTO composite_effect values(null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                    new Object[]{
+                                            ce.key, ce.name, ce.author, ce.description, ce.locale,
+                                            ce.version, icon, ce.typeKey, ce.createTime, lastModifyTime,
+                                            ce.toString(), 1, ce.isDefault, ce.color,
+                                            0, 0, "", ""
+                                    });
+                        }
+                    }
+                    cursor.close();
+                }
+
+                lastModifyTime += 100; //为区分各个滤镜的安装时间
+            }
+
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        }catch (Exception ex) {
+            GLogger.e(TAG, "Update database exception occurs");
+            GLogger.e(TAG, ex);
+            return false;
+        } finally {
+            if (null != cursor)
+                cursor.close();
+
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        return true;
+    }
+
+    private boolean updateDBInstallEffectPackage(EffectType effectType) {
+        // param check
+        if (null == effectType || null == effectType.effects || 0 == effectType.effects.size()) {
+            GLogger.e(TAG, "Param error, update database fail!");
+            return false;
+        }
+
+        GLogger.d(TAG, "Update database");
+
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        final long installTime = System.currentTimeMillis(); // 同一个package的安装时间认为是相同的
+        try {
+            db = mDBHelper.getWritableDatabase();
+            db.beginTransaction();
+
+            cursor = db.rawQuery("SELECT COUNT(*) FROM effect_type WHERE key = ?", new String[]{effectType.key});
+            if (null != cursor) {
+                cursor.moveToFirst();
+                boolean typeExist = (cursor.getInt(0) != 0);
+
+                if (!typeExist) {
+                    for (Locale locale : LocaleSupport.sSupportLocales) {
+                        EffectType et = effectType.getLocaleObject(locale);
+                        db.execSQL("INSERT INTO effect_type values(null,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{et.key, et.type, et.locale, et.name, et.tag, et.description, et.icon, installTime, 1, et.color,
+                                        0, 0, "", ""});
+                    }
+                }
+
+                cursor.close();
+            }
+
+            cursor = db.rawQuery("SELECT isNew FROM effect_type WHERE key = ?", new String[]{effectType.key});
+            boolean typeIsNew = false;
+            if (null != cursor) {
+                if (cursor.moveToFirst()) {
+                    if (cursor.getInt(0) == 1)
+                        typeIsNew = true;
+                }
+
+                cursor.close();
+            }
+
+            for (Effect effect : effectType.effects) {
+                cursor = db.rawQuery("SELECT COUNT(*) FROM effect WHERE key = ?", new String[]{effect.key});
+                if (null != cursor) {
+                    cursor.moveToFirst();
+                    boolean effectExist = (cursor.getInt(0) != 0);
+                    int isNew = typeIsNew ? 0 : 1;
+                    if (effectExist) {
+                        db.execSQL("UPDATE effect SET installation=?, installTime=?, isNew=? WHERE key = ?", new Object[]{1, installTime, isNew, effect.key});
+                    } else {
+
+                        for (Locale locale : LocaleSupport.sSupportLocales) {
+                            Effect e = effect.getLocaleObject(locale);
+                            db.execSQL("INSERT INTO effect values(null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                    new Object[]{e.key, e.type, e.locale, e.name, e.description, e.version, e.requirementStr,
+                                            e.icon, e.realRender, e.preCmdStr, e.gpuCmdStr, e.cpuCmd, e.textureStr,
+                                            e.typeKey, e.idxInType, e.packKey, e.idxInPack,
+                                            1, installTime, isNew, e.paramStr, e.timeLevel, e.color,
+                                            0, 0, "", ""});
+                        }
+                    }
+                    cursor.close();
+                }
+            }
+
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (Exception e) {
+            GLogger.e(TAG, "Update database exception occurs");
+            GLogger.e(TAG, e);
+            return false;
+        } finally {
+            if (null != cursor)
+                cursor.close();
+
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean uninstall(EffectPackage effectPackage, IEffectModel.Callback progressCallback) {
+        // param check
+        if (null == effectPackage) {
+            GLogger.e(TAG, "Param error, update database fail!");
+            return false;
+        }
+
+        effectPackage.effects = EffectModel.getInstance().getEffectsByPackKey(effectPackage.guid);
+        if (null == effectPackage.effects || 0 == effectPackage.effects.size()) {
+            GLogger.e(TAG, "Param error, update database fail!");
+            return false;
+        }
+
+        GLogger.d(TAG, "Update database");
+
+        final String typeKey = effectPackage.effects.get(0).typeKey;
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        try {
+            db = mDBHelper.getWritableDatabase();
+            db.beginTransaction();
+
+            db.execSQL("UPDATE effect SET installation = ? WHERE packKey = ?", new Object[]{0, effectPackage.guid});
+
+            cursor = db.rawQuery("SELECT COUNT(*) FROM effect WHERE typeKey = ? and installation = ?", new String[]{typeKey, "1"});
+            if (null != cursor) {
+                cursor.moveToFirst();
+                boolean hasEffectInstalled = (cursor.getInt(0) != 0);
+
+                // update effect_type table：如果该类型下无安装特效，则删除该记录
+                if (!hasEffectInstalled) {
+                    db.execSQL("DELETE FROM effect_type WHERE key = ?", new String[]{typeKey});
+                }
+                cursor.close();
+            }
+
+            db.setTransactionSuccessful();
+            db.endTransaction();
+        } catch (Exception e) {
+            GLogger.e(TAG, "Update database exception occurs");
+            GLogger.e(TAG, e);
+            return false;
+        } finally {
+            if (null != cursor)
+                cursor.close();
+
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        // 失效缓存并重建缓存
+        mEffectModel.invalidEffectDict(true);
+
+        return true;
+    }
+
+    @Override
+    public boolean save(CompositeEffect compositeEffect, IEffectModel.Callback callback) {
+        // param check
+        if ( null == compositeEffect ) {
+            GLogger.e(TAG, "Param error, update database fail!");
+
+            if ( null != callback ) {
+                callback.onPostExecute(false);
+            }
+
+            return false;
+        }
+
+        String toIconPath = null;
+        try {
+            if ( null != compositeEffect.getmIconBitmap() ) {
+                String toIconDir = getEffectInstalledDir(Effect.Type.Composite.name()).getAbsolutePath() + File.separator + "icon" + File.separator;
+                String iconName = CompositeEffect.COMPOSITE_ICON_PREFIX + compositeEffect.key + CompositeEffect.COMPOSITE_ICON_POSTFIX;
+                toIconPath = toIconDir + iconName;
+                FileUtils.checkFolder(toIconDir);
+                FileUtils.saveBitmap(toIconPath, compositeEffect.getmIconBitmap(), 90);
+
+                compositeEffect.icon = iconName;
+            }
+        } catch (IOException e) {
+            // 拷贝icon资源失败不影响数据库更新
+            GLogger.e(TAG, "copy composite icon fail");
+
+            if ( null != callback ) {
+                callback.onPostExecute(false);
+            }
+
+            return false;
+        }
+
+        // insert or update composite effect
+        // TODO 暂时放在默认的特效类型中
+        EffectType effectType = EffectType.getEmptyDefaultCompositeType();
+        // 修改isDefault字段，表明用户创建
+        compositeEffect.isDefault = 2;
+        effectType.addCompositeEffect(compositeEffect);
+        updateDBInstallCompositePackage(effectType);
+
+        // 失效缓存并重建缓存
+        mEffectModel.invalidEffectDict(true);
+
+        if ( null != callback ) {
+            callback.onPostExecute(toIconPath);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean remove(CompositeEffect compositeEffect) {
+        // param check
+        if ( null == compositeEffect ) {
+            GLogger.e(TAG, "Param error, update database fail!");
+            return false;
+        }
+
+        // update db
+        SQLiteDatabase db = null;
+        try {
+            db = mDBHelper.getWritableDatabase();
+            db.beginTransaction();
+            db.execSQL("UPDATE composite_effect SET installation = ?, lastModifyTime = ? WHERE key = ?",
+                    new Object[]{0, System.currentTimeMillis(), compositeEffect.key});
+            db.setTransactionSuccessful();
+            db.endTransaction();
+
+        }catch (Exception ex) {
+            GLogger.e(TAG, "Update database exception occurs");
+            GLogger.e(TAG, ex);
+            return false;
+        } finally {
+            if (null != db && db.isOpen())
+                db.close();
+        }
+
+        // TODO need remove icon?
+
+        // 失效缓存并重建缓存
+        mEffectModel.invalidEffectDict(true);
+
+        return true;
+    }
+}

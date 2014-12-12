@@ -1,0 +1,43 @@
+package com.pinguo.edit.sdk.filter.square;
+
+import android.app.Activity;
+import android.support.v4.app.Fragment;
+
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+/**
+ * Created by zhongzheng on 14-11-14.
+ */
+public class BaseTitleFragment extends Fragment implements TitleView.OnTitleViewClickListener {
+    protected OnFrgmentChangeListener mFragmentChange;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof OnFrgmentChangeListener) {
+            mFragmentChange = (OnFrgmentChangeListener) activity;
+        }
+    }
+
+    @Override
+    public void onBackClick() {
+        if (mFragmentChange != null) {
+            mFragmentChange.onCurrentFragmentFinish();
+        }
+    }
+
+    @Override
+    public void onRightBtnClick() {
+        if (mFragmentChange != null) {
+//            mFragmentChange.onRightBtnClick();
+        }
+    }
+
+    public interface OnFrgmentChangeListener {
+        public void onCurrentFragmentFinish();
+
+        public void changeFragment(Fragment fragment);
+
+        public void onActivityFinish();
+    }
+}

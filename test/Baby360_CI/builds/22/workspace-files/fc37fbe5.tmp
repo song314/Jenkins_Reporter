@@ -1,0 +1,286 @@
+package com.pinguo.edit.sdk.option.fragment;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+import com.pinguo.edit.sdk.filter.square.BaseTitleFragment;
+import com.pinguo.edit.sdk.login.view.Dialog.LogicDialog;
+import com.pinguo.edit.sdk.login.view.TitleView;
+import com.pinguo.edit.sdk.option.OptionsSavePathAdapter;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Locale;
+
+public class OptionsSavePath extends BaseTitleFragment implements
+        OnClickListener {
+    private TextView tvSavePath;
+    private int select_which;
+    public static final int TAG_RESULT = R.layout.options_save_path;
+
+    private static final String SD_CARD_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+    static FileFilter mFileFilter = new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+            boolean isDir = pathname.isDirectory();
+            String name = pathname.getName();
+            boolean notHide = !name.startsWith(".");
+            boolean notSystem = !name.equals("lost+found");
+            return isDir && notHide && notSystem;
+        }
+    };
+
+    private File mRootFile;
+
+    private FrameLayout laySavePathRoot;
+    private ListView mCurrListView;
+    private Button btnSavePathSelect;
+
+    private boolean mIsRoot;
+
+    public static OptionsSavePath newInstance(int which, String dir) {
+        OptionsSavePath fragment = new OptionsSavePath();
+        Bundle b = new Bundle();
+        b.putInt("select_which", which);
+        b.putString("select_root", dir);
+        fragment.setArguments(b);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initData();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        com.umeng.analytics.MobclickAgent.onPause(getActivity());
+    }
+
+    private boolean isRootDir(File dir) {
+        return dir != null && dir.getAbsolutePath().equalsIgnoreCase(mRootFile.getAbsolutePath());
+    }
+
+    private void initListener() {
+        btnSavePathSelect.setOnClickListener(this);
+
+    }
+
+    private void initData() {
+        Bundle b = getArguments();
+        if (b != null) {
+            String rootPath = b.getString("select_root");
+            select_which = b.getInt("select_which", 1);
+            mRootFile = new File(rootPath);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.options_save_path, container, false);
+        View rootView = v.findViewById(R.id.advancePicturePathTitle);
+//        setRootViewBackground(rootView);
+
+        TitleView titleView = (TitleView) v.findViewById(R.id.advancePicturePathTitle);
+        titleView.setTiTleText("存储路径");
+        titleView.setOnTitleViewClickListener(this);
+
+        tvSavePath = (TextView) v.findViewById(R.id.tv_options_save_path);
+        laySavePathRoot = (FrameLayout) v.findViewById(R.id.lay_save_path_list_body);
+        btnSavePathSelect = (Button) v.findViewById(R.id.btn_save_path_select);
+        initListener();
+        updateView(mRootFile);
+        return v;
+    }
+
+    private void updateView(File dir) {
+
+        laySavePathRoot.removeAllViews();
+        final boolean isRoot = mIsRoot = isRootDir(dir);
+        laySavePathRoot.addView(mCurrListView = obtainListView(getActivity(), dir, mIsRoot));
+        if (isRoot) {
+            tvSavePath.setText(dir.getAbsolutePath());
+        } else {
+            File parent = (File) mCurrListView.getTag();
+            tvSavePath.setText(parent.getAbsolutePath().replaceFirst(SD_CARD_PATH, ""));
+        }
+        btnSavePathSelect.setVisibility(isRoot ? View.GONE : View.VISIBLE);
+    }
+
+    private String getPath() {
+        final File parent = (File) mCurrListView.getTag();
+        String selectedPath = parent.getAbsolutePath();
+        if (!selectedPath.endsWith(File.separator)) {
+            selectedPath = selectedPath + File.separator;
+        }
+        return selectedPath;
+    }
+
+    private void usePath() {
+        final String selectedPath = getPath();
+        Bundle bundle = new Bundle();
+        CameraBusinessSettingModel.instance().setPictureSavePath(selectedPath);
+        bundle.putString("pic_save_path", selectedPath);
+        bundle.putInt("select_which", select_which);
+        // 返回
+        mFragmentChange.onCurrentFragmentFinish();
+    }
+
+    private LogicDialog mLogicDialog;
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_save_path_select:
+                if (mLogicDialog != null && mLogicDialog.isShowing()) {
+                    return;
+                }
+                mLogicDialog = new LogicDialog(getActivity());
+                mLogicDialog.setCancelable(false);
+                mLogicDialog.setCanceledOnTouchOutside(false);
+                mLogicDialog.setMessage(R.string.pic_save_dlg_notify_use_path);
+                mLogicDialog.setExtraMessage(getPath());
+                mLogicDialog.setPositiveBtn(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mLogicDialog.dismiss();
+                                usePath();
+                            }
+                        });
+                mLogicDialog.show();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+//    @Override
+//    public boolean onKeyDown(int keyCode, KeyEvent event) {
+//
+//        if (keyCode == KeyEvent.KEYCODE_BACK && !mIsRoot) {
+//            mCurrListView.performItemClick(null, 0, 0);
+//            return true;
+//        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+//            return true;
+//        }
+//
+//        return super.onKeyDown(keyCode, event);
+//    }
+
+    public static final String NAME = "name";
+    public static final String PATH = "path";
+
+    private ListView obtainListView(Context context, File dir, boolean isRoot) {
+        File[] roots = dir.listFiles(mFileFilter);
+        ArrayList<HashMap<String, Object>> data = new ArrayList<HashMap<String, Object>>();
+        if (!isRoot) {
+            HashMap<String, Object> first = new HashMap<String, Object>();
+            first.put(NAME, ".......");
+            first.put(PATH, null);
+            data.add(first);
+        }
+        for (int i = 0;
+             roots != null && i < roots.length;
+             i++) {
+            File file = roots[i];
+            HashMap<String, Object> map = new HashMap<String, Object>();
+            map.put(NAME, file.getName());
+            map.put(PATH, file);
+            data.add(map);
+        }
+        Collections.sort(data, mFileComparator);
+
+        ListView listView = new ListView(context);
+
+        OptionsSavePathAdapter adapter = new OptionsSavePathAdapter(context, data);
+
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(mOnItemClick);
+//        listView.setDivider(getResources().getDrawable(R.drawable.bs_divider_dark));
+//        listView.setDividerHeight(2);
+        listView.setBackgroundResource(Color.TRANSPARENT);
+        listView.setCacheColorHint(Color.TRANSPARENT);
+        listView.setTag(dir);
+        return listView;
+    }
+
+    static Comparator<HashMap<String, Object>> mFileComparator = new Comparator<HashMap<String, Object>>() {
+        @Override
+        public int compare(HashMap<String, Object> object1, HashMap<String, Object> object2) {
+            final String key = NAME;
+            return compare(object1.get(key).toString(), object2.get(key).toString());
+        }
+
+        public int compare(String str1, String str2) {
+            char c1 = str1.toLowerCase(Locale.ENGLISH).toCharArray()[0];
+            char c2 = str2.toLowerCase(Locale.ENGLISH).toCharArray()[0];
+            if (c2 < c1) {
+                return 1;
+            } else if (c2 == c1) {
+                char c3 = str1.toCharArray()[0];
+                char c4 = str2.toCharArray()[0];
+                if (c4 < c3) {
+                    return -1;
+                } else if (c4 == c3) {
+                    if (str1.length() == 1 || str2.length() == 1) {
+                        if (str1.length() < str2.length()) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    } else {
+                        return compare(str1.substring(1), str2.substring(1));
+                    }
+                } else {
+                    return 1;
+                }
+            } else {
+                return -1;
+            }
+        }
+    };
+
+    OnItemClickListener mOnItemClick = new OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            HashMap<String, Object> map = (HashMap<String, Object>) parent.getItemAtPosition(position);
+            File dir = (File) map.get(PATH);
+            if (dir == null) {
+                File parentDir = (File) parent.getTag();
+                parentDir = parentDir.getParentFile();
+                updateView(parentDir);
+            } else {
+                updateView(dir);
+            }
+        }
+    };
+}

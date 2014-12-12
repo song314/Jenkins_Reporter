@@ -1,0 +1,43 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.Product;
+
+import java.io.File;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Created by huowaa on 14-5-26.
+ * 特效资源管理器，处理实际的数据存取
+ */
+public interface IEffectResourceManager {
+
+    /* 下载的zip文件的保存时间，时间窗口内进行安装和试用安装不必从网上下载 */
+    //final static long ZIP_FILE_RESERVE_TIME_MS = 12 * 60 * 60 * 1000;
+
+    final static long ZIP_FILE_RESERVE_TIME_MS = 1000;
+    final static String FILE_PREFIX = "file://";
+
+
+    void init();
+
+    void destroy();
+
+    EffectDict loadEffectDict(Locale locale);
+
+    boolean install(Product product, IEffectModel.Callback progressCallback);
+
+    boolean uninstall(EffectPackage effectPackage, IEffectModel.Callback progressCallback);
+
+    boolean save(CompositeEffect compositeEffect, IEffectModel.Callback callback);
+
+    boolean remove(CompositeEffect compositeEffect);
+
+    public File getEffectInstalledDir(String type);
+
+    List<CompositeEffect> getCompositeEffectsByTags(String[] tags);
+
+    List<CompositeEffect> getCompositeEffectsByRandom(int count);
+}

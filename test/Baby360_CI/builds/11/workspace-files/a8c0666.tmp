@@ -1,0 +1,254 @@
+package us.pinguo.android.effect.group.sdk;
+
+import android.app.Activity;
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.AssetsUtils;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.Camera360Lib.utils.UnzipUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.CameraActivity;
+import com.pinguo.edit.sdk.camera.setting.PGCameraPreferences;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+import com.pinguo.edit.sdk.filter.square.FilterSquareActivity;
+import com.pinguo.edit.sdk.gallery.AlbumAppImpl;
+import com.pinguo.edit.sdk.gallery.GalleryActivity;
+import com.pinguo.edit.sdk.gallery.data.DataManager;
+import com.pinguo.edit.sdk.gallery.data.ImageCacheService;
+import com.pinguo.edit.sdk.gallery.util.ThreadPool;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import java.io.File;
+import java.io.IOException;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+
+/**
+ * Created by pinguo on 14-6-18.
+ */
+public class PGCompositeSDKApi {
+    private static final String TAG = PGCompositeSDKApi.class.getSimpleName();
+
+    private final static String PG_COMPOSITE_SDK_API_INSTALLS = "pg_composite_sdk_installs";
+
+    public final static String PG_EDIT_SDK_DATA_INIT = "PG_EDIT_SDK_DATA_INIT";
+
+    public final static String PG_EDIT_SDK_DATA_INIT_STAR = "PG_EDIT_SDK_DATA_INIT_STAR";
+
+    public final static String PG_EDIT_SDK_SHADER_CHECKED = "PG_EDIT_SDK_SHADER_CHECKED";
+
+    public final static String PG_EDIT_SDK_SHADER_CHECK_RESULT = "PG_EDIT_SDK_SHADER_CHECK_RESULT";
+
+    public static boolean is_save_org;
+
+    private static Application sAppInstance = null;
+    private static AlbumAppImpl mAlbumAppImpl;
+
+    public static void initSDK(Application application) {
+
+        sAppInstance = application;
+        PGCameraPreferences.initInApp();
+        CameraModuleUtil.init(application);
+
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(application)
+                .threadPriority(Thread.NORM_PRIORITY - 2)
+                .denyCacheImageMultipleSizesInMemory()
+                .discCacheFileNameGenerator(new Md5FileNameGenerator())
+                .tasksProcessingOrder(QueueProcessingType.LIFO)
+                .writeDebugLogs()
+                .build();
+
+        ImageLoader.getInstance().init(config);
+
+        if (null == mAlbumAppImpl) {
+            mAlbumAppImpl = new AlbumAppImpl();
+            mAlbumAppImpl.init(application);
+        }
+    }
+
+    public static Application getAppContext() {
+        return sAppInstance;
+    }
+
+    public static synchronized DataManager getDataManager() {
+        return mAlbumAppImpl.getDataManager();
+    }
+
+    public static ImageCacheService getImageCacheService() {
+        return mAlbumAppImpl.getImageCacheService();
+    }
+
+    public static synchronized ThreadPool getThreadPool() {
+        return mAlbumAppImpl.getThreadPool();
+    }
+
+    public static void startCamera(final Activity activity, boolean isSaveOrg) {
+        internalStart(activity, CameraActivity.class, isSaveOrg);
+    }
+
+    public static void startGallery(Activity activity) {
+        internalStart(activity, GalleryActivity.class, false);
+    }
+
+    public static void startFilterSquare(Activity activity) {
+        internalStart(activity, FilterSquareActivity.class, false);
+    }
+
+    private static void internalStart(final Activity activity, final Class clazz, boolean isSaveOrg) {
+        is_save_org = isSaveOrg;
+        Intent intent = new Intent(activity, clazz);
+        activity.startActivity(intent);
+    }
+
+    public static void initData(Context context, InitDataCallback callback) {
+        InitDataThread thread = new InitDataThread(context);
+        thread.setInitCallback(callback);
+        thread.start();
+    }
+
+    public static void addEffects(Context context) {
+
+        SharedPreferences sp = context.getSharedPreferences(PG_COMPOSITE_SDK_API_INSTALLS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+
+        String[] addEffects = context.getResources().getStringArray(
+                ResourceHelper.getArray(
+                        context, "composite_sdk_add_effects"));
+        EffectModel mEffectModel = EffectModel.getInstance().init(context);
+        for (int i = 0; i < addEffects.length; i++) {
+            EffectPackage p = new EffectPackage();
+            p.downloadPath = addEffects[i];
+
+            boolean isInstalls = sp.getBoolean(p.downloadPath, false);
+            if (!isInstalls) {
+                mEffectModel.install(p, null);
+                editor.putBoolean(p.downloadPath, true);
+            }
+        }
+        editor.commit();
+    }
+
+    /**
+     * 拷贝初始内置的特效数据：db，icon，texture
+     *
+     * @param context
+     */
+    public static void copyInitData(Context context) {
+        // TODO 增加删除zip的判断！
+
+        SharedPreferences sp = context.getSharedPreferences(PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+        boolean initialized = sp.getBoolean(PG_EDIT_SDK_DATA_INIT.toLowerCase(), false);
+
+        if (!initialized) {
+            GLogger.i(TAG, "Do copy init data: db, icon, texture...");
+            doCopyData(context);
+
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putBoolean(PG_EDIT_SDK_DATA_INIT.toLowerCase(), true);
+            editor.commit();
+        }
+    }
+
+
+    private static void doCopyData(Context context) {
+        // check dir
+        String databaseDir = context.getDatabasePath("effect.db").getParent();
+        FileUtils.checkFolder(databaseDir);
+        FileUtils.checkFolder(context.getFilesDir().getAbsolutePath());
+
+        // copy db
+        FileUtils.copyToFile(context.getResources().openRawResource(R.raw.effect), context.getDatabasePath("effect.db"));
+
+        File effect = new File(context.getFilesDir(), "effect");
+        // copy filter
+        File filter = new File(effect, "filter");
+        copyAndUnzip(context, filter);
+
+        // copy lighting
+        File lighting = new File(effect, "lighting");
+        copyAndUnzip(context, lighting);
+
+        // copy frame
+        File frame = new File(effect, "frame");
+        copyAndUnzip(context, frame);
+
+        // copy ce
+        File composite = new File(effect, "composite");
+        copyAndUnzip(context, composite);
+    }
+
+    private static void copyAndUnzip(Context context, File subEffect) {
+        try {
+            String type = subEffect.getName().toLowerCase();
+
+            File iconZip = new File(subEffect, "icon" + File.separator + "icon.zip");
+            AssetsUtils.copyAssetsFileTo(context,
+                    "init" + File.separator + type + File.separator + "icon" + File.separator + "icon.zip", iconZip);
+            if (iconZip.exists()) {
+                UnzipUtils.unzip(iconZip.getAbsolutePath(), iconZip.getParentFile().getAbsolutePath() + File.separator);
+                FileUtils.deleteFile(iconZip);
+            }
+
+            File textureZip = new File(subEffect, "texture" + File.separator + "texture.zip");
+            AssetsUtils.copyAssetsFileTo(context,
+                    "init" + File.separator + type + File.separator + "texture" + File.separator + "texture.zip", textureZip);
+            if (textureZip.exists()) {
+                UnzipUtils.unzip(textureZip.getAbsolutePath(), textureZip.getParentFile().getAbsolutePath() + File.separator);
+                FileUtils.deleteFile(textureZip);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class InitDataThread extends Thread {
+
+        private Context mContext;
+        private InitDataCallback mCallback;
+
+        public InitDataThread(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        public void run() {
+            if (null != mCallback) {
+                mCallback.onInitStart();
+            }
+
+//            addEffects(mContext);
+            copyInitData(mContext);
+
+            try {
+                String filePath = mContext.getFilesDir().getAbsolutePath() + File.separator + "svm_model.dat.model";
+                File file = new File(filePath);
+                AssetsUtils.copyAssetsFileTo(mContext, "svm_model.dat.model", file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (null != mCallback) {
+                mCallback.onInitFinish();
+            }
+        }
+
+        public void setInitCallback(InitDataCallback callback) {
+            mCallback = callback;
+        }
+    }
+
+    public static interface InitDataCallback {
+        void onInitStart();
+
+        void onInitFinish();
+    }
+}

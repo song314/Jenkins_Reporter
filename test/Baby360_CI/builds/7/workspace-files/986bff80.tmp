@@ -1,0 +1,24 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.view.View;
+import com.pinguo.ui.widget.MenuItemViewBigWithPadding;
+
+/**
+ * Created by taoli on 14-7-16.
+ */
+public class EffectTypeCompositeItemView extends MenuItemViewBigWithPadding {
+    public EffectTypeCompositeItemView(Context context) {
+        super(context);
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        showScrollView();
+
+        if(mOnCompositeClick != null){
+            mOnCompositeClick.onClick(v);
+        }
+    }
+}

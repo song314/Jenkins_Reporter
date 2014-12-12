@@ -1,0 +1,1050 @@
+package com.pinguo.mix;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.internal.NativeProtocol;
+import com.facebook.widget.FacebookDialog;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.Camera360Lib.utils.SystemUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.util.Exif;
+import com.pinguo.edit.sdk.camera.util.PGExifInfo;
+import com.pinguo.edit.sdk.edit.CompositeDataReceiver;
+import com.pinguo.edit.sdk.utils.BitmapUtils;
+import com.pinguo.edit.sdk.utils.EncryptUtils;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+import com.pinguo.edit.sdk.wxapi.WXDataReceiver;
+import com.pinguo.mix.api.ApiCallback;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.share.ShareApi;
+import com.pinguo.mix.api.upload.UploadApi;
+import com.pinguo.ui.widget.GradientSeekBar;
+import com.pinguo.ui.widget.ProgressDialog;
+import com.tencent.mm.sdk.modelbase.BaseResp;
+import com.tencent.mm.sdk.modelmsg.SendAuth;
+import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
+import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
+import com.tencent.mm.sdk.modelmsg.WXWebpageObject;
+import com.tencent.mm.sdk.openapi.IWXAPI;
+import com.tencent.mm.sdk.openapi.WXAPIFactory;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+
+/**
+ * Created by taoli on 14-10-13.
+ */
+public class MixShareFilterActivity extends Activity {
+
+    private static final String TAG = MixShareFilterActivity.class.getSimpleName();
+
+    public static final String EXTRA_PHOTO_PATH = "photo_path";
+    public static final String EXTRA_ORG_PHOTO_PATH = "org_photo_path";
+    public static final String EXTRA_COMPOSITE_EFFECT = "composite_effect";
+    public static final String EXTRA_COMPOSITE_EFFECT_NAME = "composite_effect_name";
+
+    private String mPath;
+    private String mOrgPath;
+    private String mCompositeEffectInfo;
+    private int mCurrentWechatShareScene;
+    private List<String> mPhotoPaths;
+
+    private ImageLoaderView mPreviewImage;
+
+    private ListView mParamListView;
+
+    private static final String WECHAT_APP_ID = "wx8f8c0427ab9ddd4f";
+    private IWXAPI mWechatAPI;
+
+    private ProgressDialog mProgressDialog;
+    private String mCompositeEffectName;
+    private int mUploadCount = 0;
+    private boolean mIsShowingOrginal = false;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.layout_mix_share_filter);
+
+        mProgressDialog = (ProgressDialog) findViewById(R.id.progress_layout);
+
+        mPath = getIntent().getExtras().getString(EXTRA_PHOTO_PATH);
+        mOrgPath = getIntent().getExtras().getString(EXTRA_ORG_PHOTO_PATH);
+        mCompositeEffectInfo = getIntent().getExtras().getString(EXTRA_COMPOSITE_EFFECT);
+        mCompositeEffectName = getIntent().getExtras().getString(EXTRA_COMPOSITE_EFFECT_NAME);
+
+        TextView filterNameTv = (TextView) findViewById(R.id.filter_name_tv);
+        filterNameTv.setText(mCompositeEffectName);
+
+        mParamListView = (ListView) findViewById(R.id.param_list);
+        if (null != mCompositeEffectInfo) {
+            List<ParamInfoBean> list = parseEffectInfo(mCompositeEffectInfo);
+            ParamListAdapter adapter = new ParamListAdapter(list);
+            mParamListView.setAdapter(adapter);
+        }
+
+        mPhotoPaths = new ArrayList<String>();
+
+        mWechatAPI = WXAPIFactory.createWXAPI(this, WECHAT_APP_ID, true);
+        mWechatAPI.registerApp(WECHAT_APP_ID);
+
+        mWXDataReceiver.registerCallback(this,
+                WXDataReceiver.EVENT_GET_USER_INFO | WXDataReceiver.EVENT_SHARE_PICTURE,
+                mWXDataObserver);
+
+        new InitPictureTask().execute(mPath, mOrgPath);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        StatisticManager.destroy(this);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+
+        if (mIsShowingOrginal) {
+            if (null != mPreviewImage) {
+                return mPreviewImage.dispatchTouchEvent(ev);
+            }
+        }
+
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (0 == mUploadCount) {
+            new AsyncTask<String, String, String>() {
+
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    mProgressDialog.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                protected String doInBackground(String... strings) {
+                    String effectPath = strings[0];
+                    String orgPath = strings[1];
+                    if (null != orgPath && orgPath.contains("tmp_org_pic")) {
+                        GLogger.i(TAG, "Delete temp org file at activity finish:" + orgPath);
+                        FileUtils.deleteFile(orgPath);
+                    }
+
+                    if (null != effectPath && effectPath.contains("tmp_eft_pic")) {
+                        GLogger.i(TAG, "Delete temp effect file at activity finish:" + effectPath);
+                        FileUtils.deleteFile(effectPath);
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(String s) {
+                    super.onPostExecute(s);
+                    mProgressDialog.setVisibility(View.GONE);
+                    MixShareFilterActivity.super.onBackPressed();
+                }
+            }.execute(mPath, mOrgPath);
+        }
+    }
+
+    private class InitPictureTask extends AsyncTask<String, String, String[]> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressDialog.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected String[] doInBackground(String... strings) {
+            String effectPath = strings[0];
+            String orgPath = strings[1];
+
+            Bitmap orgBitmap = BitmapUtils.scalePicture(orgPath, 640, true);
+            String tempOrgPath = getFilesDir().getAbsolutePath() + "/"
+                    + "tmp_org_pic_" + System.currentTimeMillis();
+            try {
+                FileUtils.saveBitmap(tempOrgPath, orgBitmap, 70);
+                orgPath = tempOrgPath;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            Bitmap effectBitmap = BitmapUtils.scalePicture(effectPath, 640, true);
+            String tempEftWithoutExifPath = getFilesDir().getAbsolutePath() + "/"
+                    + "tmp_eft_pic_with_out_exif_" + System.currentTimeMillis();
+            String tempEftPath = getFilesDir().getAbsolutePath() + "/"
+                    + "tmp_eft_pic_" + System.currentTimeMillis();
+            try {
+                FileUtils.saveBitmap(tempEftWithoutExifPath, effectBitmap, 70);
+                int orientation = Exif.getPhotoOrientation(effectPath);
+                byte[] exif = Exif.getExifData(effectPath);
+                PGExifInfo pgExifInfo = new PGExifInfo(exif);
+                pgExifInfo.setOrientation(orientation);
+                try {
+                    Exif.exifToJpegFile(tempEftWithoutExifPath,
+                            tempEftPath, pgExifInfo.getExifData());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    try {
+                        FileUtils.copySingleFile(tempEftWithoutExifPath,
+                                tempEftPath);
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+                effectPath = tempEftPath;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            String[] paths = new String[2];
+            paths[0] = effectPath;
+            paths[1] = orgPath;
+            return paths;
+        }
+
+        @Override
+        protected void onPostExecute(String[] paths) {
+            super.onPostExecute(paths);
+
+            if (null != paths[1]) {
+
+                ImageLoaderView previewOrgImage = (ImageLoaderView) findViewById(R.id.preview_org_img);
+                previewOrgImage.setImageUrl("file://" + paths[1]);
+
+                mOrgPath = paths[1];
+                GLogger.i(TAG, "Get scaled org picture:" + paths[1]);
+            }
+
+            if (null != paths[0]) {
+                DisplayMetrics dm = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+                mPreviewImage = (ImageLoaderView) findViewById(R.id.preview_img);
+                mPreviewImage.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                            mIsShowingOrginal = true;
+                            mPreviewImage.setVisibility(View.INVISIBLE);
+                        }
+
+                        if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                            mIsShowingOrginal = false;
+                            mPreviewImage.setVisibility(View.VISIBLE);
+                        }
+                        return true;
+                    }
+                });
+
+                mPreviewImage.setImageLoadingListener(new ImageLoadingListener() {
+
+                    @Override
+                    public void onLoadingStarted(String s, View view) {
+
+                    }
+
+                    @Override
+                    public void onLoadingFailed(String s, View view, FailReason failReason) {
+
+                    }
+
+                    @Override
+                    public void onLoadingComplete(String s, View view, Bitmap bitmap) {
+                        AlphaAnimation animation = new AlphaAnimation(0, 1.0f);
+                        animation.setDuration(1000);
+                        view.startAnimation(animation);
+                    }
+
+                    @Override
+                    public void onLoadingCancelled(String s, View view) {
+
+                    }
+                });
+                mPreviewImage.setImageUrl("file://" + paths[0]);
+
+                mPath = paths[0];
+                GLogger.i(TAG, "Get scaled effect picture:" + paths[0]);
+            }
+
+            mPhotoPaths.clear();
+            mPhotoPaths.add(mPath);
+            mPhotoPaths.add(mOrgPath);
+            mProgressDialog.setVisibility(View.GONE);
+        }
+    }
+
+    ;
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mWXDataReceiver.unregisterCallback(this);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Session.DEFAULT_AUTHORIZE_ACTIVITY_CODE) {
+            Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+        }
+
+        if (requestCode == 1001 && null != data) {
+            Bundle bundle = data.getExtras();
+            if (null != bundle) {
+                Bundle results = bundle.getBundle(NativeProtocol.EXTRA_PROTOCOL_METHOD_RESULTS);
+                if (null != results) {
+                    String userAction = FacebookDialog.getNativeDialogCompletionGesture(results);
+                    if (userAction.equals("cancel")) {
+                        return;
+                    }
+                }
+            }
+
+            if (NativeProtocol.isErrorResult(data)) {
+                StatisticManager.onEvent(MixShareFilterActivity.this,
+                        StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "Facebook");
+                ToastUtils.makeText(this, R.string.composite_sdk_share_picture_failed, Toast.LENGTH_SHORT).show();
+            } else {
+                StatisticManager.onEvent(MixShareFilterActivity.this,
+                        StatisticManager.KEY_SUCCESS_SHARE_FILTER_NUMBER, "Facebook");
+//                ToastUtils.makeText(this, R.string.composite_sdk_share_picture_succeed, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void useFilter(View v) {
+        StatisticManager.onEvent(v.getContext(),
+                StatisticManager.KEY_ACTION_SHARE_FILTER_FUNCTION, "使用");
+
+        CompositeDataReceiver.notifyDataChange(this, CompositeDataReceiver.EVENT_USE_COMPOSITE_EFFECT);
+        finish();
+    }
+
+    public void shareFilter(View v) {
+
+        StatisticManager.onEvent(v.getContext(),
+                StatisticManager.KEY_ACTION_SHARE_FILTER_FUNCTION, "分享滤镜");
+
+        MixShareListDialog dialog = new MixShareListDialog(this);
+        List<Integer> siteList = new ArrayList<Integer>();
+        String locationInfo = SystemUtils.getLocationInfo();
+        if ("zh-CN".equals(locationInfo)) {
+            siteList.add(R.string.composite_sdk_share_site_wechat);
+            siteList.add(R.string.composite_sdk_share_site_wechat_friend);
+        } else {
+            siteList.add(R.string.composite_sdk_share_site_facebook);
+        }
+        dialog.setShareSite(siteList);
+        dialog.setOnItemClickListener(
+                new MixShareListDialog.OnItemClickListener() {
+                    @Override
+                    public void onShareSiteClick(DialogInterface dialogInterface, final int siteNameId) {
+                        dialogInterface.dismiss();
+
+
+                        if (siteNameId == R.string.composite_sdk_share_site_facebook) {
+                            StatisticManager.onEvent(getApplicationContext(),
+                                    StatisticManager.KEY_ACTION_SHARE_FILTER_NUMBER, "Facebook");
+
+                            String packageFacebook = "com.facebook.katana";
+                            if (!SystemUtils.checkApkExist(MixShareFilterActivity.this, packageFacebook)) {
+                                String toastContent = getResources().getString(R.string.composite_sdk_install_prefix)
+                                        + getResources().getString(R.string.composite_sdk_share_site_facebook);
+                                ToastUtils.makeText(MixShareFilterActivity.this, toastContent, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            Session.openActiveSession(MixShareFilterActivity.this, true, new Session.StatusCallback() {
+                                // callback when session changes state
+                                @Override
+                                public void call(final Session session, SessionState state, Exception exception) {
+                                    if (session.isOpened()) {
+                                        mProgressDialog.setVisibility(View.VISIBLE);
+                                        mProgressDialog.setProgressTips(R.string.composite_sdk_sharing_filter);
+
+                                        if (!needReauth(MixShareFilterActivity.this, "Facebook")) {
+                                            String[] userInfo = getLocalUserInfo(MixShareFilterActivity.this, "Facebook");
+                                            startUploadPhoto(mPhotoPaths, R.string.composite_sdk_share_site_facebook, userInfo[0], userInfo[1]);
+                                            return;
+                                        }
+
+                                        String token = session.getAccessToken();
+                                        GLogger.i(TAG, "Start get facebook info:" + token);
+                                        ShareApi.getFacebookUserInfo(token, new ApiCallback() {
+                                            @Override
+                                            public void onResponse(Object data, Object... params) {
+                                                String avatar = (String) data;
+                                                Bundle bundle = (Bundle) params[0];
+                                                String nickName = bundle.getString(ApiConstants.PARAM_NICK);
+                                                updateLocalAuthInfo(MixShareFilterActivity.this, "Facebook",
+                                                        nickName, avatar);
+                                                GLogger.i(TAG, "Get facebook info succeed:" + nickName);
+                                                startUploadPhoto(mPhotoPaths, R.string.composite_sdk_share_site_facebook, nickName, avatar);
+                                            }
+
+                                            @Override
+                                            public void onError(String error) {
+                                                StatisticManager.onEvent(MixShareFilterActivity.this,
+                                                        StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "Facebook");
+                                                mProgressDialog.setVisibility(View.GONE);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+
+                            return;
+                        }
+
+                        if (siteNameId == R.string.composite_sdk_share_site_wechat
+                                || siteNameId == R.string.composite_sdk_share_site_wechat_friend) {
+                            if (siteNameId == R.string.composite_sdk_share_site_wechat) {
+                                StatisticManager.onEvent(getApplicationContext(),
+                                        StatisticManager.KEY_ACTION_SHARE_FILTER_NUMBER, "微信");
+
+                            } else if (siteNameId == R.string.composite_sdk_share_site_wechat_friend) {
+                                StatisticManager.onEvent(getApplicationContext(),
+                                        StatisticManager.KEY_ACTION_SHARE_FILTER_NUMBER, "微信朋友圈");
+
+                            }
+
+                            String packageMM = "com.tencent.mm";
+                            if (!SystemUtils.checkApkExist(MixShareFilterActivity.this, packageMM)) {
+                                String toastContent = getResources().getString(R.string.composite_sdk_install_prefix)
+                                        + getResources().getString(R.string.composite_sdk_share_site_wechat);
+                                ToastUtils.makeText(MixShareFilterActivity.this, toastContent, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            mCurrentWechatShareScene = siteNameId;
+                            if (!needReauth(MixShareFilterActivity.this, "WeChat")) {
+                                mProgressDialog.setVisibility(View.VISIBLE);
+                                mProgressDialog.setProgressTips(R.string.composite_sdk_sharing_filter);
+                                String[] userInfo = getLocalUserInfo(MixShareFilterActivity.this, "WeChat");
+                                startUploadPhoto(mPhotoPaths, siteNameId, userInfo[0], userInfo[1]);
+                                return;
+                            }
+                            startShareFilterWechat();
+                        }
+                    }
+                });
+
+        dialog.show();
+
+    }
+
+    private WXDataReceiver mWXDataReceiver = new WXDataReceiver();
+    private WXDataReceiver.IWXDataObserver mWXDataObserver
+            = new WXDataReceiver.IWXDataObserver() {
+
+        @Override
+        public void onWXDataReceived(Intent intent) {
+            String action = intent.getAction();
+            GLogger.i(TAG, "Get WX data:" + action);
+            if (action.equals(WXDataReceiver.ACTION_GET_USER_INFO)) {
+                mProgressDialog.setVisibility(View.VISIBLE);
+                String code = intent.getStringExtra("code");
+                final int scene = intent.getIntExtra("scene", SendMessageToWX.Req.WXSceneSession);
+                GLogger.i(TAG, "Start get wechat info:" + code);
+                ShareApi.getWechatUserInfo(code, new ApiCallback() {
+                    @Override
+                    public void onResponse(Object data, Object... params) {
+                        String avatar = (String) data;
+                        Bundle bundle = (Bundle) params[0];
+                        String nickName = bundle.getString(ApiConstants.PARAM_NICK);
+                        updateLocalAuthInfo(MixShareFilterActivity.this, "WeChat",
+                                nickName, avatar);
+                        GLogger.i(TAG, "Get wechat info succeed:" + nickName);
+                        startUploadPhoto(mPhotoPaths, mCurrentWechatShareScene, nickName, avatar);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        if (scene == SendMessageToWX.Req.WXSceneSession) {
+                            StatisticManager.onEvent(MixShareFilterActivity.this,
+                                    StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信");
+                        } else {
+                            StatisticManager.onEvent(MixShareFilterActivity.this,
+                                    StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信朋友圈");
+                        }
+                        mProgressDialog.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            if (action.equals(WXDataReceiver.ACTION_SHARE_PICTURE)) {
+                int errCode = intent.getIntExtra("errCode", BaseResp.ErrCode.ERR_OK);
+                int scene = intent.getIntExtra("scene", SendMessageToWX.Req.WXSceneSession);
+                if (errCode == BaseResp.ErrCode.ERR_OK) {
+                    if (scene == SendMessageToWX.Req.WXSceneSession) {
+                        StatisticManager.onEvent(MixShareFilterActivity.this,
+                                StatisticManager.KEY_SUCCESS_SHARE_FILTER_NUMBER, "微信");
+                    } else {
+                        StatisticManager.onEvent(MixShareFilterActivity.this,
+                                StatisticManager.KEY_SUCCESS_SHARE_FILTER_NUMBER, "微信朋友圈");
+                    }
+
+                    ToastUtils.makeText(MixShareFilterActivity.this,
+                            R.string.composite_sdk_share_picture_succeed, Toast.LENGTH_SHORT).show();
+                } else if (errCode != BaseResp.ErrCode.ERR_USER_CANCEL) {
+                    if (scene == SendMessageToWX.Req.WXSceneSession) {
+                        StatisticManager.onEvent(MixShareFilterActivity.this,
+                                StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信");
+                    } else {
+                        StatisticManager.onEvent(MixShareFilterActivity.this,
+                                StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信朋友圈");
+                    }
+                    ToastUtils.makeText(MixShareFilterActivity.this,
+                            R.string.composite_sdk_share_picture_failed, Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
+
+    private void startShareFilterWechat() {
+
+        SendAuth.Req req = new SendAuth.Req();
+        req.scope = "snsapi_userinfo";
+
+        Random random = new Random();
+        random.setSeed(System.currentTimeMillis());
+        req.state = "com.pinguo.edit.sdk" + random.nextLong();
+        mWechatAPI.sendReq(req);
+    }
+
+    private void startUploadPhoto(final List<String> paths, int siteNameId, String userName, String avatar) {
+
+        ShareFilterAsyncTask task = new ShareFilterAsyncTask();
+        task.execute(paths.get(0), paths.get(1), String.valueOf(siteNameId), userName, avatar);
+    }
+
+    private String startAddFilterInfo(final List<String> etagList,
+                                      final String userName,
+                                      final String avatar) {
+        GLogger.i(TAG, "Start add filter info!");
+        final byte[] lock = new byte[0];
+        final List<String> result = new ArrayList<String>();
+        ShareApi.addFilterInfo(etagList, mCompositeEffectInfo,
+                avatar, userName, mCompositeEffectName, new ApiCallback() {
+                    @Override
+                    public void onResponse(Object data, Object... params) {
+
+                        GLogger.i(TAG, "Add filter info succeed!");
+                        String url = (String) data;
+                        result.add(url);
+                        synchronized (lock) {
+                            lock.notify();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        GLogger.i(TAG, "Add filter info failed:" + error);
+                        synchronized (lock) {
+                            lock.notify();
+                        }
+                    }
+                });
+
+        synchronized (lock) {
+            try {
+                lock.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (result.size() > 0) {
+            return result.get(0);
+        }
+
+        return null;
+    }
+
+    private boolean startUploadPhoto(final List<String> paths) {
+        GLogger.i(TAG, "Start upload photo auth!");
+        final CountDownLatch countDownLatch = new CountDownLatch(2);
+        final boolean[] isUploadSucceed = new boolean[1];
+        isUploadSucceed[0] = true;
+        UploadApi.photoUploadAuth(new ApiCallback<String>() {
+            @Override
+            public void onResponse(String data, Object... params) {
+
+                GLogger.i(TAG, "Get upload photo auth succeed!");
+
+                Bundle resultBundle = (Bundle) params[0];
+                String url = data;
+                String token = resultBundle.getString(ApiConstants.PARAM_TOKEN);
+                String expires = resultBundle.getString(ApiConstants.PARAM_EXPIRES);
+
+                for (final String path : paths) {
+                    GLogger.i(TAG, "Start upload photo:" + path);
+                    StatisticManager.onEvent(MixShareFilterActivity.this,
+                            StatisticManager.KEY_ACTION_FILTER_SHARE_UPLOAD_IMAGE);
+                    UploadApi.photoUpload(url, path, token, new ApiCallback() {
+                        @Override
+                        public void onResponse(Object data, Object... params) {
+                            GLogger.i(TAG, "Upload photo succeed!");
+                            mUploadCount--;
+                            countDownLatch.countDown();
+                            Activity activity = MixShareFilterActivity.this;
+                            if (null != activity && activity.isFinishing()) {
+                                if (null != path && path.contains("tmp_org_pic")) {
+                                    GLogger.i(TAG, "Delete temp at file uploaded:" + path);
+                                    FileUtils.deleteFile(path);
+                                }
+
+                                if (null != path && path.contains("tmp_eft_pic")) {
+                                    GLogger.i(TAG, "Delete temp at file uploaded:" + path);
+                                    FileUtils.deleteFile(path);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            GLogger.i(TAG, "Upload photo failed:" + error);
+
+                            StatisticManager.onEvent(MixShareFilterActivity.this,
+                                    StatisticManager.KEY_FAILED_FILTER_SHARE_UPLOAD_IMAGE);
+                            mUploadCount--;
+                            isUploadSucceed[0] = false;
+                            countDownLatch.countDown();
+                            Activity activity = MixShareFilterActivity.this;
+                            if (null != activity && activity.isFinishing()) {
+                                if (null != path && path.contains("tmp_org_pic")) {
+                                    GLogger.i(TAG, "Delete temp org at file uploaded:" + path);
+                                    FileUtils.deleteFile(path);
+                                }
+
+                                if (null != path && path.contains("tmp_eft_pic")) {
+                                    GLogger.i(TAG, "Delete temp effect at file uploaded:" + path);
+                                    FileUtils.deleteFile(path);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                GLogger.i(TAG, "Get upload photo auth failed:" + error);
+                isUploadSucceed[0] = false;
+                countDownLatch.countDown();
+                countDownLatch.countDown();
+            }
+        });
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return isUploadSucceed[0];
+    }
+
+    private static String buildTransaction(final String type) {
+        return (type == null) ? String.valueOf(System.currentTimeMillis())
+                : type + System.currentTimeMillis();
+    }
+
+    private class ShareFilterAsyncTask extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressDialog.setVisibility(View.VISIBLE);
+            mProgressDialog.setProgressTips(R.string.composite_sdk_sharing_filter);
+            mUploadCount += 2;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String originPicturePath = params[1];
+            String effectPicturePath = params[0];
+            int siteNameId = Integer.parseInt(params[2]);
+            String userName = params[3];
+            String avatar = params[4];
+
+            String originEtag = EncryptUtils.getQETAG(originPicturePath);
+            String effectnEtag = EncryptUtils.getQETAG(effectPicturePath);
+
+            List<String> pathList = new ArrayList<String>();
+            pathList.add(originPicturePath);
+            pathList.add(effectPicturePath);
+            if (!startUploadPhoto(pathList)) {
+                return String.valueOf(siteNameId);
+            }
+
+            List<String> etagList = new ArrayList<String>();
+            etagList.add(originEtag);
+            etagList.add(effectnEtag);
+            String url = startAddFilterInfo(etagList, userName, avatar);
+            if (null != url) {
+                return url + ";" + siteNameId;
+            }
+
+            return String.valueOf(siteNameId);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            if (result.contains(";")) {
+                String[] resultArray = result.split(";");
+                String url = resultArray[0];
+                int siteNameId = Integer.parseInt(resultArray[1]);
+
+                if (siteNameId == R.string.composite_sdk_share_site_facebook) {
+                    shareFilterToFacebook(url);
+                } else if (siteNameId == R.string.composite_sdk_share_site_wechat) {
+                    shareFilterToWechat(url, SendMessageToWX.Req.WXSceneSession);
+                } else if (siteNameId == R.string.composite_sdk_share_site_wechat_friend) {
+                    shareFilterToWechat(url, SendMessageToWX.Req.WXSceneTimeline);
+                }
+            } else {
+                int siteNameId = Integer.parseInt(result);
+                if (siteNameId == R.string.composite_sdk_share_site_facebook) {
+                    StatisticManager.onEvent(MixShareFilterActivity.this,
+                            StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "Facebook");
+                } else if (siteNameId == R.string.composite_sdk_share_site_wechat) {
+                    StatisticManager.onEvent(MixShareFilterActivity.this,
+                            StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信");
+                } else if (siteNameId == R.string.composite_sdk_share_site_wechat_friend) {
+
+                    StatisticManager.onEvent(MixShareFilterActivity.this,
+                            StatisticManager.KEY_FAIL_SHARE_FILTER_NUMBER, "微信朋友圈");
+                }
+
+                ToastUtils.makeText(MixShareFilterActivity.this,
+                        R.string.composite_sdk_share_picture_failed, Toast.LENGTH_SHORT).show();
+            }
+
+            mProgressDialog.setVisibility(View.GONE);
+            mProgressDialog.disableProgressTips();
+        }
+    }
+
+    private void shareFilterToFacebook(String url) {
+
+        boolean canPresentShareDialog = FacebookDialog.canPresentShareDialog(this,
+                FacebookDialog.ShareDialogFeature.SHARE_DIALOG);
+
+        if (canPresentShareDialog) {
+            String shareName = getResources().getString(R.string.composite_sdk_share_filter_title);
+            String locationInfo = SystemUtils.getLocationInfo();
+            if (!"zh-CN".equals(locationInfo)) {
+                shareName = getResources().getString(R.string.composite_sdk_share_filter_title, mCompositeEffectName);
+            }
+
+            FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(this)
+                    .setRequestCode(1001)
+                    .setName(shareName)
+                    .setDescription(getResources().getString(R.string.composite_sdk_share_filter_content, mCompositeEffectName))
+                    .setLink(url)
+                    .setPicture("https://dn-c360.qbox.me/355ea86d36eb149b0327a14db0b95fcb?imageView/1/w/132").build();
+            shareDialog.present();
+        } else {
+            String packageGooglePlay = "com.android.vending";
+            boolean installed = SystemUtils.checkApkExist(this, packageGooglePlay);
+
+            if (installed) {
+                Intent intent = getPackageManager().getLaunchIntentForPackage(packageGooglePlay);
+                intent.setData(Uri.parse("http://play.google.com/store/apps/details?id=" + "com.facebook.katana"));
+                intent.setAction(Intent.ACTION_VIEW);
+                startActivity(intent);
+            } else {
+                String toastContent = getResources().getString(R.string.composite_sdk_install_prefix) + "facebook";
+                ToastUtils.makeText(this, toastContent, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void shareFilterToWechat(String url, int scene) {
+        Bitmap thumbNail = BitmapUtils.scalePicture(mPath, 80, true);
+
+        WXMediaMessage msg = new WXMediaMessage();
+        WXWebpageObject webpageObject = new WXWebpageObject();
+        webpageObject.webpageUrl = url;
+        msg.mediaObject = webpageObject;
+
+        msg.title = getResources().getString(R.string.composite_sdk_share_filter_title);
+        msg.description = getResources().getString(R.string.composite_sdk_share_filter_content, mCompositeEffectName);
+        if (SendMessageToWX.Req.WXSceneTimeline == scene) {
+            int splitIndex = msg.description.indexOf(",");
+            msg.title = msg.description.substring(0, splitIndex);
+            msg.description = getResources().getString(R.string.composite_sdk_share_wechat_friend_content);
+        }
+
+        msg.thumbData = BitmapUtils.bitmap2Bytes(thumbNail);
+        SendMessageToWX.Req req = new SendMessageToWX.Req();
+        req.transaction = buildTransaction("webpage");
+        req.message = msg;
+        req.scene = scene;
+
+        mWechatAPI.sendReq(req);
+    }
+
+    private static class ParamListAdapter extends BaseAdapter {
+
+        private List<ParamInfoBean> mParamInfoList;
+
+        public ParamListAdapter(List<ParamInfoBean> list) {
+            mParamInfoList = list;
+        }
+
+        @Override
+        public int getCount() {
+            return mParamInfoList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mParamInfoList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            ParamInfoBean infoBean = (ParamInfoBean) getItem(position);
+            return infoBean.getType();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup viewGroup) {
+
+            LayoutInflater layoutInflater = LayoutInflater.from(viewGroup.getContext());
+            ParamInfoBean infoBean = (ParamInfoBean) getItem(position);
+            if (0 == getItemViewType(position)) {
+                convertView = layoutInflater.inflate(
+                        R.layout.composite_sdk_param_item_layout, null);
+                TextView titleTv = (TextView) convertView.findViewById(R.id.title_tv);
+                titleTv.setText(infoBean.getKey() + ":");
+
+                TextView packNameTv = (TextView) convertView.findViewById(R.id.pack_name_tv);
+                packNameTv.setText(infoBean.getPackName() + " ");
+                if (infoBean.getPackName().isEmpty()) {
+                    packNameTv.setVisibility(View.GONE);
+                }
+
+                TextView effectNameTv = (TextView) convertView.findViewById(R.id.effect_name_tv);
+                effectNameTv.setText(infoBean.getName() + " ");
+                if (infoBean.getName().isEmpty()) {
+                    effectNameTv.setVisibility(View.GONE);
+                }
+
+                TextView valueTv = (TextView) convertView.findViewById(R.id.value_tv);
+                valueTv.setText(infoBean.getValue());
+            } else {
+                convertView = layoutInflater.inflate(
+                        R.layout.composite_sdk_param_item_seek_layout, null);
+                TextView titleTv = (TextView) convertView.findViewById(R.id.title_tv);
+                titleTv.setText(infoBean.getKey());
+
+                TextView valueTv = (TextView) convertView.findViewById(R.id.value_tv);
+                valueTv.setText(String.valueOf(infoBean.getValue()));
+
+                GradientSeekBar seekBar = (GradientSeekBar) convertView.findViewById(R.id.value_seek_bar);
+                seekBar.setValue(Math.round(Float.parseFloat(infoBean.getValue())) + 100, 200, 100);
+            }
+
+            return convertView;
+        }
+    }
+
+    private static class ParamInfoBean extends BaseBean {
+        private String key;
+        private String packName;
+        private String name;
+        private int type;
+        private String value;
+        private float minValue;
+
+        @Override
+        protected boolean isValid(Object obj) {
+            return true;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public String getPackName() {
+            return packName;
+        }
+
+        public void setPackName(String packName) {
+            this.packName = packName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public float getMinValue() {
+            return minValue;
+        }
+
+        public void setMinValue(float minValue) {
+            this.minValue = minValue;
+        }
+
+        public int getType() {
+            return type;
+        }
+
+        public void setType(int type) {
+            this.type = type;
+        }
+    }
+
+    private List<ParamInfoBean> parseEffectInfo(String info) {
+        try {
+            JSONArray jsonArray = new JSONArray(info);
+            List<ParamInfoBean> list = new ArrayList<ParamInfoBean>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject object = jsonArray.optJSONObject(i);
+                ParamInfoBean infoBean = new ParamInfoBean();
+                infoBean.setKey(getResources().getString(
+                        ResourceHelper.getString(this, "composite_sdk_param_" + object.getString("key"))));
+
+                String packName = object.getString("packName");
+                infoBean.setPackName(packName);
+                infoBean.setName(object.getString("name"));
+
+                try {
+                    int value = Integer.parseInt(object.getString("value"));
+                    if (value > 0) {
+                        infoBean.setValue("+" + value);
+                    } else {
+                        infoBean.setValue(object.getString("value"));
+                    }
+                } catch (NumberFormatException e) {
+                    infoBean.setValue(object.getString("value"));
+                }
+
+                infoBean.setMinValue(Float.parseFloat(object.getString("minValue")));
+                int type = object.getInt("type");
+                infoBean.setType(type);
+                if (0 == type) {
+                    list.add(0, infoBean);
+                } else {
+                    list.add(infoBean);
+                }
+            }
+
+            return list;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void updateLocalAuthInfo(Context context, String site,
+                                     String userName, String userAvatar) {
+        SharedPreferences pref
+                = context.getSharedPreferences("AUTH_INFO", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("user_name_" + site, userName);
+        editor.putString("user_avatar_" + site, userAvatar);
+        editor.putLong("last_auth_time_" + site, System.currentTimeMillis());
+        editor.commit();
+    }
+
+    private String[] getLocalUserInfo(Context context, String site) {
+        SharedPreferences pref
+                = context.getSharedPreferences("AUTH_INFO", Context.MODE_PRIVATE);
+        String userName = pref.getString("user_name_" + site, "");
+        String userAvatar = pref.getString("user_avatar_" + site, "");
+
+        String[] userInfo = new String[2];
+        userInfo[0] = userName;
+        userInfo[1] = userAvatar;
+
+        return userInfo;
+    }
+
+    private boolean needReauth(Context context, String site) {
+        SharedPreferences pref
+                = context.getSharedPreferences("AUTH_INFO", Context.MODE_PRIVATE);
+        long lastAuthTime = pref.getLong("last_auth_time_" + site, 0);
+        long currentTime = System.currentTimeMillis();
+
+        if (currentTime - lastAuthTime > 86400000 * 3) {
+            return true;
+        }
+
+        return false;
+    }
+}

@@ -1,0 +1,72 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamNoEffectItem;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public class Filter extends Effect {
+    private static final String TAG = Filter.class.getSimpleName();
+
+    public static final String PARAM_KEY_OPACITY = "EffectOpacity";
+
+    public Filter() {
+        this.type = Type.Filter.name();
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Filter filter = null;
+
+        try {
+            filter = (Filter) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+
+        }
+
+        if ( null != filter )
+            return filter;
+        else
+            return new Filter();
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", type);
+            String packName = context.getResources().getString(
+                    ResourceHelper.getString(context, "composite_sdk_pack_name_" + packKey));
+            jsonObject.put("packName", packName);
+            jsonObject.put("name", name);
+            if (null != param) {
+                ParamNoEffectItem item = (ParamNoEffectItem) param.getParamItemList().get(0);
+                jsonObject.put("value", Math.round(item.value / item.step));
+                jsonObject.put("minValue", Math.round(item.min));
+                jsonObject.put("type", 0);
+            } else {
+                jsonObject.put("value", 100);
+                jsonObject.put("minValue", 0);
+                jsonObject.put("type", 0);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

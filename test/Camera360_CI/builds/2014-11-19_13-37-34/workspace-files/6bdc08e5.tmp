@@ -1,0 +1,61 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.*;
+import android.util.AttributeSet;
+import android.view.View;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+public class PreviewFrameView extends View {
+    private Paint backPaint = null;
+    private Rect cRect = new Rect();
+    private RectF frameRect;
+
+    public PreviewFrameView(Context context) {
+        super(context);
+        init();
+    }
+
+    public PreviewFrameView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public PreviewFrameView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private RectF getFrameRect() {
+        return frameRect;
+    }
+
+    public void setFrameRect(RectF rectF) {
+        this.frameRect = rectF;
+        CMLogger.d("cx", "PreviewFrameView view:" + frameRect);
+        setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        RectF rect = getFrameRect();
+        if (rect == null) {
+            super.onDraw(canvas);
+            return;
+        }
+
+        canvas.getClipBounds(cRect);
+        Path path = new Path();
+        path.addRect(cRect.left, cRect.top, cRect.right, cRect.bottom, Path.Direction.CW);
+        path.addRect(rect.left, rect.top, rect.right, rect.bottom, Path.Direction.CCW);
+        canvas.drawPath(path, backPaint);
+        super.onDraw(canvas);
+    }
+
+    private void init() {
+        backPaint = new Paint();
+        backPaint.setColor(Color.BLACK);
+        backPaint.setAntiAlias(true);
+        backPaint.setStyle(Paint.Style.FILL);
+    }
+}

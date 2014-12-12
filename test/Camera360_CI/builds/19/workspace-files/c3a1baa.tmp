@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- gallery module begin-->
+    <!-- configuration for album set page -->
+    <integer name="composite_sdk_albumset_rows_land">5</integer>
+    <integer name="composite_sdk_albumset_rows_port">3</integer>
+
+    <dimen name="composite_sdk_albumset_slot_gap">1dp</dimen>
+    <dimen name="composite_sdk_albumset_padding_left">0dp</dimen>
+    <dimen name="composite_sdk_albumset_padding_top">0dp</dimen>
+    <dimen name="composite_sdk_albumset_padding_right">0dp</dimen>
+    <dimen name="composite_sdk_albumset_padding_bottom">0dp</dimen>
+    <dimen name="composite_sdk_albumset_label_height">23dp</dimen>
+    <dimen name="composite_sdk_albumset_title_offset">1dp</dimen>
+    <dimen name="composite_sdk_albumset_count_offset">2dp</dimen>
+    <dimen name="composite_sdk_albumset_title_font_size">18sp</dimen>
+    <dimen name="composite_sdk_albumset_count_font_size">12sp</dimen>
+    <dimen name="composite_sdk_albumset_icon_size">5dp</dimen>
+    <dimen name="composite_sdk_albumset_slot_width">81dp</dimen>
+    <dimen name="composite_sdk_albumset_slot_height">81dp</dimen>
+
+    <!-- configuration for album page -->
+    <integer name="composite_sdk_album_rows_land">5</integer>
+    <integer name="composite_sdk_album_rows_port">4</integer>
+
+    <dimen name="composite_sdk_album_slot_gap">2dp</dimen>
+    <dimen name="composite_sdk_album_padding_left">2dp</dimen>
+    <dimen name="composite_sdk_album_padding_top">2dp</dimen>
+    <dimen name="composite_sdk_album_padding_right">2dp</dimen>
+    <dimen name="composite_sdk_album_padding_bottom">2dp</dimen>
+    <dimen name="composite_sdk_album_label_width">120dp</dimen>
+    <dimen name="composite_sdk_album_label_height">16dp</dimen>
+    <dimen name="composite_sdk_album_tag_font_size">12sp</dimen>
+    <dimen name="composite_sdk_album_count_font_size">28sp</dimen>
+    <dimen name="composite_sdk_album_icon_size">8dp</dimen>
+    <!-- album bar -->
+    <dimen name="composite_sdk_album_header_bar_height">44dp</dimen>
+    <!-- gallery module end-->
+
+
+    <dimen name="composite_sdk_beauty_main_top_height">44dp</dimen>
+    <dimen name="composite_sdk_beauty_main_bottom_composite_height">74dp</dimen>
+    <dimen name="composite_sdk_beauty_main_bottom_menu_height">36dp</dimen>
+    <!-- 这个的高度等于上两个的值 -->
+    <dimen name="composite_sdk_beauty_seekbar_layout_height">110dp</dimen>
+    <dimen name="composite_sdk_beauty_main_random_composite_width">39dp</dimen>
+
+    <!-- camera module begin -->
+    <dimen name="composite_sdk_camera_top_menu_height">48dp</dimen>
+    <!-- camera module end -->
+
+    <dimen name="composite_sdk_group_main_top_height">26dp</dimen>
+    <dimen name="composite_sdk_group_main_bottom_height">79dp</dimen>
+    <dimen name="composite_sdk_group_main_center_margin">7dp</dimen>
+
+    <!-- crop -->
+    <dimen name="composite_sdk_group_crop_top_height">51dp</dimen>
+
+    <dimen name="composite_sdk_seekbar_margin_left">5dp</dimen>
+    <dimen name="composite_sdk_seekbar_margin_right">5dp</dimen>
+
+    <dimen name="composite_sdk_group_back_width">64dp</dimen>
+
+    <dimen name="composite_sdk_beauty_seekbar_height">74dp</dimen>
+    <dimen name="composite_sdk_common_bar_icon_size">26dp</dimen>
+    <dimen name="composite_sdk_common_bar_icon_margin">12dp</dimen>
+    <dimen name="composite_sdk_camera_bottom_height">110dp</dimen>
+    <dimen name="composite_sdk_camera_shutter_size">68dp</dimen>
+    <dimen name="composite_sdk_camera_quit_size">42dp</dimen>
+    <dimen name="composite_sdk_camera_bottom_icon_margin">20dp</dimen>
+    <dimen name="composite_sdk_camera_thumbnail_width">42dp</dimen>
+    <dimen name="composite_sdk_camera_thumbnail_height">30dp</dimen>
+    <dimen name="composite_sdk_common_group_item_size">44dp</dimen>
+    <dimen name="composite_sdk_common_group_item_text_size">8sp</dimen>
+    <dimen name="composite_sdk_common_back_btn_width">63dp</dimen>
+    <dimen name="composite_sdk_common_back_btn_height">109dp</dimen>
+
+    <dimen name="composite_sdk_seekbar_change_icon_size">36dp</dimen>
+    <dimen name="composite_sdk_detail_item_icon_size">24dp</dimen>
+    <dimen name="composite_sdk_detail_text_size">8sp</dimen>
+    <dimen name="composite_sdk_detail_text_margin">5dp</dimen>
+    <dimen name="composite_sdk_detail_text_number_size">6sp</dimen>
+    <dimen name="composite_sdk_detail_tilt_shift_icon_size">24dp</dimen>
+    <dimen name="composite_sdk_common_confirm_height">44dp</dimen>
+    <dimen name="composite_sdk_beauty_menu_icon_size">40dp</dimen>
+
+
+    <dimen name="composite_sdk_save_title_top_margin">15dp</dimen>
+    <dimen name="composite_sdk_save_photos_top_margin">40dp</dimen>
+    <dimen name="composite_sdk_save_name_edit_top_margin">25dp</dimen>
+    <dimen name="composite_sdk_save_bottom_layout_height">56dp</dimen>
+    <dimen name="composite_sdk_save_bottom_button_height">42dp</dimen>
+    <dimen name="composite_sdk_save_name_edit_text_size">20sp</dimen>
+    <dimen name="composite_sdk_share_divider_margin_top">5dp</dimen>
+    <dimen name="composite_sdk_share_divider_margin_bottom">5dp</dimen>
+    <dimen name="composite_sdk_share_instagram_margin_top">5dp</dimen>
+    <dimen name="composite_sdk_hsl_seekbar_thumb_radius">8px</dimen>
+    <dimen name="composite_sdk_mix_main_title_m_width">84dp</dimen>
+    <dimen name="composite_sdk_mix_main_title_m_height">87dp</dimen>
+    <dimen name="composite_sdk_mix_main_title_i_width">11dp</dimen>
+    <dimen name="composite_sdk_mix_main_title_i_height">87dp</dimen>
+    <dimen name="composite_sdk_mix_main_title_x_width">73dp</dimen>
+    <dimen name="composite_sdk_mix_main_title_x_height">87dp</dimen>
+    <dimen name="composite_sdk_mix_main_camera_icon_width">57dp</dimen>
+    <dimen name="composite_sdk_mix_main_camera_icon_height">41dp</dimen>
+    <dimen name="composite_sdk_mix_main_btn_margin_top">20dp</dimen>
+    <dimen name="composite_sdk_mix_guide_title_1_width">176dp</dimen>
+    <dimen name="composite_sdk_mix_guide_title_1_height">80dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_1_desc_size">18sp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_2_icon_width">153dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_2_icon_height">100dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_2_desc_size">18sp</dimen>
+
+    <dimen name="composite_sdk_mix_guide_common_desc_margin_bottom">20dp</dimen>
+    <dimen name="composite_sdk_mix_guide_start_btn_text_size">24sp</dimen>
+    <dimen name="composite_sdk_mix_guide_common_icon_margin_bottom">10dp</dimen>
+
+    <dimen name="composite_sdk_mix_guide_page_3_icon_height">80dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_3_desc_size">18sp</dimen>
+
+    <dimen name="composite_sdk_mix_guide_page_4_icon_width">138dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_4_icon_height">111dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_4_desc_size">18sp</dimen>
+
+    <dimen name="composite_sdk_mix_guide_page_5_icon_height">80dp</dimen>
+    <dimen name="composite_sdk_mix_guide_page_5_desc_size">18sp</dimen>
+    <dimen name="composite_sdk_multi_shot_width">35dp</dimen>
+    <dimen name="composite_sdk_multi_shot_height">27dp</dimen>
+</resources>

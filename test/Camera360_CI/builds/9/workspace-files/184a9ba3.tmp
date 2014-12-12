@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="#1a1c1e">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="@dimen/composite_sdk_save_title_top_margin"
+        android:layout_marginLeft="@dimen/composite_sdk_save_layout_margin"
+        android:layout_marginRight="@dimen/composite_sdk_save_layout_margin"
+        android:id="@+id/title">
+
+        <TextView
+            android:id="@+id/filter_name_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="120dp"
+            android:singleLine="true"
+            android:layout_centerInParent="true"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:text="@string/composite_sdk_save_composite_style" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="#00000000"
+            android:id="@+id/user_filter_btn"
+            android:onClick="shareFilter"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:text="@string/composite_sdk_share_filter" />
+    </RelativeLayout>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:textColor="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:onClick="useFilter"
+        android:text="@string/composite_sdk_filter_use"
+        android:textSize="18sp"
+        android:id="@+id/share_btn"
+        android:background="@drawable/composite_sdk_save_botton_bg" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="20dp"
+        android:scrollbars="none"
+        android:layout_below="@id/title"
+        android:layout_above="@id/share_btn">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:id="@+id/preview_org_img"
+                android:scaleType="fitCenter" />
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:id="@+id/preview_img"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:id="@+id/filter_param_title_lay"
+                android:layout_below="@id/preview_img"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/composite_sdk_share_filter_param_title">
+                </ImageView>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:visibility="visible"
+                    android:textColor="#a1a1a1"
+                    android:gravity="bottom"
+                    android:text="@string/composite_sdk_filter_param_title"
+                    android:textSize="18sp"/>
+
+            </LinearLayout>
+
+            <com.pinguo.edit.sdk.widget.ScrollInnerListView
+                android:id="@+id/param_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:overScrollFooter="#00000000"
+                android:overScrollHeader="#00000000"
+                android:cacheColorHint="#00000000"
+                android:listSelector="#00000000"
+                android:dividerHeight="20dp"
+                android:divider="#00000000"
+                android:fadingEdge="none"
+                android:fadingEdgeLength="0dp"
+                android:layout_marginTop="20dp"
+                android:paddingBottom="40dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_below="@id/filter_param_title_lay">
+            </com.pinguo.edit.sdk.widget.ScrollInnerListView>
+
+        </RelativeLayout>
+    </ScrollView>
+
+    <include
+        layout="@layout/progress_dialog"
+        android:id="@+id/progress_layout"/>
+
+</RelativeLayout>
+

@@ -1,0 +1,104 @@
+package us.pinguo.android.effect.group.sdk;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectDatabaseHelper;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+
+/**
+ * Created by hlf on 14-11-18.
+ * 此类用来升级星空特效的临时类
+ */
+public class PGStarInsApi {
+
+    public static boolean isInitStar(Context context) {
+        return context.getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE).getBoolean(PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT_STAR, false);
+
+    }
+
+    public static boolean insStar(Context context) {
+        return context.getSharedPreferences(
+                PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE).edit().putBoolean(PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT_STAR, true).commit();
+    }
+
+    /**
+     * 用于安装星空特效
+     *
+     * @param context
+     * @param callback
+     */
+    public static void initData(Context context, PGCompositeSDKApi.InitDataCallback callback) {
+        InitDataThread thread = new InitDataThread(context);
+        thread.setInitCallback(callback);
+        thread.setEffectModel(EffectModel.getInstance().init(context));
+        thread.start();
+
+    }
+
+    /**
+     * 用于星空特效安装的线程类
+     */
+    public static class InitDataThread extends Thread {
+
+        private Context mContext;
+        private PGCompositeSDKApi.InitDataCallback mCallback;
+        private EffectModel mEffectModel;
+
+        public InitDataThread(Context context) {
+            mContext = context;
+        }
+
+        @Override
+        public void run() {
+            if (null != mCallback) {
+                mCallback.onInitStart();
+            }
+
+            long opTime = 0l;
+            List<EffectType> list = mEffectModel.getEffectTypeList(Effect.Type.Filter);
+            if (list != null && list.size() > 0) {
+                opTime = list.get(0).optime;
+
+            }
+
+            EffectPackage ep = new EffectPackage();
+            ep.downloadPath = "assets://newFilter/c360_night.zip";
+            boolean result = mEffectModel.install(ep, null);
+            if (result) {
+                EffectDatabaseHelper helper = new EffectDatabaseHelper(mContext, EffectDatabaseHelper.DB_NAME, null, EffectDatabaseHelper.VERSION);
+                SQLiteDatabase db = helper.getWritableDatabase();
+
+                if (opTime != 0) {
+                    long skyOpTime = opTime - 50;
+                    opTime -= 100;
+                    db.execSQL("UPDATE effect_type SET opTime = " + skyOpTime + " WHERE key = 'C360_Sky'");
+                    db.execSQL("UPDATE effect_type SET opTime = " + opTime + " WHERE key = 'C360_Night'");
+
+                }
+                db.close();
+                helper.close();
+
+            }
+
+            if (null != mCallback) {
+                mCallback.onInitFinish();
+            }
+        }
+
+        public void setInitCallback(PGCompositeSDKApi.InitDataCallback callback) {
+            mCallback = callback;
+        }
+
+        public void setEffectModel(EffectModel effectModel) {
+            this.mEffectModel = effectModel;
+
+        }
+    }
+}

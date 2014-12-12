@@ -1,0 +1,41 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.shop;
+
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+
+/**
+ * Created by huowaa on 13-11-7.
+ */
+public class EffectPackage extends Product {
+    public List<Effect> effects;
+
+    public EffectPackage() {
+    }
+
+    public EffectPackage(Product product) {
+        this.productId = product.productId;
+        this.guid = product.guid;
+        this.name = product.name;
+        this.description = product.description;
+        this.icon = product.icon;
+        this.detail = product.detail;
+        this.imageList = product.imageList;
+        this.imageList2 = product.imageList2;
+        this.pregen = product.pregen;
+        this.pregen2 = product.pregen2;
+        this.price = product.price;
+        this.coin = product.coin;
+        this.purchaseType = product.purchaseType;
+        this.promoteType = product.promoteType;
+        this.recommendType = product.recommendType;
+        this.categoryId = product.categoryId;
+        this.itemCount = product.itemCount;
+        this.index = product.index;
+        this.opTime = product.opTime;
+        this.expireTime = product.expireTime;
+        this.purchaseHistory = product.purchaseHistory;
+        this.downloadPath = product.downloadPath;
+        this.requirements = product.requirements;
+    }
+}

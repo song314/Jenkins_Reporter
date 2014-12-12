@@ -1,0 +1,883 @@
+package us.pinguo.android.effect.group.sdk.group;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Message;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.ui.widget.MenuItemView;
+import com.pinguo.ui.widget.SeekBar;
+
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GetGLSurfaceViewBitmapRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.TiltShiftMakePhotoModel;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.view.AutoHideTextView;
+import us.pinguo.android.effect.group.sdk.view.ComparePGGLSurfaceView;
+import us.pinguo.android.effect.group.sdk.view.EffectTypeCompositeItemView;
+import us.pinguo.android.effect.group.sdk.view.HorizontalLayout;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public abstract class BaseMenu implements View.OnClickListener{
+
+    private final static String TAG = BaseMenu.class.getSimpleName();
+
+    protected Context mContext;
+    protected MakePhotoModel[] mEffectModelArray;
+    protected SDKManager mSDKManager;
+    private HorizontalLayout mSecondHorizontalLayout;
+    private HorizontalLayout mThirdHorizontalLayout;
+
+    protected View mMainTop;
+    protected View mScrollQuitView;
+    protected View mScrollDoneView;
+
+    protected View mSeekbarLayout;
+    protected TextView mScrollValueName;
+    protected AutoHideTextView mAutoHideTextView;
+    protected SeekBar mEditSeekBar;
+    protected ComparePGGLSurfaceView mContainer;
+    protected View mProgressBar;
+    protected View mScreenLayout;
+
+    private boolean isFinished;
+    private boolean isThird;
+
+    private View.OnClickListener mEffectTypeClickListener;
+    private View.OnClickListener mEffectClickListener;
+    private View.OnClickListener mShowScrollViewListener;
+    protected GLSurfaceViewCompositeRendererMethod mCompositeRendererMethod;
+
+    protected MenuItemView mSelectedEffectView;
+    protected MenuItemView mSelectedEffectTypeView;
+    private ViewGroup mBackBtnContainer;
+    private View mBackView;
+    protected Bitmap mOrgBitmap;
+
+    private Rect mClickGlobalVisibleRect;
+    private DisplayMetrics mDisplayMetrics;
+    private View mCurrentView;
+    protected OnPhotoChangeListener mPhotoChangeListener;
+
+    protected boolean mHasInitModelArray = false;
+
+    public BaseMenu(Context context,SDKManager sdkManager,GLSurfaceViewCompositeRendererMethod compositeRendererMethod){
+        this.mContext = context;
+        this.mEffectModelArray = compositeRendererMethod.getMakePhotoModelArray();
+        this.mSDKManager = sdkManager;
+        this.mCompositeRendererMethod = new GLSurfaceViewCompositeRendererMethod();
+        mOrgBitmap = compositeRendererMethod.getBitmap();
+
+        int showWidth = compositeRendererMethod.getShowBitmapWidth();
+        int showHeight = compositeRendererMethod.getShowBitmapHeight();
+
+        mCompositeRendererMethod.setBitmap(compositeRendererMethod.getBitmap());
+        mCompositeRendererMethod.setEffectModeArray(compositeRendererMethod.getMakePhotoModelArray());
+        mCompositeRendererMethod.setShowBitmapWidth(showWidth);
+        mCompositeRendererMethod.setShowBitmapHeight(showHeight);
+//        mCompositeRendererMethod.setEffectModeArray(new MakePhotoModel[Effect.Type.values().length]);
+        //进入某个特效的时候进行做图优化，如果不为空则说明有需要优化做图的，如果为空则说明优化做图
+        initMakePhotoModelArray();
+    }
+
+    protected void initMakePhotoModelArray() {
+        MakePhotoModel[] filterBackMakePhotoModelArray = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(mEffectModelArray, 0, getEffectModelArrayIndex() - 1);
+
+        if(filterBackMakePhotoModelArray!=null){
+            EffectGroupRendererMethod effectGroupRendererMethod = new EffectGroupRendererMethod();
+            effectGroupRendererMethod.setEffectModeArray(filterBackMakePhotoModelArray);
+            effectGroupRendererMethod.setBitmap(mCompositeRendererMethod.getBitmap());
+            effectGroupRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+                @Override
+                public void success(Bitmap bitmap) {
+                    MakePhotoModel[] filterFrontMakePhotoModelArray = MakePhotoModel.getMakePhotoModelArrayWithFilter(mEffectModelArray, getEffectModelArrayIndex(), Effect.Type.values().length - 1);//                    glSurfaceViewCompositeRendererMethod.setEffectModeArray(filterFrontMakePhotoModelArray);
+                    mCompositeRendererMethod.setEffectModeArray(filterFrontMakePhotoModelArray);
+
+                    int showWidth = mCompositeRendererMethod.getShowBitmapWidth();
+                    int showHeight = mCompositeRendererMethod.getShowBitmapHeight();
+
+                    mCompositeRendererMethod.setBitmap(bitmap);
+                    mCompositeRendererMethod.setShowBitmapWidth(showWidth);
+                    mCompositeRendererMethod.setShowBitmapHeight(showHeight);
+
+                    mHasInitModelArray = true;
+                }
+
+                @Override
+                public void fail() {
+
+                }
+
+                @Override
+                public void successForGLSurfaceView() {
+
+                }
+            });
+            mSDKManager.makePhoto(effectGroupRendererMethod);
+
+        } else {
+            mHasInitModelArray = false;
+        }
+    }
+
+    public void entrySecondMenu(){
+        showSecondMenu();
+    }
+
+    public void exit() {
+
+    }
+
+    public void showSecondMenu(){
+        mSecondHorizontalLayout.setVisibility(View.VISIBLE);
+        mSecondHorizontalLayout.removeAllChildViews();
+
+        Effect selectedEffect = EffectDataManager.getInstance().getCurrentTypeEffect(getEffectType().name());
+
+        EffectModel mEffectModel = EffectModel.getInstance().init(mContext);
+        List<EffectType> effectTypeList = mEffectModel.getEffectTypeList(getEffectType());
+
+        View selectedView = null;
+        if (effectTypeList.size() == 1) {
+            for(int i = 0; i < effectTypeList.get(0).effects.size(); i++) {
+                Effect effect = effectTypeList.get(0).effects.get(i);
+                View view = addSecondMenuView(effect.icon, effect.name, getEffectClickListener(),
+                        isOnClickShowScroll(), effect, true);
+                if (null == view) {
+                    continue;
+                }
+
+                if (null != selectedEffect) {
+                    if (selectedEffect.key.equals(effect.key)) {
+                        selectedView = view;
+                    }
+                }
+            }
+
+            if (null != selectedView) {
+                MenuItemView menuItemView
+                        = (MenuItemView) selectedView;
+                menuItemView.onClick(menuItemView);
+                mSelectedEffectView = menuItemView;
+            }
+        } else {
+            View lastView = addNoEffectMenuView();
+            if (null == selectedEffect) {
+                selectedView = lastView;
+            }
+
+            if (null != selectedView) {
+                MenuItemView menuItemView
+                        = (MenuItemView) selectedView;
+                menuItemView.showScrollView();
+                mSelectedEffectTypeView = menuItemView;
+            }
+
+            for(int i = 0; i < effectTypeList.size(); i++) {
+                EffectType effectType = effectTypeList.get(i);
+                lastView = addTypeMenuView(effectType.icon, effectType.name,
+                        getEffectTypeClickListener(), effectType, false);
+                if (null != selectedEffect) {
+                    if (selectedEffect.typeKey.equals(effectType.key)) {
+                        selectedView = lastView;
+                    }
+                }
+
+                if (null != selectedView) {
+                    MenuItemView menuItemView
+                            = (MenuItemView) selectedView;
+                    menuItemView.showScrollView();
+                    mSelectedEffectTypeView = menuItemView;
+                }
+            }
+
+            if (null != lastView) {
+                MenuItemView menuItemView
+                        = (MenuItemView) lastView;
+                menuItemView.enableDivider(false);
+            }
+        }
+
+        mSecondHorizontalLayout.scrollToView(selectedView);
+    }
+
+    public HorizontalLayout getSecondHorizontalLayout() {
+        return mSecondHorizontalLayout;
+    }
+
+    public void backSecondMenu() {
+        mThirdHorizontalLayout.hideViewForTranslateAnimation(mClickGlobalVisibleRect.right);
+        mSecondHorizontalLayout.setVisibility(View.VISIBLE);
+        mSecondHorizontalLayout.showViewForAlphaAnimation();
+    }
+
+    protected View addNoEffectMenuView() {
+
+        EffectTypeCompositeItemView effectMenuItemView
+                = new EffectTypeCompositeItemView(mContext);
+        effectMenuItemView.setIcon(R.drawable.composite_sdk_effect_icon_default_none);
+        effectMenuItemView.setNameText("NONE");
+        effectMenuItemView.enableDivider(true);
+        effectMenuItemView.setBackgroundResource(
+                ResourceHelper.getColor(mContext, "composite_sdk_composite_group_item_bg"));
+
+        effectMenuItemView.setScrollViewBgColor("0x616b72");
+        effectMenuItemView.setScrollViewDrawable(ResourceHelper.getDrawable(
+                mContext, "composite_sdk_beauty_effect_no_scroll"));
+        effectMenuItemView.setDownLineColor("0x616b72");
+        effectMenuItemView.showDownLine();
+        effectMenuItemView.setOnCompositeClick(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mEffectModelArray) {
+                    mEffectModelArray[getEffectModelArrayIndex()] = null;
+                    if (null != mCompositeRendererMethod) {
+                        mCompositeRendererMethod.getMakePhotoModelArray()[getEffectModelArrayIndex()] = null;
+                    }
+
+                    if (null != mPhotoChangeListener) {
+                        mPhotoChangeListener.onPhotoChanged();
+                    }
+                    makePhoto();
+
+                    EffectDataManager.getInstance().clearType(getEffectType().name());
+
+                    if (mSelectedEffectTypeView != null) {
+                        mSelectedEffectTypeView.hideScrollView();
+                    }
+
+                    mSelectedEffectTypeView = (MenuItemView) v;
+                    mSelectedEffectTypeView.showScrollView();
+                }
+            }
+        });
+
+        mSecondHorizontalLayout.addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), false, false);
+
+        return effectMenuItemView;
+    }
+
+    protected View addTypeMenuView(String icon, String name,
+                                     View.OnClickListener onCompositeClick,
+                                     EffectType type,  boolean enableClickAnimation) {
+
+        EffectTypeCompositeItemView effectMenuItemView
+                = new EffectTypeCompositeItemView(mContext);
+        effectMenuItemView.setIconForImageUrl(icon);
+        effectMenuItemView.setNameText(name);
+        effectMenuItemView.enableDivider(true);
+        effectMenuItemView.setBackgroundResource(
+                ResourceHelper.getColor(mContext, "composite_sdk_composite_group_item_bg"));
+
+        effectMenuItemView.setScrollViewBgColor(type.color);
+        effectMenuItemView.setScrollViewDrawable(ResourceHelper.getDrawable(
+                mContext, "composite_sdk_beauty_effect_no_scroll"));
+        effectMenuItemView.setDownLineColor(type.color);
+        effectMenuItemView.showDownLine();
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        effectMenuItemView.setTag(type);
+
+        mSecondHorizontalLayout.addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), enableClickAnimation, false);
+
+        return effectMenuItemView;
+    }
+
+    protected View addSecondMenuView(String icon, String name,
+                                     View.OnClickListener onCompositeClick,
+                                     boolean isShowScrollView, Object tag,
+                                     boolean enableClickAnimation) {
+
+        MenuItemView effectMenuItemView
+                = new MenuItemView(mContext);
+        effectMenuItemView.setIconForImageUrl(icon);
+        effectMenuItemView.setNameText(name);
+        effectMenuItemView.setBackgroundResource(
+                ResourceHelper.getColor(mContext, "composite_sdk_composite_group_item_bg"));
+
+        if (tag instanceof EffectType) {
+            effectMenuItemView.enableDivider(true);
+        } else {
+            effectMenuItemView.enableDivider(false);
+            if (tag instanceof Effect) {
+                Effect effect = (Effect) tag;
+                effectMenuItemView.setScrollViewBgColor(effect.color);
+                effectMenuItemView.setNameBgColor(effect.color);
+                if (effect.key.endsWith("None")) {
+                    return null;
+                } else {
+                    effectMenuItemView.setScrollViewDrawable(ResourceHelper.getDrawable(
+                            mContext, "composite_sdk_beauty_effect_scroll"));
+                }
+            }
+        }
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        if(isShowScrollView){
+            effectMenuItemView.setOnShowScrollViewClick(getShowScrollViewClickListener());
+        }
+        effectMenuItemView.setTag(tag);
+
+        mSecondHorizontalLayout.addChildView(effectMenuItemView,
+                effectMenuItemView.getOnClickListener(), enableClickAnimation, false);
+
+        return effectMenuItemView;
+    }
+
+    protected View addThirdMenuView(String icon, String name, View.OnClickListener onCompositeClick, boolean isShowScrollView, Object tag) {
+
+        MenuItemView effectMenuItemView
+                = new MenuItemView(mContext);
+        effectMenuItemView.setIconForImageUrl(icon);
+        effectMenuItemView.setNameText(name);
+        effectMenuItemView.setBackgroundResource(
+                ResourceHelper.getColor(mContext, "composite_sdk_composite_group_item_bg"));
+
+        effectMenuItemView.setOnCompositeClick(onCompositeClick);
+        if (isShowScrollView) {
+            effectMenuItemView.setOnShowScrollViewClick(getShowScrollViewClickListener());
+        }
+        effectMenuItemView.setTag(tag);
+        if (tag instanceof Effect) {
+            Effect effect = (Effect) tag;
+            effectMenuItemView.setScrollViewBgColor(effect.color);
+            effectMenuItemView.setNameBgColor(effect.color);
+            if (effect.key.endsWith("None")) {
+                return null;
+            } else {
+                effectMenuItemView.setScrollViewDrawable(ResourceHelper.getDrawable(
+                        mContext, "composite_sdk_beauty_effect_scroll"));
+            }
+        }
+
+        mThirdHorizontalLayout.addChildView(effectMenuItemView, effectMenuItemView.getOnClickListener(), true, false);
+
+        return effectMenuItemView;
+    }
+
+    public  void backMainMenu(){
+        finish();
+    }
+
+    protected abstract int getEffectModelArrayIndex();
+
+    protected abstract Effect.Type getEffectType();
+
+    protected abstract boolean isOnClickShowScroll();
+
+    protected View.OnClickListener getEffectTypeClickListener(){
+
+        if(mEffectTypeClickListener == null){
+            mEffectTypeClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    if (mSelectedEffectTypeView != null) {
+                        mSelectedEffectTypeView.hideScrollView();
+                    }
+
+                    mSelectedEffectTypeView = (MenuItemView) view;
+                    mSelectedEffectTypeView.showScrollView();
+
+                    EffectType effectType = (EffectType)view.getTag();
+                    isThird = true;
+
+                    showBackBtn();
+
+                    mThirdHorizontalLayout.setVisibility(View.VISIBLE);
+
+                    Effect selectedEffect = EffectDataManager.getInstance().getCurrentTypeEffect(getEffectType().name());
+                    //无特效
+                    View selectedView = null;
+                    for(Effect effect : effectType.effects){
+                        View currentView = null;
+                        if (effect.key.endsWith("None")) {
+                            currentView = addThirdMenuView(effect.icon, effect.name, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if (mSelectedEffectView != null) {
+                                        mSelectedEffectView.hideScrollView();
+                                    }
+                                    setMakePhotoModel(null); //清除特效
+                                    makePhoto();
+                                    mSelectedEffectView = (MenuItemView) v;
+                                }
+                            }, true, effect);
+                        } else {
+                            currentView = addThirdMenuView(effect.icon, effect.name, getEffectClickListener(), isOnClickShowScroll(), effect);
+                        }
+
+                        if (null == currentView) {
+                            continue;
+                        }
+
+                        if (null != selectedEffect) {
+                            if (selectedEffect.key.equals(effect.key)) {
+                                selectedView = currentView;
+                            }
+                        }
+                    }
+
+
+                    if (null != selectedView) {
+                        MenuItemView menuItemView
+                                = (MenuItemView) selectedView;
+                        menuItemView.onClick(menuItemView);
+                        mSelectedEffectView = menuItemView;
+                    }
+
+                    //如果子特效没有撑满整个布局的话，那动画效果就会存在瑕疵，所以在这里判断是否撑满布局，没有撑满则加一个view撑满
+                    int childWidth = 0;
+                    for (int i = 0; i < mThirdHorizontalLayout.getLayout().getChildCount(); i++) {
+                        childWidth += mThirdHorizontalLayout.getLayout().getChildAt(i).getLayoutParams().width;
+
+                    }
+                    if (childWidth < mDisplayMetrics.widthPixels) {
+                        int viewWidth = mDisplayMetrics.widthPixels - childWidth;
+                        View fillView = new View(mContext);
+                        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(viewWidth, ViewGroup.LayoutParams.MATCH_PARENT);
+                        fillView.setLayoutParams(layoutParams);
+                        mThirdHorizontalLayout.getLayout().addView(fillView);
+                    }
+
+
+                    mClickGlobalVisibleRect = new Rect();
+                    view.getGlobalVisibleRect(mClickGlobalVisibleRect);
+
+                    mThirdHorizontalLayout.scrollToViewWithAnimation(selectedView, mClickGlobalVisibleRect.right, mDisplayMetrics.widthPixels, new HorizontalLayout.HorizontalLayoutCallBackListener() {
+                        @Override
+                        public void callBack() {
+                            mSecondHorizontalLayout.hideViewForAlphaAnimation();
+                        }
+                    });
+//                    mThirdHorizontalLayout.showViewForTranslateAnimation();
+
+                }
+            };
+        }
+        return mEffectTypeClickListener;
+    }
+
+    protected View.OnClickListener getEffectClickListener(){
+        if (mEffectClickListener == null) {
+            mEffectClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Effect effect = (Effect)view.getTag();
+                    if (!effect.key.endsWith("None")) {
+                        //effect.getParam();
+                        Effect operationEffect = EffectDataManager.getInstance().getEffect(effect.key);
+                        //operationEffect.getParam();
+                        setMakePhotoModel(operationEffect);
+                        initParams(operationEffect);
+                    } else {
+                        setMakePhotoModel(null);
+                    }
+
+                    if (null != mPhotoChangeListener) {
+                        mPhotoChangeListener.onPhotoChanged();
+                    }
+                    makePhoto();
+                    if (mSelectedEffectView != null) {
+                        mSelectedEffectView.hideScrollView();
+                    }
+
+                    mSelectedEffectView = (MenuItemView) view;
+                }
+            };
+        }
+
+        return mEffectClickListener;
+    }
+
+    protected View.OnClickListener getShowScrollViewClickListener(){
+        if(mShowScrollViewListener == null){
+            mShowScrollViewListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (view.getTag() instanceof Effect) {
+                        Effect effect = (Effect) view.getTag();
+                        if (effect.key.endsWith("None")) {
+                            return;
+                        }
+                    }
+                    showScrollViewClick();
+
+                }
+            };
+        }
+
+        return mShowScrollViewListener;
+    }
+
+    protected void showScrollViewClick(){
+
+        Animation slideInFromTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromTopAnimation.setDuration(400);
+        mScrollValueName.startAnimation(slideInFromTopAnimation);
+        mScrollValueName.setVisibility(View.VISIBLE);
+        mScrollValueName.setText(getScrollValueNameString());
+
+        Animation slideInFromBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromBottomAnimation.setDuration(400);
+        mSeekbarLayout.startAnimation(slideInFromBottomAnimation);
+        mSeekbarLayout.setVisibility(View.VISIBLE);
+
+        setCompareBitmap();
+    }
+
+    protected String getScrollValueNameString(){
+        if (null != mSelectedEffectView) {
+            Effect effect = (Effect) mSelectedEffectView.getTag();
+            return effect.name;
+        }
+
+        return "";
+    }
+
+    public boolean keyCodeBack() {
+
+        if (mSeekbarLayout.getVisibility() == View.VISIBLE) {
+//            System.out.println("menu:"+getClass()+",");
+            quitScrollView();
+            return true;
+
+        }
+        return false;
+    }
+
+    //
+    public boolean isFinish(){
+        return isFinished;
+    }
+
+    public void finish(){
+        isFinished = true;
+
+        if (mBackView != null && mBackView.getParent() != null && mBackBtnContainer != null) {
+            mBackBtnContainer.removeView(mBackView);
+        }
+
+        if (mThirdHorizontalLayout != null) {
+            mThirdHorizontalLayout.revertLayout();
+        }
+
+//        if (mHasInitModelArray) {
+            if (null != mCompositeRendererMethod) {
+                mCompositeRendererMethod.setBitmap(null);
+            }
+//        }
+
+        mOrgBitmap = null;
+        mHasInitModelArray = false;
+    }
+
+    protected void makePhoto(EffectGroupRendererMethod.RendererMethodActionListener rendererMethodActionListener) {
+
+
+        mCompositeRendererMethod.setRendererMethodActionListener(rendererMethodActionListener);
+        mSDKManager.showPhoto(mCompositeRendererMethod);
+    }
+
+    public void makePhoto() {
+        makePhoto(null);
+    }
+
+    protected void setMakePhotoModel(Effect effect){
+        int index = getEffectModelArrayIndex();
+        //如果传入的effect为空，则说明是不需要做图的
+        if(effect == null){
+            mEffectModelArray[index] = null;
+            mCompositeRendererMethod.getMakePhotoModelArray()[index] = null;
+            return;
+        }
+
+        if(mEffectModelArray[index]!=null && effect.key.equals(mEffectModelArray[index].getEffect().key)){
+            //如果key一样的话则说明特效没有变化，所以可以不用重新设置
+            return;
+        }
+
+        MakePhotoModel makePhotoModelModel;
+        if (effect.type.equals(Effect.Type.TiltShift.name())) {
+            makePhotoModelModel = new TiltShiftMakePhotoModel();
+        } else {
+            makePhotoModelModel = new MakePhotoModel();
+        }
+
+        makePhotoModelModel.setEffect(effect);
+        mEffectModelArray[index] = makePhotoModelModel;
+        //因为再做图优化的时候会导致mEffectModeArray和mCompositeRendererMethod中的做图数据不统一，所以需要都设置
+        mCompositeRendererMethod.getMakePhotoModelArray()[index] = makePhotoModelModel;
+    }
+
+    protected void setParamsModel(String effectKey,String key,String value){
+        mEffectModelArray[getEffectModelArrayIndex()].setParams(effectKey, key, value);
+        mCompositeRendererMethod.getMakePhotoModelArray()[getEffectModelArrayIndex()].setParams(effectKey, key, value);
+    }
+
+    protected void clearParamsModel(String effectKey,String key){
+        mEffectModelArray[getEffectModelArrayIndex()].clearParams(effectKey, key);
+        mCompositeRendererMethod.getMakePhotoModelArray()[getEffectModelArrayIndex()].clearParams(effectKey, key);
+
+    }
+
+    protected void clearNoParamsModel(String key){
+        mEffectModelArray[getEffectModelArrayIndex()].clearNoEffectParams(key);
+        mCompositeRendererMethod.getMakePhotoModelArray()[getEffectModelArrayIndex()].clearNoEffectParams(key);
+    }
+
+    protected void handlerDispatchMessage(Message msg) {
+
+        if (SET_COMPARE_BITMAP == msg.what) {
+            mContainer.setComparePhoto((Bitmap) msg.obj);
+
+        } else if (HIDE_SECOND == msg.what) {
+            mSecondHorizontalLayout.setVisibility(View.GONE);
+
+        } else if (HIDE_BACK_VIEW == msg.what) {
+            mBackBtnContainer.removeView(mBackView);
+
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        if(mScrollQuitView == view){
+            quitScrollView();
+
+        }else if(mScrollDoneView == view){
+            doneScrollView();
+
+        }
+    }
+
+    public void quitScrollView(){
+        hideScrollView();
+    }
+
+    protected void doneScrollView() {
+        hideScrollView();
+    }
+
+    public void hideScrollView(){
+        if (null != mSeekbarLayout) {
+            Animation slideOutToBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f);
+            slideOutToBottomAnimation.setDuration(400);
+            mSeekbarLayout.startAnimation(slideOutToBottomAnimation);
+            mSeekbarLayout.setVisibility(View.GONE);
+        }
+
+        if (null != mScrollValueName) {
+            Animation slideOutToTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f);
+            slideOutToTopAnimation.setDuration(400);
+            mScrollValueName.startAnimation(slideOutToTopAnimation);
+            mScrollValueName.setVisibility(View.GONE);
+        }
+
+        if (null != mContainer) {
+            mContainer.setComparePhoto(mOrgBitmap);
+        }
+    }
+
+    public void setDisplayMetrics(DisplayMetrics dm) {
+        mDisplayMetrics = dm;
+    }
+
+    protected void setCompareBitmap() {
+        //再做图之前去获取特效图用于和变化后的图片做对比
+        GetGLSurfaceViewBitmapRendererMethod getRendererMethod = new GetGLSurfaceViewBitmapRendererMethod();
+        getRendererMethod.setWidthHeight(mCompositeRendererMethod.getShowBitmapWidth(), mCompositeRendererMethod.getShowBitmapHeight());
+        getRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+            @Override
+            public void success(Bitmap bitmap) {
+                mHandler.obtainMessage(SET_COMPARE_BITMAP, bitmap).sendToTarget();
+            }
+
+            @Override
+            public void fail() {
+
+            }
+
+            @Override
+            public void successForGLSurfaceView() {
+
+            }
+        });
+        mSDKManager.showPhoto(getRendererMethod);
+    }
+
+    public void setSecondHorizontalLayout(HorizontalLayout horizontalLayout) {
+        this.mSecondHorizontalLayout = horizontalLayout;
+    }
+
+    public void setThirdHorizontalLayout(HorizontalLayout horizontalLayout) {
+        this.mThirdHorizontalLayout = horizontalLayout;
+    }
+
+    public void setSeekbarLayout(View seekbarLayout) {
+        this.mSeekbarLayout = seekbarLayout;
+
+        mScrollQuitView = mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"quit"));
+        mScrollQuitView.setOnClickListener(this);
+        mScrollDoneView = mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"done"));
+        mScrollDoneView.setOnClickListener(this);
+        mEditSeekBar = (SeekBar)mSeekbarLayout.findViewById(ResourceHelper.getId(mContext,"edit_seekbar"));
+    }
+
+    public View getSeekbarLayout() {
+        return mSeekbarLayout;
+    }
+
+    public void setScrollValueName(TextView scrollValueName){
+        this.mScrollValueName = scrollValueName;
+    }
+
+    public View getScrollValueName() {
+        return this.mScrollValueName;
+    }
+
+    public void setMainTop(View mainTop){
+        this.mMainTop = mainTop;
+    }
+
+    public void setAutoHideTextView(AutoHideTextView autoHideTextView){
+        this.mAutoHideTextView = autoHideTextView;
+    }
+
+
+    public void setContainer(ComparePGGLSurfaceView container) {
+        mContainer = container;
+
+
+    }
+
+    private final static int SET_COMPARE_BITMAP = 1;
+    private final static int HIDE_SECOND = 2;
+    private final static int HIDE_BACK_VIEW = 3;
+    private final static int REMOVE_THIRD = 4;
+    protected Handler mHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            handlerDispatchMessage(msg);
+        }
+    };
+
+    public void setScreenLayout(View screenLayout) {
+        mScreenLayout = screenLayout;
+    }
+
+    public View getScreenLayout() {
+        return mScreenLayout;
+    }
+
+    public void setProgressBar(View progressBar) {
+        mProgressBar = progressBar;
+    }
+
+    public View getProgressBar() {
+        return mProgressBar;
+    }
+
+    protected void setAutoHideTextViewValue(float value){
+        mAutoHideTextView.setTextForShow(String.valueOf(Math.round(value)));
+    }
+
+    protected void setAutoHideTextViewValue(String value){
+        mAutoHideTextView.setTextForShow(value);
+    }
+
+    private void showBackBtn() {
+        int width = mSecondHorizontalLayout.getResources().getDimensionPixelSize(
+                ResourceHelper.getDimen(mContext, "composite_sdk_group_back_width"));
+        View backgroundView = new View(mContext);
+        backgroundView.setBackgroundColor(Color.parseColor("#0b0b0b"));
+        mThirdHorizontalLayout.addChildView(backgroundView, null, false, true);
+        ViewGroup viewGroup = (ViewGroup) mSecondHorizontalLayout.getParent();
+        mBackBtnContainer = (ViewGroup) viewGroup.findViewById(
+                ResourceHelper.getId(mContext, "navigate_back_container"));
+
+        mBackView = LayoutInflater.from(mContext).inflate(
+                ResourceHelper.getLayout(mContext, "composite_sdk_back_layout"), null);
+
+        ViewGroup.LayoutParams bgParam = backgroundView.getLayoutParams();
+        bgParam.width = width;
+        mBackView.setLayoutParams(bgParam);
+        mBackBtnContainer.addView(mBackView);
+
+        ImageButton button = (ImageButton) mBackView.findViewById(
+                ResourceHelper.getId(mContext, "back_btn"));
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                mBackView.setClickable(false);
+                AlphaAnimation alphaAnimation = new AlphaAnimation(1f, 0f);
+                alphaAnimation.setDuration(350l);
+                alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        mHandler.sendEmptyMessage(HIDE_BACK_VIEW);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                mBackView.startAnimation(alphaAnimation);
+                backSecondMenu();
+            }
+        });
+
+        AlphaAnimation alphaAnimation = new AlphaAnimation(0f, 1f);
+        alphaAnimation.setDuration(400l);
+        mBackView.startAnimation(alphaAnimation);
+    }
+
+    protected void initParams(Effect effect) {
+
+    }
+
+    public interface OnPhotoChangeListener {
+        void onPhotoChanged();
+    }
+
+    public void setPhotoChangeListener(OnPhotoChangeListener listener) {
+        mPhotoChangeListener = listener;
+    }
+}

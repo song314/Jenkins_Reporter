@@ -1,0 +1,111 @@
+
+package com.pinguo.edit.sdk.gallery.ui.layout;
+
+import android.graphics.Rect;
+import com.pinguo.edit.sdk.gallery.ui.SlotView;
+
+import java.util.ArrayList;
+
+public abstract class BaseSlotLayout {
+
+    private static final String TAG = "BaseSlotLayout";
+    protected SlotView.SlotRenderer mSlotRenderer;
+    protected int mVisibleSlotStart;
+    protected int mVisibleSlotEnd;
+    //
+    protected int mSlotCount;
+    protected ArrayList<SlotPos> mSlotPositions;
+    protected int mSlotWidth;
+    protected int mSlotHeight;
+    protected int mSlotGap;
+    protected SlotView.Spec mSpec;
+    protected int mWidth;
+    protected int mHeight;
+    protected int mCloumCount;
+    protected int mContentLength;
+    protected int mScrollPosition;
+
+    public static class SlotPos{
+    	public SlotPos(boolean checked, Rect r) {
+    		isChecked = checked;
+    		rect = r;
+    	}
+    	public boolean isChecked;
+    	public Rect rect;
+    }
+    public void setSlotRender(SlotView.SlotRenderer render) {
+        mSlotRenderer = render;
+    }
+
+    protected abstract void initLayoutParameters();
+
+    protected abstract void updateVisibleSlotRange();
+
+    public abstract int getSlotIndexByPosition(float x, float y);
+
+    public abstract Rect getSlotRect(int index, Rect rect);
+
+    public abstract void setSize(int width, int height);
+
+    protected void setVisibleRange(int start, int end) {
+        if (start == mVisibleSlotStart && end == mVisibleSlotEnd)
+            return;
+        if (start < end) {
+            mVisibleSlotStart = start;
+            mVisibleSlotEnd = end;
+        } else {
+            mVisibleSlotStart = mVisibleSlotEnd = 0;
+        }
+        if (mSlotRenderer != null) {
+            mSlotRenderer.onVisibleSlotRangeChanged(mVisibleSlotStart, mVisibleSlotEnd);
+        }
+    }
+
+    public void setSlotSpec(SlotView.Spec spec) {
+        mSpec = spec;
+    }
+
+    public boolean setSlotCount(int slotCount) {
+        if (slotCount == mSlotCount)
+            return false;
+        mSlotCount = slotCount;
+        initLayoutParameters();
+        return false;
+    }
+
+    public void setScrollPosition(int position) {
+        if (mScrollPosition == position)
+            return;
+        mScrollPosition = position;
+        updateVisibleSlotRange();
+    }
+
+    public int getScrollLimit() {
+        int limit = SlotView.WIDE_SCROLLING ? mContentLength - mWidth : mContentLength - mHeight;
+        return limit <= 0 ? 0 : limit;
+    }
+
+    public boolean advanceAnimation(long animTime) {
+        return false;
+    }
+
+    public int getSlotWidth() {
+        return mSlotWidth;
+    }
+
+    public int getSlotHeight() {
+        return mSlotHeight;
+    }
+
+    public int getVisibleSlotStart() {
+        return mVisibleSlotStart;
+    }
+
+    public int getVisibleSlotEnd() {
+        return mVisibleSlotEnd;
+    }
+
+    public int getSlotCount() {
+        return mSlotCount;
+    }
+}

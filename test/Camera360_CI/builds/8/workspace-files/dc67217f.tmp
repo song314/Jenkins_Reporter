@@ -1,0 +1,50 @@
+package com.pinguo.edit.sdk.filter.square.Info;
+
+import android.os.Bundle;
+
+import com.pinguo.mix.api.ApiCallback;
+
+/**
+ * Created by zhongzheng on 14-10-28.
+ */
+public class FilterInfoManager implements ApiCallback {
+    private static FilterInfoManager mInstance = new FilterInfoManager();
+
+    private FilterInfoManager() {
+    }
+
+    public static FilterInfoManager getInstance() {
+        return mInstance;
+    }
+
+//    public void getFiterInfo() {
+//        GetFilterInfoApi.getFilterInfo(1000, this);
+//    }
+//
+//    public void updateFiterInfo() {
+//        GetFilterInfoApi.getFilterInfo(1000, this);
+//    }
+//
+//    public void downloadFiterInfo() {
+//        GetFilterInfoApi.getFilterInfo(1000, this);
+//    }
+//
+//    public void getNewestFiterInfo() {
+//        GetFilterInfoApi.getFilterInfo(1000, this);
+//    }
+//
+//    public void addFiterInfo() {
+//        GetFilterInfoApi.AddFilterInfo("aaa", "aaa", "aaa",
+//                "aaa", "aaa", "aaa", "aaa", "aaa", this);
+//    }
+
+    @Override
+    public void onResponse(Object data, Object... params) {
+        Bundle[] b = (Bundle[]) params;
+    }
+
+    @Override
+    public void onError(String error) {
+        String a = error;
+    }
+}

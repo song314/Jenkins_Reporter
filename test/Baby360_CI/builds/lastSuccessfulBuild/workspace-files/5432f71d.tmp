@@ -1,0 +1,719 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.util.Log;
+import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.PGLoginConstants;
+import com.pinguo.edit.sdk.login.StatusErrorCodeMessage;
+import com.pinguo.edit.sdk.login.lib.os.AsyncFutureAdapter;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.login.lib.util.ViewUtils;
+import com.pinguo.edit.sdk.login.model.EmailRegister;
+import com.pinguo.edit.sdk.login.model.PhoneRegister;
+import com.pinguo.edit.sdk.login.user.ApiDeletePhoneUser;
+import com.pinguo.edit.sdk.login.user.ApiPhoneGetVerifyCode;
+import com.pinguo.edit.sdk.login.view.CheckEmailViewGroup;
+import com.pinguo.edit.sdk.login.view.EditTextWithPrompt;
+import com.pinguo.edit.sdk.login.view.TitleView;
+
+
+/**
+ * Created by crab on 14-10-24.
+ */
+public class PGRegisterActivity extends PGLoginBaseActivity implements View.OnClickListener,
+        EditTextWithPrompt.HideErrorPromptListener, Rotate3dAnimation.InterpolatedTimeListener,
+        EditTextWithPrompt.IRegisterWay, EditTextWithPrompt.ICheckInput {
+    private EditTextWithPrompt mEmailInput;
+    private EditTextWithPrompt mEmailPasswordInput;
+    private ImageView mEyeImageView;
+    private CheckEmailViewGroup mCheckEmailViewGroup;
+    //那一种注册方式
+    private TextView mRegisterWayText;
+
+    //是否是大陆用户
+    private boolean mIsMainLandUser = true;
+    private boolean mOnceFocus = false;
+    private boolean mClickEye = false;
+    private boolean mShowPassword = false;
+    private boolean mCanChangeText = false;
+    private boolean mIsAnimation = true;
+    //是否正在检测帐号
+    private boolean mIsCheckAccount = false;
+
+    private EmailRegister mEmailRegisterFuture;
+    private PhoneRegister mPhoneREgisterFuture;
+    private AsyncFutureAdapter mCheckFutrue;
+
+    private int mError = PGLoginConstants.ERROR_NO;
+    private int mEffectPosition = PGLoginConstants.EFFECT_POSITION_DEFAULT;
+    private int mRegisterWay = PGLoginConstants.REGISTER_WAY_PHONE;
+
+    private static final int REQUEST_CODE = 1000;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_login_register);
+
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            if (intent != null) {
+                mEffectPosition = intent.getIntExtra(PGLoginConstants.CONTEXT_DATA, PGLoginConstants.EFFECT_POSITION_DEFAULT);
+            }
+        } else {
+            mEffectPosition = savedInstanceState.getInt(PGLoginConstants.CONTEXT_DATA);
+        }
+        mIsMainLandUser = SystemUtils.isMainLandUser(this);
+        initView();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(PGLoginConstants.CONTEXT_DATA, mEffectPosition);
+    }
+
+    @Override
+    public void initView() {
+        mRootView = findViewById(R.id.id_pg_register_root_view);
+        setRootViewBackground(mRootView);
+
+        TitleView headView = (TitleView) findViewById(R.id.pg_login_head);
+        headView.setTiTleText(R.string.composite_sdk_login_register);
+        headView.setOnTitleViewClickListener(this);
+
+        mEmailInput = (EditTextWithPrompt) findViewById(R.id.id_email_edittext);
+        mEmailInput.setRegisterWayListener(this);
+        mEmailInput.setCheckInutListener(this);
+        mEmailInput.setHideErrorPromptListener(this);
+
+        mEmailPasswordInput = (EditTextWithPrompt) findViewById(R.id.id_password_edittext);
+        mEmailPasswordInput.setTypeface(Typeface.DEFAULT);
+        preparePasswordListener();
+
+        findViewById(R.id.id_pg_register_button).setOnClickListener(this);
+
+        mErrorTipText = (TextView) findViewById(R.id.id_pg_login_error_prompt_text);
+        hideErrorMessage();
+
+        mRegisterWayText = (TextView) findViewById(R.id.id_pg_register_way_btn);
+        mRegisterWayText.setOnClickListener(this);
+
+        mEyeImageView = (ImageView) findViewById(R.id.id_password_eye);
+        mEyeImageView.setOnClickListener(this);
+
+        mCheckEmailViewGroup = (CheckEmailViewGroup) findViewById(R.id.id_login_check_email_parent);
+
+
+        String language = getResources().getConfiguration().locale.getLanguage();
+
+        TextView authText = (TextView) findViewById(R.id.id_pg_auth_agree);
+        authText.setOnClickListener(this);
+        //中文要单独处理
+        if (language.equalsIgnoreCase("zh")) {
+            String text = authText.getText().toString();
+            SpannableStringBuilder builder = new SpannableStringBuilder(text);
+            ForegroundColorSpan partI = new ForegroundColorSpan(0xFFABB2BA);
+            ForegroundColorSpan partII = new ForegroundColorSpan(0xFF7B8085);
+            builder.setSpan(partI, 0, 7, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            builder.setSpan(partII, 7, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            authText.setText(builder);
+        }
+        if (mIsMainLandUser) {
+            mRegisterWayText.setVisibility(View.VISIBLE);
+            mRegisterWay = PGLoginConstants.REGISTER_WAY_PHONE;
+        } else {
+            mRegisterWayText.setVisibility(View.INVISIBLE);
+            mRegisterWay = PGLoginConstants.REGISTER_WAY_EMAIL;
+        }
+        resetRegisterData();
+
+        mIsAnimation = false;
+
+        //TODO 测试代码
+        findViewById(R.id.delete_register_user).setOnClickListener(this);
+        findViewById(R.id.get_phone_verify_code).setOnClickListener(this);
+    }
+
+    private void preparePasswordListener() {
+        mEmailPasswordInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    if (!mOnceFocus) {
+                        mOnceFocus = true;
+                        if (mIsAnimation) {
+                            return;
+                        }
+                        if (getErrorTipVisibility() != View.VISIBLE) {
+                            final String text = mEmailInput.getText().toString();
+                            checkInputTextAndPrompt(text);
+                        }
+                    }
+                }
+            }
+        });
+        mEmailPasswordInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mIsAnimation) {
+                    return;
+                }
+                if (mClickEye) {
+                    mClickEye = false;
+                    return;
+                }
+                String text = mEmailInput.getText().toString();
+                boolean checkPass = checkInputTextAndPrompt(text);
+                if (checkPass) {
+                    //如果当前是系统错误或者是密码错误，我们在输入的时候要隐藏掉提示
+                    if (mError == PGLoginConstants.ERROR_PASSWORD || mError == PGLoginConstants.ERROR_SYSTEM) {
+                        hideErrorPromptTextView(PGLoginConstants.ERROR_HIDE_PASSWORD);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 检测用户输入的手机号或者邮箱号是否正确
+     * 然后给用户提示
+     *
+     * @param text
+     */
+    private boolean checkInputTextAndPrompt(String text) {
+        if (TextUtils.isEmpty(text)) {
+            String errorMessage = "";
+            if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+                errorMessage = getResources().getString(R.string.pg_login_email_empty);
+            } else {
+                errorMessage = getResources().getString(R.string.pg_login_phone_number_empty);
+            }
+            showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+            return false;
+        }
+        if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+            boolean b = SystemUtils.checkEmailFormat(text);
+            if (!b) {
+                showErrorPromptTextView(getResources().getString(R.string.pg_login_email_format_error), PGLoginConstants.ERROR_EMAIL);
+                return false;
+            }
+        } else {
+            boolean b = SystemUtils.checkPhoneNumber(text);
+            if (!b) {
+                showErrorPromptTextView(getResources().getString(R.string.pg_login_phone_number_format_error), PGLoginConstants.ERROR_EMAIL);
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private void resetRegisterData() {
+        if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+            mEmailInput.setHint(R.string.id_pg_login_register_email_hint_text);
+            mRegisterWayText.setText(R.string.pg_login_user_phone_register_text);
+        } else if (mRegisterWay == PGLoginConstants.REGISTER_WAY_PHONE) {
+            mEmailInput.setHint(R.string.id_pg_login_register_phone_hint_text);
+            mRegisterWayText.setText(R.string.pg_login_user_email_register_text);
+        }
+        mEmailInput.setText("");
+        mEmailPasswordInput.setText("");
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mEmailRegisterFuture != null) {
+            mEmailRegisterFuture.cancel(true);
+        }
+        if (mPhoneREgisterFuture != null) {
+            mPhoneREgisterFuture.cancel(true);
+        }
+        if (mCheckFutrue != null) {
+            mCheckFutrue.cancel(true);
+        }
+        mCheckEmailViewGroup.cancelAllMessage();
+        hideSoftwareKeyboard(mEmailInput);
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        v.setClickable(false);
+        ViewUtils.setDelayedClickable(v, true, 500);
+        switch (id) {
+            case R.id.id_pg_register_button: {
+                if (mIsCheckAccount) {
+                    showMessage(getString(R.string.pg_login_check_account));
+                    return;
+                }
+                if (mRegisterWay == PGLoginConstants.REGISTER_WAY_PHONE) {
+                    checkPhone();
+                } else if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+                    registerEmail(this);
+                }
+                break;
+            }
+            case R.id.id_pg_auth_agree: {
+//                startActivity(new Intent(this, PGLoginAuthorize.class));
+                break;
+            }
+            case R.id.id_password_eye: {
+                mClickEye = true;
+                //如果用户根本没有输入文本，点击眼睛按钮无效
+                mShowPassword = !mShowPassword;
+                mEyeImageView.setSelected(mShowPassword);
+                CharSequence password = mEmailPasswordInput.getText();
+                mEmailPasswordInput.setInputType(InputType.TYPE_CLASS_TEXT
+                        | (mShowPassword ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+                mEmailPasswordInput.setSelection(password.length());
+                mEmailPasswordInput.setTypeface(Typeface.DEFAULT);
+                break;
+            }
+            case R.id.id_pg_register_way_btn: {
+                mCanChangeText = true;
+                if (mRegisterWay == PGLoginConstants.REGISTER_WAY_PHONE) {
+                    mRegisterWay = PGLoginConstants.REGISTER_WAY_EMAIL;
+                    applyRotation(mRegisterWayText, 0, 180);
+                } else {
+                    mRegisterWay = PGLoginConstants.REGISTER_WAY_PHONE;
+                    applyRotation(mRegisterWayText, 360, 180);
+                }
+                break;
+            }
+            case R.id.delete_register_user: {
+                ApiDeletePhoneUser deletePhoneUser = new ApiDeletePhoneUser(this, "18200113803");
+                deletePhoneUser.get(new AsyncResult() {
+                    @Override
+                    public void onSuccess(Object o) {
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+
+                    }
+                });
+                break;
+            }
+            case R.id.get_phone_verify_code: {
+                ApiPhoneGetVerifyCode getVerifyCode = new ApiPhoneGetVerifyCode(this, "18200113803");
+                getVerifyCode.get(new AsyncResult<ApiPhoneGetVerifyCode.RealyResponse>() {
+                    @Override
+                    public void onSuccess(ApiPhoneGetVerifyCode.RealyResponse realyResponse) {
+                        Button btn = (Button) findViewById(R.id.get_phone_verify_code);
+                        btn.setText(realyResponse.data.verifyCode);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.i("test", "exception:" + e.toString());
+                        showMessage("获取手机验证码失败");
+                    }
+                });
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void showErrorPromptTextView(String text, int error) {
+        if (mIsAnimation) {
+            return;
+        }
+        mError = error;
+        if (mError == PGLoginConstants.ERROR_EMAIL) {
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+        }
+        showErrorMessage(text);
+    }
+
+    @Override
+    public void showEmailCheckStatus(int state) {
+        if (mIsAnimation) {
+            return;
+        }
+        mCheckEmailViewGroup.changePromptIconState(state);
+    }
+
+    @Override
+    public void hideErrorPromptTextView(int hide) {
+        //如果当前显示的是email错误信息，但是你又是从password输入框输入后想隐藏输入信息
+        if (mError == PGLoginConstants.ERROR_EMAIL && hide == PGLoginConstants.ERROR_HIDE_PASSWORD) {
+            return;
+        }
+        //如果当前显示的是密码错误信息，但是你又是从email输入框输入后想隐藏输入信息
+        if (mError == PGLoginConstants.ERROR_PASSWORD && hide == PGLoginConstants.ERROR_HIDE_EMAIL) {
+            return;
+        }
+        hideErrorMessage();
+    }
+
+    @Override
+    public void interpolatedTime(float interpolatedTime) {
+        if (mCanChangeText && interpolatedTime > 0.5) {
+            resetRegisterData();
+            mCanChangeText = false;
+        }
+    }
+
+    /**
+     * Setup a new 3D rotation on the container view.
+     *
+     * @param start the start angle at which the rotation must begin
+     * @param end   the end angle of the rotation
+     */
+    private void applyRotation(View v, float start, float end) {
+        // Find the center of the container
+        final float centerX = v.getWidth() / 2.0f;
+        final float centerY = v.getHeight() / 2.0f;
+
+        // Create a new 3D rotation with the supplied parameter
+        // The animation listener is used to trigger the next animation
+        final Rotate3dAnimation rotation =
+                new Rotate3dAnimation(start, end, centerX, centerY, 310.0f, false);
+        rotation.setDuration(300);
+        rotation.setFillAfter(true);
+        rotation.setInterpolator(new AccelerateInterpolator());
+        rotation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                mIsAnimation = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mIsAnimation = false;
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        });
+        rotation.setInterpolatedTimeListener(this);
+        v.startAnimation(rotation);
+    }
+
+    /**
+     * 使用邮箱注册
+     *
+     * @param context
+     */
+    private void registerEmail(Context context) {
+        if (!SystemUtils.hasNet(context)) {
+            showMessage(getString(R.string.pg_login_network_exception));
+            return;
+        }
+        final String email = mEmailInput.getText().toString();
+        final String password = mEmailPasswordInput.getText().toString();
+        if (TextUtils.isEmpty(email)) {
+            showErrorPromptTextView(getString(R.string.pg_login_email_empty), PGLoginConstants.ERROR_EMAIL);
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+            return;
+        }
+        boolean b = SystemUtils.checkEmailFormat(email);
+        if (!b) {
+            showErrorPromptTextView(getString(R.string.pg_login_email_format_error), PGLoginConstants.ERROR_EMAIL);
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            showErrorPromptTextView(getString(R.string.pg_login_password_empty), PGLoginConstants.ERROR_PASSWORD);
+            return;
+        }
+        if (password.length() < 6 || password.length() > 20) {
+            showErrorPromptTextView(getString(R.string.pg_login_password_prompt), PGLoginConstants.ERROR_PASSWORD);
+            return;
+        }
+        //注册前的准备工作
+        hideSoftwareKeyboard(mEmailInput);
+
+        if (mEmailRegisterFuture != null) {
+            mEmailRegisterFuture.cancel(true);
+        }
+        mEmailRegisterFuture = new EmailRegister(this, email, password);
+        showDialog();
+        mEmailRegisterFuture.get(new AsyncResult<Void>() {
+
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                returnResultFinish();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                int status = 0;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    status = fault.getStatus();
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGRegisterActivity.this, status);
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_register_fail);
+                    showMessage(errorMessage);
+                } else {
+                    if (status == 10518) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+                    } else {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_SYSTEM);
+                    }
+                }
+                //对10518进行特殊处理
+                if (status == 10518) {
+                    showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                }
+            }
+        });
+    }
+
+    /**
+     * 使用手机号注册
+     */
+    private void checkPhone() {
+        if (!SystemUtils.hasNet(this)) {
+            showMessage(getString(R.string.pg_login_network_exception));
+            return;
+        }
+        final String phoneNumber = mEmailInput.getText().toString();
+        final String password = mEmailPasswordInput.getText().toString();
+        if (TextUtils.isEmpty(phoneNumber)) {
+            showErrorPromptTextView(getString(R.string.pg_login_phone_number_empty), PGLoginConstants.ERROR_EMAIL);
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+            return;
+        }
+        boolean b = SystemUtils.checkPhoneNumber(phoneNumber);
+        if (!b) {
+            showErrorPromptTextView(getString(R.string.pg_login_phone_number_format_error), PGLoginConstants.ERROR_EMAIL);
+            showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+            return;
+        }
+        if (TextUtils.isEmpty(password)) {
+            showErrorPromptTextView(getString(R.string.pg_login_password_empty), PGLoginConstants.ERROR_PASSWORD);
+            return;
+        }
+        if (password.length() < 6 || password.length() > 20) {
+            showErrorPromptTextView(getString(R.string.pg_login_password_prompt), PGLoginConstants.ERROR_PASSWORD);
+        }
+        //注册前的准备工作
+        hideSoftwareKeyboard(mEmailInput);
+        createSmsVerifyDialog();
+    }
+
+    private void registerPhone() {
+        final String phoneNumber = mEmailInput.getText().toString();
+        final String password = mEmailPasswordInput.getText().toString();
+        if (mPhoneREgisterFuture != null) {
+            mPhoneREgisterFuture.cancel(true);
+        }
+        mPhoneREgisterFuture = new PhoneRegister(this, phoneNumber, password);
+        showDialog();
+        mPhoneREgisterFuture.get(new AsyncResult<Void>() {
+
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                Intent intent = new Intent(PGRegisterActivity.this, PGPhoneVerifyActivity.class);
+                intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+                intent.putExtra(PGLoginConstants.KEY_PHONE_PASSWORD, password);
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                int status = 0;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    status = fault.getStatus();
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGRegisterActivity.this, status);
+                }
+                //帐号存在，用户设置过密码
+                if (status == 10541) {
+                    createHasRegisterDialog();
+                    return;
+                }
+                //用户存在且没有设置过密码
+                if (status == 10542) {
+                    createRegisterDialogOther();
+                    return;
+                }
+                if (status == 10543) {
+                    Intent intent = new Intent(PGRegisterActivity.this, PGPhoneVerifyActivity.class);
+                    intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+                    intent.putExtra(PGLoginConstants.KEY_PHONE_PASSWORD, password);
+                    startActivityForResult(intent, REQUEST_CODE);
+                    return;
+                }
+                //超过每天发送短信验证码数量限制
+                if (status == 10540) {
+                    showVerifyNumberLimitDialog();
+                    return;
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.pg_register_fail);
+                    showMessage(errorMessage);
+                } else {
+                    if (status == 10518) {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+                    } else {
+                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_SYSTEM);
+                    }
+                }
+                //对10518进行特殊处理
+                if (status == 10518) {
+                    showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+                }
+            }
+        });
+    }
+
+    private void returnResultFinish() {
+        sendBroadcast(new Intent(PGLoginConstants.ACTION_LOGIN_SUCCESS));
+        Intent data = new Intent();
+        data.putExtra(PGLoginConstants.CONTEXT_DATA, mEffectPosition);
+        setResult(RESULT_OK, data);
+        finish();
+    }
+
+    @Override
+    public int getRegisterWay() {
+        return mRegisterWay;
+    }
+
+    private void createSmsVerifyDialog() {
+        final String phoneNumber = mEmailInput.getText().toString();
+        String a = getString(R.string.pg_login_sms_verification_code_prompt, phoneNumber);
+        showSelectDialog(R.string.pg_login_sms_verification_code_prompt, phoneNumber, new DialogConfirmListener() {
+            @Override
+            public void onConfirm() {
+                registerPhone();
+            }
+        });
+    }
+
+    private void createHasRegisterDialog() {
+        final String phoneNumber = mEmailInput.getText().toString();
+        final String passsword = mEmailPasswordInput.getText().toString();
+        showSelectDialog(R.string.pg_login_phone_number_exist, null, new DialogConfirmListener() {
+            @Override
+            public void onConfirm() {
+                Intent intent = new Intent(PGRegisterActivity.this, PGNewLoginActivity.class);
+                intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+                intent.putExtra(PGLoginConstants.KEY_PHONE_PASSWORD, passsword);
+                intent.putExtra(PGLoginConstants.KEY_LOGIN_REDIRECT, false);
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+        });
+    }
+
+    private void createRegisterDialogOther() {
+        final String phoneNumber = mEmailInput.getText().toString();
+        showSelectDialog(R.string.pg_login_phone_number_exist_again, null, new DialogConfirmListener() {
+            @Override
+            public void onConfirm() {
+                Intent intent = new Intent(PGRegisterActivity.this, PGNewLoginActivity.class);
+                intent.putExtra(PGLoginConstants.KEY_PHONE_NUMBER, phoneNumber);
+                intent.putExtra(PGLoginConstants.KEY_LOGIN_REDIRECT, false);
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+        });
+    }
+
+    @Override
+    public void checkInputText(String text) {
+        checkEmailValidate(text);
+    }
+
+    /**
+     * 检查邮箱或者手机号是否可用
+     *
+     * @param text
+     */
+    private void checkEmailValidate(final String text) {
+        //新需求，输入框不区检测是否已经注册过
+//        showEmailCheckStatus(CheckEmailViewGroup.STATE_PROGRESS);
+//        if (mCheckFutrue != null) {
+//            mCheckFutrue.cancel(true);
+//        }
+//        if (mRegisterWay == PGLoginConstants.REGISTER_WAY_EMAIL) {
+//            mCheckFutrue = new EmailCheck(this, text);
+//        } else {
+//            mCheckFutrue = new PhoneCheck(this, text);
+//        }
+//
+//        mIsCheckAccount = true;
+//
+//        mCheckFutrue.get(new AsyncResult<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                mIsCheckAccount = false;
+//                showEmailCheckStatus(CheckEmailViewGroup.STATE_SUCCESS);
+//            }
+//
+//            @Override
+//            public void onError(Exception e) {
+//                mIsCheckAccount = false;
+//                if (e instanceof Fault) {
+//                    Fault fault = (Fault) e;
+//                    int status = fault.getStatus();
+//
+//                    showEmailCheckStatus(CheckEmailViewGroup.STATE_FAIL);
+//                    String errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PGRegisterActivity.this, fault.getStatus());
+//                    //对10520进行特殊处理
+//                    if (status == 10520 || status == 10535) {
+//                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_EMAIL);
+//                    } else {
+//                        showErrorPromptTextView(errorMessage, PGLoginConstants.ERROR_SYSTEM);
+//                    }
+//                } else {
+//                    showEmailCheckStatus(CheckEmailViewGroup.STATE_EXCEPTION);
+//                }
+//            }
+//        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                returnResultFinish();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+}

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="202dp">
+
+        <com.pinguo.Camera360Lib.ui.imageloader
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+        />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/white"
+            android:textSize="36.5sp"
+            android:id="@+id/composite_name"/>
+    
+         <View
+             android:layout_width="wrap_content"
+             android:layout_height="1.2dp"
+             android:background="@android:color/white"
+             android:layout_below="@id/composite_name"
+             android:layout_alignLeft="@id/composite_name"
+             android:layout_alignRight="@id/composite_name"
+             android:layout_marginTop="9dp"
+             android:id="@+id/line"/>
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textSize="15dp"
+              android:textColor="@android:color/white"
+              android:id="@+id/author"
+              android:layout_below="@id/line"
+              android:layout_centerHorizontal="true"
+              />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginRight="11.2dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:textColor="@android:color/white"
+                    android:textSize="13.5sp"
+                    />
+                
+
+
+            </RelativeLayout>
+
+
+</RelativeLayout>

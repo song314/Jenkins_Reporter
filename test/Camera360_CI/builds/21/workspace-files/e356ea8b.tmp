@@ -1,0 +1,31 @@
+package us.pinguo.androidsdk;
+
+public class PGColorBuffer {
+    private int[] argb = null;
+    private int width = 0;
+    private int height = 0;
+
+    public int[] getColorBuffer() {
+        return argb;
+    }
+
+    public int getImageWidth() {
+        return width;
+    }
+
+    public int getImageHeight() {
+        return height;
+    }
+
+    public void setColorBuffer(int[] buffer) {
+        argb = buffer;
+    }
+
+    public void setImageWidth(int value) {
+        width = value;
+    }
+
+    public void setImageHeight(int value) {
+        height = value;
+    }
+}

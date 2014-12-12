@@ -1,0 +1,30 @@
+package com.pinguo.edit.sdk.widget;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by taoli on 14-8-18.
+ */
+public class IndicatorView extends LinearLayout {
+
+    private ImageView mLastSelectImageView;
+
+    public IndicatorView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public void setIndex(int index) {
+        if (mLastSelectImageView != null) {
+            mLastSelectImageView.setImageResource(R.drawable.composite_sdk_guide_indicator_page_off);
+        }
+
+        ImageView imageView = (ImageView) getChildAt(index);
+        imageView.setImageResource(R.drawable.composite_sdk_guide_indicator_page_on);
+        mLastSelectImageView = imageView;
+
+    }
+}

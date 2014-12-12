@@ -1,0 +1,21 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.widget.RelativeLayout;
+
+/**
+ * Created by taoli on 14-7-28.
+ */
+public class CommonProgressDialog extends RelativeLayout {
+
+    public CommonProgressDialog(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return true;
+    }
+}

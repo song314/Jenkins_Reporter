@@ -1,0 +1,353 @@
+package com.pinguo.edit.sdk.gallery;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Rect;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.widget.Toast;
+import com.pinguo.edit.sdk.gallery.data.DataManager;
+import com.pinguo.edit.sdk.gallery.data.MediaSet;
+import com.pinguo.edit.sdk.gallery.data.Path;
+import com.pinguo.edit.sdk.gallery.ui.*;
+import com.pinguo.edit.sdk.gallery.util.AlbumUtils;
+import com.pinguo.edit.sdk.gallery.util.Future;
+import com.pinguo.edit.sdk.gallery.util.GMLogger;
+import com.pinguo.edit.sdk.gallery.util.Utils;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+public class AlbumSetPage extends ActivityState implements
+        EyePosition.EyePositionListener, MediaSet.SyncListener {
+
+    private static final String TAG = "AlbumSetPage";
+    private static final int BIT_LOADING_RELOAD = 1;
+    private static final int BIT_LOADING_SYNC = 2;
+    private static final int REQUEST_DO_ANIMATION = 1;
+    private static final int MSG_PICK_ALBUM = 1;
+    public static final String KEY_SET_CENTER = "set-center";
+    private MediaSet mMediaSet;
+    private Path mMediaPath;
+    private AlbumSetDataLoader mAlbumSetDataLoader;
+    private boolean mIsActive = false;
+    private Future<Integer> mSyncTask = null;
+    private int mLoadingBits = 0;
+    private boolean mInitialSynced = false;
+    private Handler mHandler;
+    //
+    private SlotView mSlotView;
+    private SlotView.Spec mSlotViewSpec;
+    private AlbumSetSlotRenderer mAlbumSetSlotRenderer;
+    private EyePosition mEyePosition;
+    private float mX;
+    private float mY;
+    private float mZ;
+    private final GLView mRootPane = new GLView() {
+
+        private final float mMatrix[] = new float[16];
+
+        @Override
+        protected void renderBackground(GLCanvas view) {
+            view.clearBuffer();
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int left, int top, int right,
+                                int bottom) {
+            mEyePosition.resetPosition();
+            int slotViewTop = 0;
+            int slotViewBottom = bottom - top;
+            int slotViewRight = right - left;
+            // opengl render范围，给出了画布的padding
+            mSlotView.layout(0 + mSlotViewSpec.paddingLeft, slotViewTop
+                    + mSlotViewSpec.paddingTop
+                    + mSlotViewSpec.header_bar_height, slotViewRight
+                    - mSlotViewSpec.paddingRight, slotViewBottom
+                    - mSlotViewSpec.paddingBottom);
+        }
+
+        @Override
+        protected void render(GLCanvas canvas) {
+            canvas.save(GLCanvas.SAVE_FLAG_MATRIX);
+            AlbumUtils.setViewPointMatrix(mMatrix, getWidth() / 2 + mX,
+                    getHeight() / 2 + mY, mZ);
+            canvas.multiplyMatrix(mMatrix, 0);
+            super.render(canvas);
+            canvas.restore();
+        }
+    };
+
+    private class MyLoadingListener implements LoadingListener {
+
+        int mediaItemCount = 0;
+
+        @Override
+        public void onLoadingStarted() {
+            synchronized (DataManager.LOCK) {
+                mediaItemCount = mMediaSet.getMediaItemCount();
+            }
+            mActivity.setTitleText(
+                    mActivity.getResources().getString(
+                            ResourceHelper.getIdByName(mActivity.getAndroidContext(),
+                                    "string", "composite_sdk_album_title"), mediaItemCount));
+            setLoadingBit(BIT_LOADING_RELOAD);
+        }
+
+        @Override
+        public void onLoadingFinished() {
+            synchronized (DataManager.LOCK) {
+                mediaItemCount = mMediaSet.getMediaItemCount();
+            }
+            mActivity.setTitleText(
+                    mActivity.getResources().getString(
+                            ResourceHelper.getIdByName(mActivity.getAndroidContext(),
+                                    "string", "composite_sdk_album_title"), mediaItemCount));
+            clearLoadingBit(BIT_LOADING_RELOAD);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    private void onDown(int index) {
+        mAlbumSetSlotRenderer.setPressedIndex(index);
+    }
+
+    private void onUp(boolean followedByLongPress) {
+        if (followedByLongPress) {
+            // Avoid showing press-up animations for long-press.
+            mAlbumSetSlotRenderer.setPressedIndex(-1);
+        } else {
+            mAlbumSetSlotRenderer.setPressedUp();
+        }
+    }
+
+    public void onSingleTapUp(int slotIndex) {
+        if (!mIsActive)
+            return;
+
+        // Show pressed-up animation for the single-tap.
+        mAlbumSetSlotRenderer.setPressedIndex(slotIndex);
+        mAlbumSetSlotRenderer.setPressedUp();
+        mHandler.sendMessageDelayed(
+                mHandler.obtainMessage(MSG_PICK_ALBUM, slotIndex, 0),
+                FadeTexture.DURATION);
+    }
+
+    public void onLongTap(int slotIndex) {
+        MediaSet set = mAlbumSetDataLoader.getMediaSet(slotIndex);
+        if (set == null)
+            return;
+        mSlotView.invalidate();
+    }
+
+    @Override
+    public void onCreate(Bundle data, Bundle restoreState) {
+        initializeViews();
+        initializeData(data);
+        Context context = mActivity.getAndroidContext();
+        mEyePosition = new EyePosition(context, this);
+        mHandler = new SynchronizedHandler(mActivity.getGLRoot()) {
+
+            @Override
+            public void handleMessage(Message message) {
+                switch (message.what) {
+                    case MSG_PICK_ALBUM: {
+                        pickAlbum(message.arg1);
+                        break;
+                    }
+                    default:
+                        throw new AssertionError(message.what);
+                }
+            }
+        };
+    }
+
+    private void initializeViews() {
+        UIConfig.AlbumSetPage config = UIConfig.AlbumSetPage
+                .get((Context) mActivity);
+        mSlotViewSpec = config.slotViewSpec;
+        mSlotView = new SlotView(mActivity, mSlotViewSpec,
+                SlotView.SLOT_TYPE_LIST_SLOT);
+        mAlbumSetSlotRenderer = new AlbumSetListSlotRenderer(mActivity, mSlotView,
+                config.labelSpec);
+        mSlotView.setSlotRenderer(mAlbumSetSlotRenderer);
+        mSlotView.setListener(new SlotView.SimpleListener() {
+
+            @Override
+            public void onDown(int index) {
+                AlbumSetPage.this.onDown(index);
+            }
+
+            @Override
+            public void onUp(boolean followedByLongPress) {
+                AlbumSetPage.this.onUp(followedByLongPress);
+            }
+
+            @Override
+            public void onSingleTapUp(int slotIndex) {
+                AlbumSetPage.this.onSingleTapUp(slotIndex);
+            }
+
+            @Override
+            public void onLongTap(int slotIndex) {
+                AlbumSetPage.this.onLongTap(slotIndex);
+            }
+        });
+        mRootPane.addComponent(mSlotView);
+    }
+
+    private void initializeData(Bundle data) {
+        mMediaPath = new Path(data.getInt(DataManager.MEDIA_TYPE),
+                data.getString(DataManager.MEDIA_PATH_ID));
+        mMediaSet = mActivity.getDataManager().getMediaSet(mMediaPath);
+        mAlbumSetDataLoader = new AlbumSetDataLoader(mActivity, mMediaSet);
+        mAlbumSetDataLoader.setLoadingListener(new MyLoadingListener());
+        mAlbumSetSlotRenderer.setModel(mAlbumSetDataLoader);
+    }
+
+    private void getSlotCenter(int slotIndex, int center[]) {
+        Rect offset = new Rect();
+        mRootPane.getBoundsOf(mSlotView, offset);
+        Rect r = mSlotView.getSlotRect(slotIndex);
+        int scrollX = mSlotView.getScrollX();
+        int scrollY = mSlotView.getScrollY();
+        center[0] = offset.left + (r.left + r.right) / 2 - scrollX;
+        center[1] = offset.top + (r.top + r.bottom) / 2 - scrollY;
+    }
+
+    private void pickAlbum(int slotIndex) {
+        if (!mIsActive)
+            return;
+        int bucketId = mAlbumSetDataLoader.getBucketId(slotIndex);
+        // GMLogger.i(TAG, "----------bucketId:" + bucketId);
+        if (bucketId == 0)
+            return;
+        Bundle d = new Bundle();
+        d.putInt(DataManager.MEDIA_TYPE, DataManager.MEDIA_TYPE_SYSTEM_ALBUM);
+        d.putString(DataManager.MEDIA_PATH_ID, String.valueOf(bucketId));
+        d.putString(DataManager.MEDIA_NAME,
+                mAlbumSetDataLoader.getMediaSet(slotIndex).getName());
+        int[] center = new int[2];
+        getSlotCenter(slotIndex, center);
+        d.putIntArray(AlbumPage.KEY_SET_CENTER, center);
+        startStateForResult(d, REQUEST_DO_ANIMATION);
+    }
+
+    protected void startStateForResult(Bundle d, int requestCode) {
+        mActivity.getStateManager().startStateForResult(
+                AlbumPage.class, requestCode, d);
+    }
+
+    private void clearLoadingBit(int loadingBit) {
+        mLoadingBits &= ~loadingBit;
+        if (mLoadingBits == 0 && mIsActive) {
+            // Only show toast when there's no album and we are going to finish
+            // the page. Toast is redundant if we are going to stay on this
+            // page.
+            if ((mAlbumSetDataLoader.size() == 0)) {
+                if (mActivity.getStateManager().getStateCount() > 1) {
+                    Toast.makeText((Context) mActivity,
+                            ResourceHelper.getIdByName(mActivity.getAndroidContext(),
+                                    "string", "composite_sdk_empty_album"),
+                            Toast.LENGTH_LONG).show();
+                    mActivity.getStateManager().finishState(this);
+                }
+            }
+        }
+    }
+
+    private void setLoadingBit(int loadingBit) {
+        mLoadingBits |= loadingBit;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mIsActive = true;
+        setContentPane(mRootPane);
+        // Set the reload bit here to prevent it exit this page in
+        // clearLoadingBit()
+        setLoadingBit(BIT_LOADING_RELOAD);
+        mAlbumSetDataLoader.resume();
+        mAlbumSetSlotRenderer.resume();
+        mEyePosition.resume();
+        if (!mInitialSynced) {
+            setLoadingBit(BIT_LOADING_SYNC);
+            mSyncTask = mMediaSet.requestSync(AlbumSetPage.this);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mIsActive = false;
+        mAlbumSetDataLoader.pause();
+        mAlbumSetSlotRenderer.pause();
+        mEyePosition.pause();
+        // DetailsHelper.pause();
+        // Call disableClusterMenu to avoid receiving callback after paused.
+        // Don't hide menu here otherwise the list menu will disappear earlier
+        // than
+        // the action bar, which is janky and unwanted behavior.
+        if (mSyncTask != null) {
+            mSyncTask.cancel();
+            mSyncTask = null;
+            clearLoadingBit(BIT_LOADING_SYNC);
+        }
+    }
+
+    @Override
+    protected void onStateResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_DO_ANIMATION: {
+                mSlotView.startRisingAnimation();
+            }
+        }
+    }
+
+    @Override
+    public void onSyncDone(MediaSet mediaSet, final int resultCode) {
+        if (resultCode == MediaSet.SYNC_RESULT_ERROR) {
+            GMLogger.d(TAG, "onSyncDone: " + Utils.maskDebugInfo(mediaSet.getName())
+                    + " result=" + resultCode);
+        }
+        ((Activity) mActivity).runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                GLRoot root = mActivity.getGLRoot();
+                root.lockRenderThread();
+                try {
+                    if (resultCode == MediaSet.SYNC_RESULT_SUCCESS) {
+                        mInitialSynced = true;
+                    }
+                    clearLoadingBit(BIT_LOADING_SYNC);
+                    if (resultCode == MediaSet.SYNC_RESULT_ERROR && mIsActive) {
+                        GMLogger.w(TAG, "failed to load album set");
+                    }
+                } finally {
+                    root.unlockRenderThread();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onEyePositionChanged(float x, float y, float z) {
+        mRootPane.lockRendering();
+        mX = x;
+        mY = y;
+        mZ = z;
+        mRootPane.unlockRendering();
+        mRootPane.invalidate();
+    }
+
+    public void invalidate() {
+        mRootPane.invalidate();
+    }
+
+}

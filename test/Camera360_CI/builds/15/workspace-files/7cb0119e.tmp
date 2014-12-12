@@ -1,0 +1,48 @@
+package com.pinguo.edit.sdk.login.lib.os;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * Created by yinyu on 2014/6/26.
+ */
+public class AsyncSuccess<V> implements AsyncFuture<V> {
+    private V v;
+
+    public AsyncSuccess(V v) {
+        this.v = v;
+    }
+
+    @Override
+    public void get(AsyncResult<V> result) {
+        if (result != null) {
+            result.onSuccess(v);
+        }
+    }
+
+    @Override
+    public boolean cancel(boolean b) {
+        return true;
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return false;
+    }
+
+    @Override
+    public boolean isDone() {
+        return true;
+    }
+
+    @Override
+    public V get() throws InterruptedException, ExecutionException {
+        return v;
+    }
+
+    @Override
+    public V get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+        return v;
+    }
+}

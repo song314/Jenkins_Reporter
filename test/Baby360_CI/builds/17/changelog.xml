@@ -1,0 +1,10 @@
+commit 07d827367e6d2f190d0f6c5f04da1f2762781859
+tree cf34e8bad2aa89ea38d0940dd141418a9785af81
+parent 4959df0c5f788d9be049a369d08725bebe63478c
+author litao <litao@camera360.com> 1417240771 +0800
+committer hlffeng <helinfeng@camera360.com> 1417398743 +0800
+
+    ［李涛］错误日志在控制台打印
+    (cherry picked from commit a232f61)
+
+:100644 100644 1339310ce8fc7cdd257fc0ed776cc18f3ef70b90 252677ea5b5fd9b50937a0f7a7d0e01876770972 M	src/com/pinguo/mix/AppCrashHandler.java

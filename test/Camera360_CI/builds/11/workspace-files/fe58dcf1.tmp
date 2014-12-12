@@ -1,0 +1,68 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.ImageView;
+
+/**
+ * Created by pinguo on 14-6-23.
+ */
+public class CompareImageView extends ImageView implements View.OnTouchListener{
+
+    private Bitmap mOrgBitmap;
+    private Bitmap mBitmap;
+
+
+    public CompareImageView(Context context) {
+        super(context);
+
+        setOnTouchListener(this);
+    }
+
+    public CompareImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        setOnTouchListener(this);
+    }
+
+    public void setOrgBitmap(Bitmap orgBitmap){
+        this.mOrgBitmap = orgBitmap;
+    }
+
+
+
+    public void setEffectImage(Bitmap effectBitmap){
+        this.mBitmap = effectBitmap;
+        setImageBitmap(effectBitmap);
+    }
+
+    public Bitmap getBitmap(){
+        return this.mBitmap;
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if(mOrgBitmap!=null){
+                    setImageBitmap(mOrgBitmap);
+                }
+
+                break;
+            case MotionEvent.ACTION_UP:
+                setImageBitmap(mBitmap);
+
+
+                break;
+
+            default:
+                break;
+        }
+        return true;
+
+    }
+}

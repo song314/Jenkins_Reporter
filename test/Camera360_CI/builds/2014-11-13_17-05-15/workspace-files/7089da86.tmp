@@ -1,0 +1,53 @@
+package com.pinguo.edit.sdk.camera.model;
+
+import android.hardware.Camera;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+
+/**
+ * Created by marui on 13-10-18.
+ * 预览模块接口
+ */
+public interface IPreviewModel {
+
+    /**
+     * 初始化预览参数
+     *
+     * @param surfaceView 非实时预览使用的SurfaceView,not null
+     * @param callback    Surface生命周期
+     */
+    public void init(SurfaceView surfaceView, SurfaceView liveSurfaceView, SurfaceHolder.Callback callback);
+
+    /**
+     * 销毁及回收
+     */
+    public void destroy();
+
+    /**
+     * 开启预览
+     *
+     * @param camera
+     */
+    public void startPreview(CameraManager.CameraProxy camera);
+
+    /**
+     *
+     * 停止预览
+     * @param camera 相机实体
+     */
+    public void stopPreview(CameraManager.CameraProxy camera);
+
+    /**
+     * 初始化预览View,设置两个SurfaceView的其可见性
+     *
+     * @param surfaceView
+     * @param liveSurfaceView
+     */
+    public void setSurfaceVisibility(SurfaceView surfaceView, SurfaceView liveSurfaceView);
+
+    public void onPreviewFrame(byte[] data, Camera camera);
+
+    public void preStartPreview();
+
+    public SurfaceHolder getSurfaceHolder();
+}

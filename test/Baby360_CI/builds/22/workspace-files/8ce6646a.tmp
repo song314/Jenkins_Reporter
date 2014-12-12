@@ -1,0 +1,818 @@
+package com.pinguo.edit.sdk.camera.focus;
+
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.graphics.Matrix;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.MotionEvent;
+
+import com.pinguo.edit.sdk.camera.model.CameraManager;
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettingModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettings;
+import com.pinguo.edit.sdk.camera.util.ApiHelper;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.CameraModuleUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by huowaa on 13-10-22.
+ */
+public class FocusManager {
+    private static final String TAG = "FocusManager";
+
+    // 各个状态机的状态
+    public static final String STATE_IDLE = "STATE_IDLE";
+    public static final String STATE_FOCUSING = "STATE_FOCUSING";
+    public static final String STATE_FOCUSING_SNAP_ON_FINISH = "STATE_FOCUSING_SNAP_ON_FINISH";
+    public static final String STATE_SUCCESS = "STATE_SUCCESS";
+    public static final String STATE_FAIL = "STATE_FAIL";
+
+    // time threshold
+    protected static final int FIRST_AUTO_FOCUS_DELAY = 2000;
+    protected static final int CONTINUOUS_SNAP_MAX_INTERVAL = 1000; //连拍最大时间间隔(ms)
+    protected static final int FOCUSING_TIMEOUT = 5000; //聚焦超时
+
+    // settings
+//    private boolean mTouchSnap = false; //触屏拍照
+
+    // current and last values
+    private boolean mFocusSuccess = true;
+    private boolean mLastFocusSuccess = true; // ture for success, false for fail
+    private String mFocusMode;
+    private long mCaptureTime = 0;
+    private long mLastCaptureTime = 0;
+    private long mFocusFinishTime = 0;
+    private long mLastFocusFinishTime = 0;
+
+    // surfaceView的高度和宽度
+    private int mPreviewWidth;
+    private int mPreviewHeight;
+
+    private static final int MSG_START_DISTANCE_CHECKER = 4;
+    private static final int MSG_CAPTURE = 5;
+    private static final int MSG_HIDE_TOUCH_INDICATOR = 6;
+
+
+    private FocusStateMachine mFocusStateMachine;
+    private Handler mHandler;
+    private IAutoFocusCallBack mAutoFocusCallBack;
+    private String[] mDefaultFocusModes;
+
+    // 是否是实体键聚焦，因为实体键聚焦在聚焦成功或者失败后不能隐藏掉聚焦框
+    private boolean mIsShutterDownFocus;
+    // 是否聚焦区域支持
+    private boolean mFocusAreaSupported;
+    private boolean mIsFocusSupported = true;
+    private boolean mMeteringAreaSupported;
+    // 这两个值暂时不用,保留
+//    private boolean mLockAeAwbNeeded;
+//    private boolean mAeAwbLock;
+    // 用于上层坐标系和camera坐标系转换的矩阵
+    private Matrix mMatrix;
+    // 定时开始的时候，取消传感器聚焦
+    private boolean mCloseSensor;
+    // 屏蔽聚焦功能，比如实时预览检测的过程中,默认值是开启
+    private boolean mEnableFocus = true;
+    /**
+     * 当前的相机预览是否
+     */
+    private boolean mIsPreviewPause = true;
+    private boolean mIsCameraRelease = false;
+
+    // 聚集区域和测光区域
+    private List<Camera.Area> mFocusArea; // focus area in driver format
+    private List<Camera.Area> mMeteringArea; // metering area in driver format
+
+    /**
+     * 智能聚焦的条件之一，当设备发生旋转时
+     */
+    private FocusDistanceChecker mFocusDistanceChecker;
+
+    private FocusDistanceChecker.DistanceCheckerListener mDistanceListener = new FocusDistanceChecker.DistanceCheckerListener() {
+
+        @Override
+        public boolean preCheck() {
+            // 返回false，会完成关闭传感器的处理逻辑
+            /*if (!mEnableFocus || mCloseSensor || mIsPreviewPause || mIsFocusing || mIsInUserMode || !mInitialized || ! canCallAutoFocus()) {
+                return;
+	        }*/
+
+            // 如果需要屏蔽传感器的值 或者 如果用户使用触屏聚焦后且传感器此时未超过阀值 ，屏蔽自动聚焦。
+            //CMLogger.i(TAG, "Sensor focus pre_check mEnableFocus:" + mEnableFocus + " mCloseSensor = " + mCloseSensor + " mIsPreviewPause =" + mIsPreviewPause);
+            if (!mEnableFocus || mCloseSensor || mIsPreviewPause || mIsCameraRelease) {
+                return false;
+            }
+
+            String focusMode = getFocusMode();
+            if (Parameters.FOCUS_MODE_INFINITY.equals(focusMode) || Parameters.FOCUS_MODE_MACRO.equals(focusMode)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public void onDistanceChanged() {
+            String state = mFocusStateMachine.getState();
+            CMLogger.i(TAG, "onDistanceChanged : send message to state machine. state = " + state);
+            // 如果是正在聚焦或者预约拍照状态,不响应事件
+            if ("STATE_FOCUSING".equals(state) || "mFocusingSnapOnFinish".equals(state)) {
+                return;
+            }
+
+            float focusInterval = System.currentTimeMillis() - mFocusFinishTime;
+            if (mLastFocusSuccess) {
+                // 上次聚焦成功,1600ms内不在进行聚焦
+                if (focusInterval < 1600) {
+                    return;
+                }
+            } else {
+                // 上次聚焦失败,2000ms内不再进行聚焦
+                if (focusInterval < 2000) {
+                    return;
+                }
+            }
+            // 若此时处于实体键聚焦中，不响应传感器聚焦
+            if (mIsShutterDownFocus) {
+                return;
+            }
+            sendMsgToStateMachine(FocusStateMachine.MSG_START_SENSOR_FOCUS);
+        }
+    };
+
+    public FocusManager(Context context, String[] defaultFocusModes) {
+        mMatrix = new Matrix();
+        mDefaultFocusModes = defaultFocusModes;
+        // 初始化状态机
+        mFocusStateMachine = new FocusStateMachine("FocusStateMachine", FocusManager.STATE_IDLE, this, context.getMainLooper());
+        mFocusStateMachine.start();
+        mHandler = new MainHandler();
+        mFocusDistanceChecker = new FocusDistanceChecker(context, mDistanceListener);
+    }
+
+    /**
+     * 设置聚焦状态的回调
+     *
+     * @param callBack
+     */
+    public void setFocusCallBack(IAutoFocusCallBack callBack) {
+        mAutoFocusCallBack = callBack;
+    }
+
+    protected IAutoFocusCallBack getAutoFocusCallBack() {
+        return mAutoFocusCallBack;
+    }
+
+    // This has to be initialized before initialize().
+    public void initializeFocusParameters(int surfaceViewWidth, int surfaceViewHeight) {
+        mPreviewWidth = surfaceViewWidth;
+        mPreviewHeight = surfaceViewHeight;
+        CameraSettingModel settingModel = CameraSettingModel.instance();
+        mIsFocusSupported = isSupported(Parameters.FOCUS_MODE_AUTO, settingModel.getSupportedFocusModes());
+        mFocusAreaSupported = settingModel.isFocusAreaSupported();
+        mMeteringAreaSupported = settingModel.isMeteringAreaSupported();
+//        mLockAeAwbNeeded = (settingModel.isAutoExposureLockSupported() || CameraSettingModel.instance().isAutoWhiteBalanceLockSupported());
+        CMLogger.i(TAG, "mPreviewWidth = " + mPreviewWidth + "mPreviewHeight = " + mPreviewHeight);
+        CMLogger.i(TAG, "mIsFocusSupported = " + mIsFocusSupported + " mFocusAreaSupported  = "
+                + mFocusAreaSupported + "mMeteringAreaSupported = " + mMeteringAreaSupported + "settingModel.getSupportedFocusModes() = " + settingModel.getSupportedFocusModes());
+        Matrix matrix = new Matrix();
+        Point p = new Point(surfaceViewWidth, surfaceViewHeight);
+        // 前置摄像头是true
+        // 因为上层设置了拍照方向是90，所以，此时应该旋转matrix 90度,很重要呀，搞死人了
+        CameraModuleUtil.prepareMatrix(matrix, false, 90, p.x, p.y);
+        // In face detection, the matrix converts the driver coordinates to UI
+        // coordinates. In tap focus, the inverted matrix converts the UI
+        // coordinates to driver coordinates.
+        matrix.invert(mMatrix);
+    }
+
+    /**
+     * 每次打开相机的时候，必须调用此方法，保证FocusManager的状态是正确的
+     */
+    public void resetSensorValue() {
+        mLastFocusSuccess = false;
+        if (mFocusDistanceChecker != null) {
+            mFocusDistanceChecker.reset();
+        }
+    }
+
+    /**
+     * 判断是否是实体键聚焦
+     *
+     * @return
+     */
+    protected boolean isShutterDownFocus() {
+        return mIsShutterDownFocus;
+    }
+
+    /**
+     * 设置是否是实体键聚焦
+     *
+     * @param isShutterFocus
+     */
+    protected void setShutterDownFocus(boolean isShutterFocus) {
+        mIsShutterDownFocus = isShutterFocus;
+    }
+
+    // Getters, setters
+    public boolean isLastFocusSuccess() {
+        return mLastFocusSuccess;
+    }
+
+    public boolean isFocusSuccess() {
+        return mFocusSuccess;
+    }
+
+    public void setFocusSuccess(boolean mFocusSuccess) {
+        this.mLastFocusSuccess = this.mFocusSuccess;
+        this.mFocusSuccess = mFocusSuccess;
+    }
+
+    public long getCaptureTime() {
+        return mCaptureTime;
+    }
+
+    protected void setCaptureTime(long mCaptureTime) {
+        this.mLastCaptureTime = this.mCaptureTime;
+        this.mCaptureTime = mCaptureTime;
+    }
+
+    public long getLastCaptureTime() {
+        return mLastCaptureTime;
+    }
+
+    public long getFocusFinishTime() {
+        return mFocusFinishTime;
+    }
+
+    public void setFocusFinishTime(long focusFinishTime) {
+        this.mLastFocusFinishTime = this.mFocusFinishTime;
+        this.mFocusFinishTime = focusFinishTime;
+    }
+
+    public long getLastFocusFinishTime() {
+        return mLastFocusFinishTime;
+    }
+
+    public boolean isTouchSnap() {
+        return CameraBusinessSettingModel.instance().getTouchScreenTakePic();
+    }
+
+    /**
+     * 获得当前聚焦的状态
+     *
+     * @return "STATE_IDLE" "STATE_FOCUSING" "STATE_FOCUSING_SNAP_ON_FINISH";
+     * "STATE_SUCCESS" "STATE_FAIL";
+     */
+    public String getState() {
+        return mFocusStateMachine.getState();
+    }
+
+    /**
+     * 开始拍照
+     */
+    public void capture() {
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.capture();
+        }
+        setCaptureTime(System.currentTimeMillis());
+    }
+
+    /**
+     * 开启预览后需要调用此方法开始一次延迟2s的聚焦动作
+     */
+    public void startFirstFocusAfterStartPreview() {
+        CMLogger.i(TAG, "start sensor mIsFocusSupported =" + mIsFocusSupported);
+
+        // 当后置摄像头不支持聚焦功能的时候，是不许要去注册传感器的.相比以前，仅仅是优化作用
+        if (!mIsFocusSupported) {
+            return;
+        }
+        // 前置攝像頭也取消聚焦功能
+        CameraManager.CameraProxy cameraProxy = CameraManager.instance().getCamera();
+
+        if (cameraProxy != null) {
+            CMLogger.i(TAG, "cameraProxy.getFacing() = " + cameraProxy.getFacing());
+            if (cameraProxy.getFacing() == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                // if we already register the sensor, should un-register it if camera type is front.
+                CMLogger.i(TAG, "mFocusDistanceChecker.unRegister()");
+                mFocusDistanceChecker.unRegister();
+                return;
+            }
+        }
+        // 需求，在首次时，待相机稳定后2秒开始一次聚焦
+        if (mHandler.hasMessages(MSG_START_DISTANCE_CHECKER)) {
+            mHandler.removeMessages(MSG_START_DISTANCE_CHECKER);
+        }
+
+        mHandler.sendEmptyMessageDelayed(MSG_START_DISTANCE_CHECKER, FIRST_AUTO_FOCUS_DELAY);
+        mLastFocusFinishTime = System.currentTimeMillis();
+    }
+
+    /**
+     * 发送message到状态机
+     *
+     * @param what
+     */
+    private void sendMsgToStateMachine(int what) {
+        CMLogger.i(TAG, "send msg to state machine : " + what);
+        Message msg = new Message();
+        msg.what = what;
+        msg.arg1 = 1;
+        mFocusStateMachine.sendMessage(msg);
+    }
+
+    private class MainHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_CAPTURE:
+                    capture();
+                    break;
+                case MSG_START_DISTANCE_CHECKER:
+                    CMLogger.i(TAG, "start sensor now");
+                    if (mFocusDistanceChecker != null) {
+                        mFocusDistanceChecker.register();
+                    }
+                    break;
+                case MSG_HIDE_TOUCH_INDICATOR:
+                    if (mAutoFocusCallBack != null) {
+                        mAutoFocusCallBack.clear();
+                    }
+                    break;
+                default:
+                    CMLogger.w(TAG, "Invalid message:" + msg.what);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 这个方法暂时没用，不用删除
+     * This can only be called after mParameters is initialized.
+     *
+     * @return
+     */
+    public String initFocusMode() {
+        CameraSettingModel settingModel = CameraSettingModel.instance();
+
+        List<String> supportedFocusModes = settingModel.getSupportedFocusModes();
+
+        if (mFocusAreaSupported && mFocusArea != null && !Parameters.FOCUS_MODE_MACRO.equals(mFocusMode)) {
+            // Always use autofocus in tap-to-focus, except macro mode
+            mFocusMode = Parameters.FOCUS_MODE_AUTO;
+        } else {
+            // The default is continuous autofocus.
+            mFocusMode = settingModel.getFocusMode();
+
+            // Try to find a supported focus mode from the default list.
+            if (mFocusMode == null) {
+                for (int i = 0;
+                     i < mDefaultFocusModes.length;
+                     i++) {
+                    String mode = mDefaultFocusModes[i];
+                    if (isSupported(mode, supportedFocusModes)) {
+                        mFocusMode = mode;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!isSupported(mFocusMode, supportedFocusModes)) {
+            // For some reasons, the driver does not support the current
+            // focus mode. Roll back to auto.
+            if (isSupported(Parameters.FOCUS_MODE_AUTO, settingModel.getSupportedFocusModes())) {
+                mFocusMode = Parameters.FOCUS_MODE_AUTO;
+            } else {
+                mFocusMode = settingModel.getFocusMode();
+            }
+        }
+        return mFocusMode;
+    }
+
+    public static boolean isSupported(String value, List<String> supported) {
+        return supported == null ? false : supported.indexOf(value) >= 0;
+    }
+
+    /**
+     * Set the focus mode
+     *
+     * @param focusMode
+     */
+    public void setFocusMode(String focusMode) {
+        mFocusMode = focusMode;
+    }
+
+    /**
+     * Get the focus mode.
+     *
+     * @return
+     */
+    protected String getFocusMode() {
+        if (TextUtils.isEmpty(mFocusMode)) {
+            mFocusMode = CameraSettingModel.instance().getFocusMode();
+        }
+        return mFocusMode;
+    }
+
+    /**
+     * 开始聚焦
+     */
+    protected void autoFocus() {
+        if (!mEnableFocus) {
+            return;
+        }
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.autoFocus();
+        }
+
+        if (mFocusDistanceChecker != null) {
+            mFocusDistanceChecker.updateLastSensorValues();
+        }
+    }
+
+    /**
+     * 初始化聚焦区域
+     *
+     * @param focusWidth    聚焦框的宽度
+     * @param focusHeight   聚焦框的高度
+     * @param x
+     * @param y
+     * @param previewWidth  预览尺寸宽度
+     * @param previewHeight 预览尺寸高度
+     */
+    @TargetApi(ApiHelper.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private void initializeFocusAreas(int focusWidth, int focusHeight,
+                                      int x, int y, int previewWidth, int previewHeight) {
+        if (mFocusArea == null) {
+            mFocusArea = new ArrayList<Camera.Area>();
+            mFocusArea.add(new Camera.Area(new Rect(), 1));
+        }
+
+        // Convert the coordinates to driver format.
+        calculateTapArea(focusWidth, focusHeight, 1f, x, y, previewWidth, previewHeight,
+                (mFocusArea.get(0)).rect);
+    }
+
+    /**
+     * 初始化测光区域
+     *
+     * @param focusWidth    聚焦框的宽度
+     * @param focusHeight   聚焦框的高度
+     * @param x
+     * @param y
+     * @param previewWidth  预览尺寸宽度
+     * @param previewHeight 预览尺寸高度
+     */
+    @TargetApi(ApiHelper.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private void initializeMeteringAreas(int focusWidth, int focusHeight,
+                                         int x, int y, int previewWidth, int previewHeight) {
+        if (mMeteringArea == null) {
+            mMeteringArea = new ArrayList<Camera.Area>();
+            mMeteringArea.add(new Camera.Area(new Rect(), 1));
+        }
+
+        // Convert the coordinates to driver format.
+        // AE area is bigger because exposure is sensitive and
+        // easy to over- or underexposure if area is too small.
+        calculateTapArea(focusWidth, focusHeight, 1.5f, x, y, previewWidth, previewHeight,
+                (mMeteringArea.get(0)).rect);
+    }
+
+    /**
+     * calculate the area when end user tap the screen
+     */
+    public void calculateTapArea(int focusWidth, int focusHeight, float areaMultiple, int x, int y, int previewWidth, int previewHeight, Rect rect) {
+        int areaWidth = (int) (focusWidth * areaMultiple);
+        int areaHeight = (int) (focusHeight * areaMultiple);
+        int left = CameraModuleUtil.clamp(x - areaWidth / 2, 0, previewWidth - areaWidth);
+        int top = CameraModuleUtil.clamp(y - areaHeight / 2, 0, previewHeight - areaHeight);
+        RectF rectF = new RectF(left, top, left + areaWidth, top + areaHeight);
+        mMatrix.mapRect(rectF);
+        CameraModuleUtil.rectFToRect(rectF, rect);
+    }
+
+    /**
+     * 是否可以调用聚焦,无限远模式不能聚焦
+     *
+     * @return
+     */
+    protected boolean needAutoFocusCall() {
+        String focusMode = getFocusMode();
+        CMLogger.i(TAG, "focusMode = " + focusMode);
+        return !(focusMode.equals(Parameters.FOCUS_MODE_INFINITY)
+                || focusMode.equals(Parameters.FOCUS_MODE_FIXED)
+                || focusMode.equals(Parameters.FOCUS_MODE_EDOF));
+    }
+
+    /**
+     * 聚焦成功与否的回调
+     *
+     * @param success true 成功 false 失败
+     */
+    public void onAutoFocus(boolean success) {
+        CMLogger.i(TAG, "onAutoFocus is success = " + success);
+        mLastFocusSuccess = success;
+        mFocusFinishTime = System.currentTimeMillis();
+        if (success) {
+            mFocusStateMachine.sendMessage(FocusStateMachine.MSG_FOCUS_SUCCESS);
+        } else {
+            mFocusStateMachine.sendMessage(FocusStateMachine.MSG_FOCUS_FAIL);
+        }
+    }
+
+    /**
+     * 重置聚焦UI
+     */
+    public void resetTouchFocus() {
+
+        // Put focus indicator to the center.
+        if (null != mAutoFocusCallBack) {
+            mAutoFocusCallBack.onResetFocusArea();
+            mAutoFocusCallBack.clear();
+        }
+
+        mFocusArea = null;
+        mMeteringArea = null;
+    }
+
+    /**
+     * 取消聚焦
+     */
+    protected void cancelAutoFocus() {
+        CMLogger.v(TAG, "Cancel autofocus.");
+
+        // Reset the tap area before calling mListener.cancelAutofocus.
+        // Otherwise, focus mode stays at auto and the tap area passed to the
+        // driver is not reset.
+        resetTouchFocus();
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.cancelAutoFocus();
+        }
+    }
+
+    /**
+     * 触屏聚焦
+     *
+     * @param e
+     * @param supportTouchFocus
+     * @return
+     */
+    public boolean onTouch(Point point, MotionEvent e, boolean supportTouchFocus) {
+        CMLogger.i(TAG, "onTouch");
+        // 用户使用触屏聚焦后，当前改为手动模式，手动模式下，自动聚焦不再生效。
+        // 该模式
+//        mHandler.sendEmptyMessage(MSG_CHANGE_TO_TOUCH_FOCUS);
+        mIsShutterDownFocus = false;
+        CMLogger.i(TAG, "mFocusAreaSupported =" + mFocusAreaSupported + " mFocusArea = " + mFocusArea);
+        if ((!mFocusAreaSupported && null == mFocusArea) || !supportTouchFocus) {
+            // 不支持触屏聚焦，触摸将触发普通自动聚焦
+            mFocusStateMachine.sendMessage(FocusStateMachine.MSG_NOT_SUPPORT_FOCUS_AREA_TOUCH);
+            return true;
+        }
+
+        Message msg = new Message();
+        msg.what = FocusStateMachine.MSG_TOUCH;
+        msg.arg1 = Math.round(point.x + e.getX());
+        msg.arg2 = Math.round(point.y + e.getY());
+        mFocusStateMachine.sendMessage(msg);
+
+        return true;
+    }
+
+
+    /**
+     * 实体键半按聚焦
+     */
+    public void onShutterDown() {
+        mIsShutterDownFocus = true;
+        if (!needFocus()) {
+            return;
+        }
+        /*if (System.currentTimeMillis() - mLastFocusTime > FOCUS_SHOOT_INTERVAL) {
+            mFocusState.sendMessage(FocusState.MSG_START_FOCUS);
+        } else {
+        	mFocusState.sendMessage(FocusState.MSG_DO_SNAP);
+        }*/
+        mFocusStateMachine.sendMessage(FocusStateMachine.MSG_HALF_PRESS_DOWN);
+    }
+
+    /**
+     * 实体键up,取消聚焦
+     */
+    public void onShutterUp() {
+        Log.i(TAG, "onShutterUp MSG_CANCEL_FOCUS");
+        CameraManager.CameraProxy camera = CameraManager.instance().getCamera();
+        if (camera != null) {
+            if (camera.getFacing() == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                return;
+            }
+        }
+        mIsShutterDownFocus = false;
+        mFocusStateMachine.sendMessage(FocusStateMachine.MSG_HALF_PRESS_UP);
+    }
+
+    /**
+     * 是否可以调用聚焦
+     *
+     * @return
+     */
+    protected boolean needFocus() {
+        if (!mIsFocusSupported) {
+            return false;
+        }
+        // Walk around with SAMSUNG device focus.
+        if ("STATE_FOCUSING".equals(mFocusStateMachine.getState())) {
+            return false;
+        }
+
+        if (!needAutoFocusCall()) {
+            return false;
+        }
+
+        // 前置攝像頭也取消聚焦功能
+        CameraManager.CameraProxy cameraProxy = CameraManager.instance().getCamera();
+        if (cameraProxy != null) {
+            if (cameraProxy.getFacing() == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 设置聚焦区域
+     *
+     * @param x
+     * @param y
+     */
+    protected void setFocusArea(int x, int y) {
+        if (mAutoFocusCallBack == null) {
+            return;
+        }
+        Point p = mAutoFocusCallBack.getFocusSize();
+        int focusWidth = p.x;
+        int focusHeight = p.y;
+        CMLogger.i("test", "focusWidth=" + focusWidth + "focusHeight" + focusHeight + "mPreviewWidth=" + mPreviewWidth + "mPreviewHeight=" +
+                mPreviewHeight + " x / " + x + "/ y = " + y);
+        Point point = new Point(mPreviewWidth, mPreviewHeight);
+
+        int previewWidth = point.x;
+        int previewHeight = point.y;
+
+        // Initialize mFocusArea.
+        if (mFocusAreaSupported) {
+            initializeFocusAreas(
+                    focusWidth, focusHeight, x, y, previewWidth, previewHeight);
+        }
+        // Initialize mMeteringArea.
+        if (mMeteringAreaSupported) {
+            initializeMeteringAreas(
+                    focusWidth, focusHeight, x, y, previewWidth, previewHeight);
+        }
+        CMLogger.i("test", "x = " + x + "Y =  " + y);
+        mAutoFocusCallBack.onSetFocusArea(x, y, previewWidth, previewHeight);
+        // Set the focus area and metering area.
+        updateFocusParameters();
+    }
+
+    /**
+     * 更新聚焦参数
+     */
+    public void updateFocusParameters() {
+
+        final CameraSettingModel settingModel = CameraSettingModel.instance();
+        if (mFocusAreaSupported && null != mFocusArea) {
+            settingModel.setFocusAreas(mFocusArea);
+        } else {
+            CMLogger.d(TAG, "updateFocusParameters : setFocusAreas unsupported.");
+        }
+
+        if (mMeteringAreaSupported && null != mMeteringArea) {
+            CMLogger.d(TAG, "upDateFocusParameters  :  meter area " + mMeteringArea);
+            settingModel.setMeteringAreas(mMeteringArea);
+        } else {
+            CMLogger.d(TAG, "updateFocusParameters : setMeteringAreas unsupported.");
+        }
+
+        settingModel.updateParameters(CameraSettings.UPDATE_PARAM_PREFERENCE);
+    }
+
+    public void setMatrix(boolean mirror, int displayOrientation) {
+        if (0 != mPreviewHeight && 0 != mPreviewWidth) {
+            Matrix matrix = new Matrix();
+            CMLogger.e("Focus", "Update matrix:" + mPreviewWidth + "/" + mPreviewHeight);
+            CameraModuleUtil.prepareMatrix(matrix, mirror, displayOrientation, mPreviewWidth, mPreviewHeight);
+            // In face detection, the matrix converts the driver coordinates to
+            // UI
+            // coordinates. In tap focus, the inverted matrix converts the UI
+            // coordinates to driver coordinates.
+            matrix.invert(mMatrix);
+        }
+    }
+
+    /**
+     * 通知状态机开始拍照
+     */
+    public void doCapture() {
+        if (mFocusStateMachine.getState().equals(FocusManager.STATE_FOCUSING_SNAP_ON_FINISH)) {
+            return;
+        }
+        mIsShutterDownFocus = false;
+        mFocusStateMachine.sendMessage(FocusStateMachine.MSG_SNAP);
+    }
+
+    /**
+     * Stop sensor when Activity pause
+     */
+    public void stopSensor() {
+        // 避免打开相机后马上back键盘退出
+        if (mHandler.hasMessages(MSG_START_DISTANCE_CHECKER)) {
+            mHandler.removeMessages(MSG_START_DISTANCE_CHECKER);
+        }
+        mFocusDistanceChecker.unRegister();
+    }
+
+    /**
+     * 关闭传感器聚焦
+     *
+     * @param closSensorFocus
+     */
+    public void closeSensorFocus(boolean closSensorFocus) {
+        this.mCloseSensor = closSensorFocus;
+        CMLogger.i(TAG, "closeSensorFocus : " + mCloseSensor);
+    }
+
+    /**
+     * Show focus view successful
+     *
+     * @param isDelay
+     */
+    protected void showFocusViewSuccess(boolean isDelay) {
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.showSuccess(isDelay);
+        }
+    }
+
+    /**
+     * show focus view fail
+     *
+     * @param isDelay
+     */
+    protected void showFocusViewFail(boolean isDelay) {
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.showFail(isDelay);
+        }
+    }
+
+    /**
+     * start show focus view
+     */
+    protected void showFocusViewStart() {
+        if (mAutoFocusCallBack != null) {
+            mAutoFocusCallBack.showStart();
+        }
+    }
+
+    /**
+     * FocusManager的总开关，设计为FocusManager中优先级最高开关，用于实时预览中检测时取消所有聚焦使用
+     *
+     * @param enabled
+     */
+    public void setFocusEnable(boolean enabled) {
+        mEnableFocus = enabled;
+    }
+
+    /**
+     * 设置相机预览是否停止
+     *
+     * @param isPause
+     */
+    public void setPreviewPause(boolean isPause) {
+        this.mIsPreviewPause = isPause;
+    }
+
+    /**
+     * 相机资源被释放
+     *
+     * @param isReleaseCamera
+     */
+    public void setCameraRelease(boolean isReleaseCamera) {
+        CMLogger.i(TAG, "setCameraRelease isReleaseCamera" + isReleaseCamera);
+        mIsCameraRelease = isReleaseCamera;
+        if (isReleaseCamera && mFocusStateMachine != null) {
+            mFocusStateMachine.removeAllPendingMessage();
+        }
+    }
+}

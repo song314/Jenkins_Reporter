@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/feedback_ad_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/umeng_fb_reply_date_default"
+        android:textColor="#abb2ba"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#ffffff"
+        android:gravity="center"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/feedback_ad_title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="10dp"
+            android:clickable="false"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <com.pinguo.camera360.lib.ui.ImageLoaderView
+            android:id="@+id/feedback_ad_image"
+            android:clickable="false"
+            android:adjustViewBounds="true"
+            android:layout_below="@id/feedback_ad_title"
+            android:scaleType="fitStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/feedback_ad_content"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/feedback_ad_image"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:clickable="false"
+            android:textColor="#733f3f3f"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/feedback_ad_link"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/feedback_ad_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:textColor="#ffffdb5b"
+            android:clickable="false"
+            android:textSize="16sp" />
+
+    </RelativeLayout>
+
+</LinearLayout>

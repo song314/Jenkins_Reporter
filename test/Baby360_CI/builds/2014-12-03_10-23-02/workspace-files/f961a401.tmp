@@ -1,0 +1,690 @@
+package com.pinguo.edit.sdk.option.message;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.utils.NetworkUtils;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.option.feedback.Constant;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+
+/**
+ * Created by wangpeng on 14-4-29.
+ */
+public class PGMessageManager {
+    private static final String TAG = PGMessageManager.class.getSimpleName();
+
+    private static final String SIG_SECRET_KEY = "1Qqf0PEkShxcfjFwaUjpe3aoZGKblONw";
+    private static final String APP_ID = "9b71356f2c48eda0";
+
+    private final static String PREFERENCE_NAME = "msg_center";
+    private final static String KEY_VERSION = "msg_version";
+    private final static String KEY_MSG = "msg_json";
+    private final static String KEY_NOT_AVAILABLE_MSG = "not_available_msg_json";
+    private final static String KEY_DELETED_MSG = "deleted_msg";
+    private final static String KEY_NEW_MSG_COUNT = "new_msg_count";
+
+    private final static String KEY_NEW_ORDER_CHANGE_COUNT = "new_order_change_count";
+    private final static String KEY_ORDER_STATE_CHANGED_LIST = "oder_state_chaged_list";
+
+    private Gson mGson;
+    private ApiPGMessageList mApiPGMessageList;
+    private SharedPreferences mPreferences;
+    private SharedPreferences.Editor mEditor;
+    private Context mContext;
+
+    // 用户相关
+    private SharedPreferences mUserPreferences;
+    private SharedPreferences.Editor mUserEditor;
+
+    private static PGMessageManager sInstance;
+
+//    private Interaction.InteractionUpdateListener updateListener = null;
+
+    public void setContext(Context context) {
+        if (mContext != null) {
+            return;
+        }
+
+        Log.i(TAG, "setContext invoked");
+        mContext = context.getApplicationContext();
+
+        initPreference();
+        initUserPreference();
+    }
+
+    private void initPreference() {
+        if (mContext == null) {
+            GLogger.e(TAG, "initPreference context is null");
+            return;
+        }
+
+        String locale = Locale.getDefault().toString();
+        mPreferences = mContext.getSharedPreferences(PREFERENCE_NAME + locale, 0);
+        mEditor = mPreferences.edit();
+    }
+
+    private boolean checkPreference() {
+        if (mPreferences == null || mEditor == null) {
+            initPreference();
+        }
+
+        return (mPreferences != null && mEditor != null);
+    }
+
+//    public void setUpdateListener(Interaction.InteractionUpdateListener updateListener) {
+//        this.updateListener = updateListener;
+//    }
+
+    public void initUserPreference() {
+        if (mContext == null) {
+            GLogger.e(TAG, "initUserPreference context is null");
+            return;
+        }
+
+        Context context = mContext;
+        //新的登录
+        User user = User.create(context);
+        User.Info userInfo = user.getInfo();
+        if (userInfo != null) {
+            String uid = userInfo.userId;
+            if (!TextUtils.isEmpty(uid)) {
+                mUserPreferences = context.getSharedPreferences(PREFERENCE_NAME + uid, 0);
+                mUserEditor = mUserPreferences.edit();
+            } else {
+                mUserPreferences = context.getSharedPreferences(PREFERENCE_NAME, 0);
+                mUserEditor = mUserPreferences.edit();
+            }
+        } else {
+            mUserPreferences = context.getSharedPreferences(PREFERENCE_NAME, 0);
+            mUserEditor = mUserPreferences.edit();
+        }
+    }
+
+    private PGMessageManager() {
+        mGson = new Gson();
+    }
+
+    public static synchronized PGMessageManager getInstance() {
+        if (sInstance == null) {
+            sInstance = new PGMessageManager();
+        }
+
+        return sInstance;
+    }
+
+    public void update(OnUpdateMsgResult result) {
+        if (result != null) {
+            mOnUpdateMsgResult = result;
+        }
+
+        HashMap<String, String> map = new HashMap<String, String>();
+
+        Constant.prepareCommonParams(mContext, map);
+        map.put("appId", APP_ID);
+        String sig = NetworkUtils.getSigByParamMap(map);
+        if (!TextUtils.isEmpty(sig)) {
+            map.put("sig", sig);
+        }
+
+        request(map);
+
+        GLogger.i(TAG, "update");
+    }
+
+    public List<PGMessage> getMsgList() {
+        return refreshLocalMsg();
+    }
+
+    /**
+     * 刷新本地消息
+     * 过期的消息需要删除；因为某些功能不可用而隐藏的消息，检查这些功能是否可用，可用则需要添加显示消息
+     *
+     * @return
+     */
+    public List<PGMessage> refreshLocalMsg() {
+        //剔除过期的消息
+        List<PGMessage> msgList = getMsgListFromPref();
+        List<PGMessage> retList = new ArrayList<PGMessage>();
+        try {
+            for (PGMessage message : msgList) {
+                if (message.expireTime * 1000 > System.currentTimeMillis()) {
+                    retList.add(message);
+                }
+            }
+        } catch (Exception e) {
+            GLogger.e(TAG, "剔除过期数据error");
+            e.printStackTrace();
+        }
+
+        // 检查本地生效（未安装到已安装）的消息
+        updateUnreadMsg(retList);
+
+        // 从已删除的消息中移除过期的消息
+        delLocalExpiredMsg();
+
+        // 消息按时间排序
+        Collections.sort(retList);
+
+        // 保存刷新后的消息到本地
+        updateLocalMsgs(retList);
+
+        // 设置未读消息
+        int unreadMsg = 0;
+        for (PGMessage message : retList) {
+            if (!message.hasReaded) {
+                unreadMsg++;
+            }
+        }
+        setNewMessageCount(unreadMsg);
+
+        return retList;
+    }
+
+    /**
+     * 因为某些功能不可用而隐藏的消息，检查这些功能是否可用，可用则需要添加显示消息
+     *
+     * @param localMsgList
+     */
+    public void updateUnreadMsg(List<PGMessage> localMsgList) {
+        List<PGMessage> unvailableList = getUnavailableMsgListFromPref();
+        if (unvailableList == null || unvailableList.size() <= 0) {
+            return;
+        }
+
+        List<PGMessage> addedList = new ArrayList<PGMessage>();
+        try {
+//            for (final PGMessage message : unvailableList) {
+//                boolean bool = Interaction.asyncValidAndUpdate(message.logic, new Interaction.InteractionUpdateListener() {
+//                    @Override
+//                    public void valid(boolean bool) {
+//                        if (bool && updateListener != null) {
+////                            updateListener.valid(Interaction.isValid(message.logic));
+//                        }
+//                    }
+//                });
+
+//                if (bool && message.expireTime * 1000 > System.currentTimeMillis()) {
+//                    addedList.add(message);
+//                }
+//            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (addedList.size() > 0) {
+//            CameraBusinessSettingModel.instance().addNewFlagInMyCenter(CameraBusinessSettingModel.MY_CENTER_NEW_MSG_FLAG);
+            localMsgList.addAll(addedList);
+
+            // 删除可用的消息
+            unvailableList.removeAll(addedList);
+            mEditor.putString(KEY_NOT_AVAILABLE_MSG, mGson.toJson(unvailableList));
+            // add new msg count
+            mEditor.putInt(KEY_NEW_MSG_COUNT, mPreferences.getInt(KEY_NEW_MSG_COUNT, 0) + addedList.size());
+            mEditor.commit();
+        }
+    }
+
+    /**
+     * 从已删除的消息中移除过期的消息
+     */
+    private void delLocalExpiredMsg() {
+        List<PGMessage> delList = getDeletedMsgListFromPref();
+        try {
+            int len = delList.size();
+            for (int i = len - 1;
+                 i >= 0;
+                 --i) {
+                if (delList.get(i).expireTime * 1000 <= System.currentTimeMillis()) {
+                    delList.remove(i);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mEditor.putString(KEY_DELETED_MSG, mGson.toJson(delList));
+        mEditor.commit();
+    }
+
+    public int getNewMessageCount() {
+        // 加保护
+        if (!checkPreference()) {
+            return 0;
+        }
+
+        refreshLocalMsg();
+        return mPreferences.getInt(KEY_NEW_MSG_COUNT, 0);
+    }
+
+    /**
+     * 减少消息中心未读消息数量
+     *
+     * @param count
+     */
+    public void decNewMessageCount(int count) {
+        if (!checkPreference()) {
+            return;
+        }
+
+        int newCount = mPreferences.getInt(KEY_NEW_MSG_COUNT, 0) - count;
+        mEditor.putInt(KEY_NEW_MSG_COUNT, newCount >= 0 ? newCount : 0);
+        mEditor.commit();
+    }
+
+    public void setNewMessageCount(int count) {
+        if (!checkPreference()) {
+            return;
+        }
+
+        mEditor.putInt(KEY_NEW_MSG_COUNT, count);
+        mEditor.commit();
+    }
+
+    public void clearNewMessageFlag() {
+        // 加保护
+        if (!checkPreference()) {
+            return;
+        }
+
+        mEditor.putInt(KEY_NEW_MSG_COUNT, 0);
+        mEditor.commit();
+    }
+
+    private OnUpdateMsgResult mOnUpdateMsgResult;
+
+    public static abstract class OnUpdateMsgResult extends AsyncResult<List<PGMessage>> {
+
+    }
+
+    public void setOnUpdateMsgResult(OnUpdateMsgResult result) {
+        mOnUpdateMsgResult = result;
+    }
+
+    private void request(final Map<String, String> map) {
+        // 取消正在执行的请求
+        if (mApiPGMessageList != null) {
+            mApiPGMessageList.cancel(true);
+        }
+
+        mApiPGMessageList = new ApiPGMessageList(mContext, map);
+        mApiPGMessageList.get(new AsyncResult<ApiPGMessageList.Data>() {
+            @Override
+            public void onSuccess(ApiPGMessageList.Data response) {
+                GLogger.i(TAG, "返回：" + new Gson().toJson(response));
+
+                // 订单状态改变
+                handleOrderMessages(response.usermsgs);
+
+                // 消息中心
+                handlePGMessages(response.messages);
+
+                putVersion2Pref(response.version);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                GLogger.e(TAG, e);
+                if (mOnUpdateMsgResult != null) {
+                    mOnUpdateMsgResult.onError(e);
+                }
+            }
+        });
+    }
+
+    private void handleOrderMessages(List<PGOrderMessage> usermsgs) {
+        // 订单状态改变
+        if (usermsgs == null) {
+            GLogger.i(TAG, "usermsgs == null");
+        } else if (usermsgs.size() <= 0) {
+            GLogger.i(TAG, "usermsgs size <= 0");
+        } else {
+            List<PGOrderMessage> orders = new ArrayList<PGOrderMessage>();
+            for (PGOrderMessage msg : usermsgs) {
+                if (TextUtils.equals(msg.type, "USER_ORDER_MSG")) {
+                    orders.add(msg);
+                }
+            }
+
+            int size = orders.size();
+            if (size > 0) {
+
+                // 剔除重复订单
+                Set<PGOrderMessage> set = new HashSet<PGOrderMessage>();
+                set.addAll(orders);
+                orders.clear();
+                orders.addAll(set);
+
+                List<PGOrderMessage> list = getStateChangedOrderList();
+                if (list != null) {
+                    int sizeList = list.size();
+                    int sizeOrder = orders.size();
+
+                    // 订单状态改变
+                    List<PGOrderMessage> updateList = new ArrayList<PGOrderMessage>();
+                    try {
+                        for (int i = 0;
+                             i < sizeOrder;
+                             i++) {
+                            PGOrderMessage msg = orders.get(i);
+                            int j;
+                            for (j = 0;
+                                 j < sizeList;
+                                 j++) {
+                                if (msg.logic.equals(list.get(j).logic)) {
+                                    break;
+                                }
+                            }
+
+                            if (j >= sizeList) {
+                                updateList.add(msg);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    list.addAll(updateList);
+
+                } else {
+                    list = orders;
+                }
+
+                size = list.size();
+                if (checkUserPreference()) {
+                    mUserEditor.putInt(KEY_NEW_ORDER_CHANGE_COUNT, size);
+                    mUserEditor.putString(KEY_ORDER_STATE_CHANGED_LIST, mGson.toJson(list));
+                    mUserEditor.commit();
+                }
+
+//                // 取景界面新消息提示
+//                CameraBusinessSettingModel.instance().addNewFlagInMyCenter(CameraBusinessSettingModel.MY_CENTER_NEW_ORDER_FLAG);
+//
+//                // 订单状态改变event
+//                PGEventBus.getInstance().post(new OnOrderStatusChangedEvent());
+            }
+        }
+    }
+
+    private void handlePGMessages(List<PGMessage> messages) {
+        if (messages != null && messages.size() > 0) {
+            Log.i(TAG, "onResponse response.messages.size : " + messages.size());
+
+            // 剔除过期数据和暂时不能用数据
+            List<PGMessage> availableList = new ArrayList<PGMessage>();
+            List<PGMessage> notAvailableList = new ArrayList<PGMessage>();
+            try {
+                for (PGMessage message : messages) {
+                    GLogger.i(TAG, "message = " + message.text + " logic =" + message.logic);
+                    message.receiveTime = System.currentTimeMillis();
+                    if (message.expireTime * 1000 > System.currentTimeMillis()) {
+                        availableList.add(message);
+                    }
+                }
+            } catch (Exception e) {
+                GLogger.e(TAG, "剔除无效数据和暂时不能用数据出错");
+                e.printStackTrace();
+            }
+
+            if (notAvailableList.size() > 0) {
+                Log.i(TAG, "notAvailableList.size : " + notAvailableList.size());
+                mEditor.putString(KEY_NOT_AVAILABLE_MSG, mGson.toJson(notAvailableList));
+                mEditor.commit();
+            }
+
+            //删除已经看过的消息
+            try {
+                List<PGMessage> deletedList = getDeletedMsgListFromPref();
+                int deletedLen = deletedList.size();
+                for (int d = deletedLen - 1;
+                     d >= 0;
+                     --d) {
+                    PGMessage deletedMessage = deletedList.get(d);
+                    int len = availableList.size();
+                    for (int i = len - 1;
+                         i >= 0;
+                         --i) {
+                        PGMessage msg = availableList.get(i);
+                        if (TextUtils.equals(deletedMessage.id, msg.id)) {
+                            if (deletedMessage.version >= msg.version) {
+                                availableList.remove(i);
+                            } else {
+                                deletedList.remove(d);
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                GLogger.e(TAG, "删除已经看过的消息出错");
+                e.printStackTrace();
+            }
+
+            // 统计新消息个数
+            List<PGMessage> localList = getMsgListFromPref();
+            int updateSize = 0;
+            try {
+                if (localList.size() > 0) {
+                    for (PGMessage message : availableList) {
+                        int len = localList.size();
+                        int i = len - 1;
+                        for (;
+                             i >= 0;
+                             i--) {
+                            PGMessage localMessage = localList.get(i);
+                            // id匹配但是verson变大，添加
+                            if (TextUtils.equals(message.id, localMessage.id)) {
+                                if (message.version > localMessage.version) {
+                                    Log.i(TAG, "id equal verson not message:" + message.appName);
+                                    updateSize++;
+                                } else {
+                                    message.hasReaded = localMessage.hasReaded;
+                                    message.receiveTime = localMessage.receiveTime;
+                                }
+                                localList.remove(i);
+                                break;
+                            }
+                        }
+                        // 没有匹配的id，添加
+                        if (i < 0) {
+                            Log.i(TAG, "i < 0 message : " + message.appName);
+                            updateSize++;
+                        }
+                    }
+                } else {
+                    updateSize = availableList.size();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            Log.i(TAG, "onResponse update size : " + updateSize);
+            // 小红点提示
+            if (updateSize > 0) {
+                // add new msg count
+                mEditor.putInt(KEY_NEW_MSG_COUNT, mPreferences.getInt(KEY_NEW_MSG_COUNT, 0) + updateSize);
+                mEditor.commit();
+
+//                // 取景界面新消息提示
+//                CameraBusinessSettingModel.instance().addNewFlagInMyCenter(CameraBusinessSettingModel.MY_CENTER_NEW_MSG_FLAG);
+            }
+
+            putMsgJson2Pref(mGson.toJson(availableList));
+
+            if (mOnUpdateMsgResult != null) {
+                mOnUpdateMsgResult.onSuccess(availableList);
+            }
+
+            GLogger.i(TAG, "数据数量: " + availableList.size());
+
+        } else {
+            if (mOnUpdateMsgResult != null) {
+                mOnUpdateMsgResult.onSuccess(messages);
+            }
+        }
+    }
+
+    private List<PGMessage> getMsgListFromPref() {
+        // 加保护
+        if (!checkPreference()) {
+            return new ArrayList<PGMessage>();
+        }
+
+        String json = mPreferences.getString(KEY_MSG, "");
+        if (TextUtils.isEmpty(json)) {
+            return new ArrayList<PGMessage>();
+        }
+
+        List<PGMessage> list = mGson.fromJson(json, new TypeToken<ArrayList<PGMessage>>() {
+        }.getType());
+
+        return list;
+    }
+
+    private List<PGMessage> getUnavailableMsgListFromPref() {
+        // 加保护
+        if (!checkPreference()) {
+            return null;
+        }
+
+        String json = mPreferences.getString(KEY_NOT_AVAILABLE_MSG, "");
+        if (TextUtils.isEmpty(json)) {
+            return null;
+        }
+
+        List<PGMessage> list = mGson.fromJson(json, new TypeToken<ArrayList<PGMessage>>() {
+        }.getType());
+
+        return list;
+    }
+
+    private void putVersion2Pref(int version) {
+        // 加保护
+        if (!checkPreference()) {
+            return;
+        }
+
+        mEditor.putInt(KEY_VERSION, version);
+        mEditor.commit();
+    }
+
+    private void putMsgJson2Pref(String msg) {
+        // 加保护
+        if (!checkPreference()) {
+            return;
+        }
+
+        mEditor.putString(KEY_MSG, msg);
+        mEditor.commit();
+    }
+
+    public void updateLocalMsgs(List<PGMessage> msgList) {
+        putMsgJson2Pref(mGson.toJson(msgList));
+    }
+
+    private List<PGMessage> getDeletedMsgListFromPref() {
+        // 加保护
+        if (!checkPreference()) {
+            return new ArrayList<PGMessage>();
+        }
+
+        String json = mPreferences.getString(KEY_DELETED_MSG, "");
+        if (TextUtils.isEmpty(json)) {
+            return new ArrayList<PGMessage>();
+        }
+
+        List<PGMessage> list = mGson.fromJson(json, new TypeToken<ArrayList<PGMessage>>() {
+        }.getType());
+
+        return list;
+    }
+
+    public void delMsg(PGMessage msg) {
+        // 加保护
+        if (!checkPreference()) {
+            return;
+        }
+
+        List<PGMessage> list = getDeletedMsgListFromPref();
+        list.add(msg);
+        mEditor.putString(KEY_DELETED_MSG, mGson.toJson(list));
+        mEditor.commit();
+    }
+
+    public void delMsg(List<PGMessage> msg) {
+        // 加保护
+        if (!checkPreference()) {
+            return;
+        }
+
+        List<PGMessage> list = getDeletedMsgListFromPref();
+        list.addAll(msg);
+        mEditor.putString(KEY_DELETED_MSG, mGson.toJson(list));
+        mEditor.commit();
+    }
+
+    // ================================= 订单
+    private boolean checkUserPreference() {
+        if (mUserPreferences == null || mUserEditor == null) {
+            initUserPreference();
+        }
+
+        return (mUserPreferences != null) && (mUserEditor != null);
+    }
+
+    public int getNewOrderCount() {
+        if (!checkUserPreference()) {
+            GLogger.e(TAG, "checkUserPreference return false");
+            return 0;
+        }
+
+        return mUserPreferences.getInt(KEY_NEW_ORDER_CHANGE_COUNT, 0);
+    }
+
+    public List<PGOrderMessage> getStateChangedOrderList() {
+        if (!checkUserPreference()) {
+            GLogger.e(TAG, "checkUserPreference return false");
+            return null;
+        }
+
+        String json = mUserPreferences.getString(KEY_ORDER_STATE_CHANGED_LIST, "");
+        if (TextUtils.isEmpty(json)) {
+            return null;
+        }
+
+        List<PGOrderMessage> list = mGson.fromJson(json, new TypeToken<ArrayList<PGOrderMessage>>() {
+        }.getType());
+
+        return list;
+    }
+
+    public void saveStateChangedOrderList(List<PGOrderMessage> list) {
+        if (!checkUserPreference()) {
+            GLogger.e(TAG, "checkUserPreference return false");
+            return;
+        }
+
+        if (list == null) {
+            return;
+        }
+
+        mUserEditor.putInt(KEY_NEW_ORDER_CHANGE_COUNT, list.size());
+        mUserEditor.putString(KEY_ORDER_STATE_CHANGED_LIST, mGson.toJson(list));
+        mUserEditor.commit();
+    }
+}

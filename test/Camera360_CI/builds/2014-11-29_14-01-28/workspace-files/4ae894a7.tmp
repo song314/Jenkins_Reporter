@@ -1,0 +1,605 @@
+package us.pinguo.android.effect.group.sdk.androidsdk.model;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SeniorAdjustmentEnum;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectFactory;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.*;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.texture.Texture;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.texture.TextureItem;
+
+import java.io.File;
+import java.util.*;
+
+/**
+ * Created by pinguo on 14-5-26.
+ */
+public class MakePhotoModel {
+    private final static int DEFAULT_TEXTURE_INDEX = -1;
+    private static final String TAG = MakePhotoModel.class.getName();
+
+
+    private Effect effect; //特效
+
+    private String gpuCmd;
+
+    private int textureIndex = DEFAULT_TEXTURE_INDEX;
+
+    private String texturePath; //纹理路径
+    private boolean setTexture;
+    //    private int[] textureARGB;
+    private int textureHeight;
+    private int textureWidth;
+
+    private Map<String, ParamsModel> mParamsMap = new HashMap<String, ParamsModel>();
+    private Map<String, String> mNoEffectParamsMap = new HashMap<String, String>();
+
+    //是否在滑动结束后再去做图
+    private boolean scrollStopMake = false;
+
+    public boolean hasTexture() {
+        return !(DEFAULT_TEXTURE_INDEX == textureIndex);
+    }
+
+    public boolean hasParams() {
+        return mParamsMap.size() != 0;
+    }
+
+    public static String getChildEffect(String paramsKey) {
+        return SeniorAdjustmentEnum.childEffectParams.get(paramsKey);
+    }
+
+    public Effect getEffect() {
+        return effect;
+    }
+
+    public String getGpuCmd() {
+
+        if (mNoEffectParamsMap.size() != 0) {
+            StringBuilder sb = new StringBuilder(gpuCmd);
+            Iterator<String> iterator = mNoEffectParamsMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                sb.append("|").append(key).append("=").append(mNoEffectParamsMap.get(key));
+            }
+            return sb.toString();
+        }
+        return gpuCmd;
+    }
+
+    public int getTextureIndex() {
+        return textureIndex;
+    }
+
+    public String getTexturePath() {
+        return texturePath;
+    }
+
+    public int[] getTextureARGB() {
+        int[] textureARGB = null;
+        if (textureARGB == null) {
+            Bitmap textureBitmap = BitmapFactory.decodeFile(texturePath);
+            GLogger.d(TAG,"texturePath:"+texturePath);
+            textureHeight = textureBitmap.getHeight();
+            textureWidth = textureBitmap.getWidth();
+
+            textureARGB = new int[textureBitmap.getWidth() * textureBitmap.getHeight()];
+
+            textureBitmap.getPixels(textureARGB, 0, textureBitmap.getWidth(), 0, 0, textureBitmap.getWidth(), textureBitmap.getHeight());
+
+            textureBitmap.recycle();
+        }
+
+        setTexture = true;
+        return textureARGB;
+
+    }
+
+    public boolean isSetedTexture() {
+        return setTexture && !ConstantUtil.needClearTexture;
+    }
+
+    public int getTextureHeight() {
+        return textureHeight;
+    }
+
+    public int getTextureWidth() {
+        return textureWidth;
+    }
+
+    public void setGpuCmd(String gpuCmd) {
+        this.gpuCmd = gpuCmd;
+    }
+
+    public void setEffect(Effect effect) {
+
+        gpuCmd = EffectFactory.getGPUCmd(effect);
+        Texture texture = effect.getTexture();
+        if (texture != null && texture.items != null && texture.items.size() != 0) {
+            for (TextureItem textureItem : texture.items) {
+                setTextureIndex(textureItem.index);
+                setTexturePath(texture.textureDir + File.separator + textureItem.name);
+            }
+        }
+
+        Param param = effect.getParam();
+        if (param != null) {
+            Iterator<ParamItem> paramItemIterator = param.getParamItemList().iterator();
+            while (paramItemIterator.hasNext()) {
+                ParamItem paramItem = paramItemIterator.next();
+                if (paramItem instanceof ParamFloatItem) {
+                    ParamFloatItem paramFloatItem = (ParamFloatItem) paramItem;
+                    if (paramFloatItem.value != paramFloatItem.defaultValue) {
+                        setParams(paramFloatItem.effectKey, paramFloatItem.key, String.valueOf(paramFloatItem.value));
+                    }
+
+                } else if (paramItem instanceof ParamNoEffectItem) {
+                    ParamNoEffectItem paramNoEffectItem = (ParamNoEffectItem) paramItem;
+                    if (paramNoEffectItem.value != paramNoEffectItem.defaultValue) {
+                        setNoEffectParams(paramNoEffectItem.key, String.valueOf(paramNoEffectItem.value));
+                    }
+
+                } else if (paramItem instanceof ParamVecItem) {
+                    ParamVecItem paramVecItem = (ParamVecItem) paramItem;
+                    if (paramVecItem.value != paramVecItem.defaultValue) {
+                        setParams(paramVecItem.effectKey, paramVecItem.key, paramVecItem.value);
+                    }
+
+
+                }
+            }
+        }
+
+        this.effect = effect;
+    }
+
+    public void setEffectParams(Effect effect) {
+        gpuCmd = EffectFactory.getGPUCmd(effect);
+        Texture texture = effect.getTexture();
+        if (texture != null && texture.items != null && texture.items.size() != 0) {
+            for (TextureItem textureItem : texture.items) {
+                setTextureIndex(textureItem.index);
+                setTexturePath(texture.textureDir + File.separator + textureItem.name);
+            }
+        }
+
+
+        Iterator<ParamItem> paramItemIterator = effect.getParam(true).getParamItemList().iterator();
+        while (paramItemIterator.hasNext()) {
+            ParamItem paramItem = paramItemIterator.next();
+            if (paramItem instanceof ParamFloatItem) {
+                ParamFloatItem paramFloatItem = (ParamFloatItem) paramItem;
+//                if (paramFloatItem.value != paramFloatItem.defaultValue) {
+                    setParams(paramFloatItem.effectKey, paramFloatItem.key, String.valueOf(paramFloatItem.value));
+//                }
+
+            } else if (paramItem instanceof ParamNoEffectItem) {
+                ParamNoEffectItem paramNoEffectItem = (ParamNoEffectItem) paramItem;
+//                if (paramNoEffectItem.value != paramNoEffectItem.defaultValue) {
+                    setNoEffectParams(paramNoEffectItem.key, String.valueOf(paramNoEffectItem.value));
+//                }
+
+            } else if (paramItem instanceof ParamVecItem) {
+                ParamVecItem paramVecItem = (ParamVecItem) paramItem;
+//                if (paramVecItem.value != paramVecItem.defaultValue) {
+                    setParams(paramVecItem.effectKey, paramVecItem.key, paramVecItem.value);
+//                }
+
+
+            }
+        }
+
+        this.effect = effect;
+    }
+
+    private void setScrollStopMake() {
+        scrollStopMake = true;
+    }
+
+    public void setTextureIndex(int textureIndex) {
+        this.textureIndex = textureIndex;
+    }
+
+    public void setTexturePath(String texturePath) {
+        this.texturePath = texturePath;
+    }
+
+
+    public void setParams(String effectKey, String key, String value) {
+        String mapKey = effectKey + key;
+        ParamsModel paramsModel = mParamsMap.get(mapKey);
+        if (paramsModel == null) {
+            paramsModel = new ParamsModel();
+            mParamsMap.put(mapKey, paramsModel);
+        }
+        paramsModel.setEffectKey(effectKey);
+        paramsModel.setKey(key);
+        paramsModel.setValue(value);
+    }
+
+    public ParamsModel getParams(String effectKey, String key) {
+        return mParamsMap.get(effectKey + key);
+    }
+
+    public void clearParams(String effectKey, String key) {
+        mParamsMap.remove(effectKey + key);
+    }
+
+    public void setNoEffectParams(String key, String value) {
+        mNoEffectParamsMap.put(key, value);
+    }
+
+    public void clearNoEffectParams(String key) {
+        mNoEffectParamsMap.remove(key);
+    }
+
+    public boolean isScrollStopMake() {
+
+        if (null != effect) {
+            if (effect.timeLevel > 0) {
+                return true;
+            }
+        }
+
+        return !ConstantUtil.enableHighPerformance;
+    }
+
+    public Map<String, String> getNoEffectParamMap() {
+        return mNoEffectParamsMap;
+    }
+
+    public Map<String, ParamsModel> getParamsMap() {
+        return mParamsMap;
+    }
+
+
+    public static MakePhotoModel[] getMakePhotoModelArray(CompositeEffect compositeEffect, Set<String> filterSet, EffectModel effectModel) {
+        MakePhotoModel[] makePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+
+        if (compositeEffect != null) { //刚开始组合滤镜没有数据，所以需要这个判断
+            for (int i = 0; i < compositeEffect.effectList.size(); i++) {
+                if (filterSet != null) {
+                    if (filterSet.contains(compositeEffect.effectList.get(i).type)) {
+                        continue;
+                    }
+                }
+
+                MakePhotoModel makePhotoModel;
+                Effect compositeEffectItem = compositeEffect.effectList.get(i);
+                if (compositeEffectItem.type.equals(Effect.Type.TiltShift.name())) {
+                    TiltShiftMakePhotoModel tiltShiftMakePhotoModel = new TiltShiftMakePhotoModel();
+                    tiltShiftMakePhotoModel.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PIC);
+                    makePhotoModel = tiltShiftMakePhotoModel;
+
+                } else {
+                    makePhotoModel = new MakePhotoModel();
+                }
+
+                Effect effect = EffectDataManager.getInstance().getEffect(compositeEffectItem.key);
+                effect.paramStr = compositeEffectItem.paramStr;
+                makePhotoModel.setEffectParams(effect);
+
+                makePhotoModelArray[Effect.Type.valueOf(compositeEffectItem.type).ordinal()] = makePhotoModel;
+            }
+        }
+        return makePhotoModelArray;
+    }
+
+    public static MakePhotoModel[] getMakePhotoModelArrayForWithFilter(CompositeEffect compositeEffect, Set<String> filterSet) {
+        MakePhotoModel[] makePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+
+        if (compositeEffect != null && compositeEffect.effectList != null) { //刚开始组合滤镜没有数据，所以需要这个判断
+            for (int i = 0; i < compositeEffect.effectList.size(); i++) {
+                if (filterSet != null) {
+                    if (filterSet.contains(compositeEffect.effectList.get(i).type)) {
+                        continue;
+                    }
+                }
+
+                MakePhotoModel makePhotoModel;
+                Effect compositeEffectItem = compositeEffect.effectList.get(i);
+                if (compositeEffectItem.type.equals(Effect.Type.TiltShift.name())) {
+                    TiltShiftMakePhotoModel tiltShiftMakePhotoModel = new TiltShiftMakePhotoModel();
+                    tiltShiftMakePhotoModel.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PIC);
+                    makePhotoModel = tiltShiftMakePhotoModel;
+
+                } else {
+                    makePhotoModel = new MakePhotoModel();
+                }
+
+                Effect effect = EffectDataManager.getInstance().getEffect(compositeEffectItem.key);
+                effect.paramStr = compositeEffectItem.paramStr;
+                makePhotoModel.setEffectParams(effect);
+
+                makePhotoModelArray[Effect.Type.valueOf(compositeEffectItem.type).ordinal()] = makePhotoModel;
+            }
+        }
+        return makePhotoModelArray;
+    }
+
+    public static MakePhotoModel[] getMakePhotoModelArray(CompositeEffect compositeEffect, EffectModel effectModel) {
+        return getMakePhotoModelArray(compositeEffect, null, effectModel);
+    }
+
+    public static MakePhotoModel[] getMakePhotoModelArrayWithFilter(MakePhotoModel[] makePhotoModelArray, int start, int end) {
+        MakePhotoModel[] filterMakePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+        for (int i = 0; i < makePhotoModelArray.length; i++) {
+            if (i >= start && i <= end) {
+                filterMakePhotoModelArray[i] = makePhotoModelArray[i];
+            }
+        }
+
+        return filterMakePhotoModelArray;
+    }
+
+    public static MakePhotoModel[] getNewMakePhotoModelArrayWithFilter(MakePhotoModel[] makePhotoModelArray, int start, int end) {
+        MakePhotoModel[] filterMakePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+        boolean isStartToEndNull = true;
+        for (int i = 0; i < makePhotoModelArray.length; i++) {
+            if (i >= start && i <= end) {
+                if (makePhotoModelArray[i] == null) {
+                    continue;
+                }
+
+
+//                try {
+//                    filterMakePhotoModelArray[i] = makePhotoModelArray[i].getClass().newInstance();
+//
+//
+//                } catch (InstantiationException e) {
+//                    e.printStackTrace();
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                }
+                MakePhotoModel makePhotoModel;
+                if (makePhotoModelArray[i].getEffect().type.equals(Effect.Type.TiltShift.name())) {
+                    TiltShiftMakePhotoModel tiltShiftMakePhotoModel = new TiltShiftMakePhotoModel();
+                    tiltShiftMakePhotoModel.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PIC);
+                    makePhotoModel = tiltShiftMakePhotoModel;
+
+                } else {
+                    makePhotoModel = new MakePhotoModel();
+                }
+                filterMakePhotoModelArray[i] = makePhotoModel;
+
+                filterMakePhotoModelArray[i].setEffect(makePhotoModelArray[i].getEffect());
+
+                Iterator<ParamsModel> paramsModelIterator = makePhotoModelArray[i].getParamsMap().values().iterator();
+                while (paramsModelIterator.hasNext()) {
+                    ParamsModel paramsModel = paramsModelIterator.next();
+                    filterMakePhotoModelArray[i].setParams(paramsModel.effectKey, paramsModel.key, paramsModel.value);
+                }
+
+                Map<String, String> noEffectParamMap = makePhotoModelArray[i].getNoEffectParamMap();
+                Iterator<String> noEffectIterator = noEffectParamMap.keySet().iterator();
+                while (noEffectIterator.hasNext()) {
+                    String key = noEffectIterator.next();
+                    filterMakePhotoModelArray[i].setNoEffectParams(key, noEffectParamMap.get(key));
+                }
+
+                isStartToEndNull = false;
+            }
+        }
+
+        if (isStartToEndNull) {
+            return null;
+        } else {
+            return filterMakePhotoModelArray;
+        }
+    }
+
+    public static MakePhotoModel[] getNewMakePhotoModelArrayWithFilter(MakePhotoModel[] makePhotoModelArray, HashSet<Integer> filterSet) {
+        MakePhotoModel[] filterMakePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+        boolean isStartToEndNull = true;
+
+        for (int i = 0; i < makePhotoModelArray.length; i++) {
+
+            if (!filterSet.contains(i)) {
+                if (makePhotoModelArray[i] == null) {
+                    continue;
+                }
+
+                MakePhotoModel makePhotoModel;
+                if (makePhotoModelArray[i].getEffect().type.equals(Effect.Type.TiltShift.name())) {
+                    TiltShiftMakePhotoModel tiltShiftMakePhotoModel = new TiltShiftMakePhotoModel();
+                    tiltShiftMakePhotoModel.setMakeType(((TiltShiftMakePhotoModel)makePhotoModelArray[i]).getMakeType());
+                    makePhotoModel = tiltShiftMakePhotoModel;
+
+                } else {
+                    makePhotoModel = new MakePhotoModel();
+                }
+                filterMakePhotoModelArray[i] = makePhotoModel;
+                filterMakePhotoModelArray[i].setEffect(makePhotoModelArray[i].getEffect());
+
+                Iterator<ParamsModel> paramsModelIterator = makePhotoModelArray[i].getParamsMap().values().iterator();
+                while (paramsModelIterator.hasNext()) {
+                    ParamsModel paramsModel = paramsModelIterator.next();
+                    filterMakePhotoModelArray[i].setParams(paramsModel.effectKey, paramsModel.key, paramsModel.value);
+                }
+
+                Map<String, String> noEffectParamMap = makePhotoModelArray[i].getNoEffectParamMap();
+                Iterator<String> noEffectIterator = noEffectParamMap.keySet().iterator();
+                while (noEffectIterator.hasNext()) {
+                    String key = noEffectIterator.next();
+                    filterMakePhotoModelArray[i].setNoEffectParams(key, noEffectParamMap.get(key));
+                }
+
+                isStartToEndNull = false;
+            }
+
+        }
+
+        if (isStartToEndNull) {
+            return null;
+        } else {
+            return filterMakePhotoModelArray;
+        }
+    }
+
+
+    public static Random[] getCompositeRandomArray() {
+        Random random = new Random();
+        Random[] randomArray = new Random[Effect.Type.values().length];
+        for (int i = 0; i < randomArray.length; i++) {
+            randomArray[i] = new Random(random.nextInt());
+        }
+        return randomArray;
+    }
+
+    public static MakePhotoModel[] getRandomComposite(EffectModel effectModel, Random[] randomArray) {
+        MakePhotoModel[] makePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+
+        for (Effect.Type type : Effect.Type.values()) {
+            if (type == Effect.Type.Filter || type == Effect.Type.Lighting || type == Effect.Type.Frame) {
+                List<Effect> effectList = effectModel.getEffectList(type);
+                if (effectList.size() != 0) {
+
+                    int index = randomArray[type.ordinal()].nextInt(effectList.size() - 1);
+                    MakePhotoModel makePhotoModel = new MakePhotoModel();
+                    makePhotoModel.setEffect(effectList.get(index));
+                    makePhotoModelArray[type.ordinal()] = makePhotoModel;
+                }
+            }
+        }
+
+        return makePhotoModelArray;
+    }
+
+    public boolean make(EffectGroupRendererMethod method,
+                        EffectGroupRendererMethod.RendererMethodActionListener listener) {
+        long l1 = System.currentTimeMillis();
+
+//        method.clearImage(getTextureIndex());
+
+        if (!method.setEffect(getGpuCmd())) {
+            if (listener != null) {
+                listener.fail();
+            }
+            GLogger.i(TAG, "setEffect fail,effect=" + getEffect());
+            return false;
+        }
+
+        long l2 = System.currentTimeMillis();
+        GLogger.i("", getEffect().type + " make1:" + (l2 - l1));
+
+        if (hasParams()) {
+            Iterator<MakePhotoModel.ParamsModel> iterator = getParamsMap().values().iterator();
+            while (iterator.hasNext()) {
+                MakePhotoModel.ParamsModel paramsModel = iterator.next();
+                GLogger.i(TAG, paramsModel.getEffectKey() + ":" + paramsModel.getKey() + "=" + paramsModel.getValue());
+                if (!method.setEffectParams(paramsModel.getEffectKey(), paramsModel.getKey() + "=" + paramsModel.getValue())) {
+                    if (listener != null) {
+                        listener.fail();
+                    }
+                    GLogger.i(TAG, "setEffect fail,childEffect=" + paramsModel.getEffectKey() + ",params=" + paramsModel.getKey() + ",value=" + paramsModel.getValue());
+                    return false;
+                }
+            }
+
+        }
+
+        long l3 = System.currentTimeMillis();
+        GLogger.i(TAG, getEffect().type + " make2:" + (l3 - l2));
+
+        if (hasTexture() && !isSetedTexture()) {
+            long l11 = System.currentTimeMillis();
+
+            if (texturePath.toLowerCase().endsWith(".png")) {
+                if (!method.setSupportImageFromPNGPath(getTextureIndex(), texturePath)) {
+                    if (listener != null) {
+                        listener.fail();
+                    }
+                    GLogger.i(TAG, "set png texture fail,texturePath = " + getTexturePath() + ",textureIndex = " + getTextureIndex());
+                    return false;
+                }
+            } else {
+                if (!method.setImageFromPath(getTextureIndex(), texturePath)) {
+                    if (listener != null) {
+                        listener.fail();
+                    }
+                    GLogger.i(TAG, "set jpg texture fail,texturePath = " + getTexturePath() + ",textureIndex = " + getTextureIndex());
+                    return false;
+                }
+            }
+
+            long l22 = System.currentTimeMillis();
+            GLogger.i("", "texture:" + (l22 - l11) + ",type:" + effect.type + ",key:" + effect.key + ",textureIndex:" + getTextureIndex() + ",gpuCmd:" + getGpuCmd());
+
+        }
+
+        long l4 = System.currentTimeMillis();
+        GLogger.i(TAG, getEffect().type + " make3:" + (l4 - l3));
+
+        if (!method.make()) {
+            if (listener != null) {
+                listener.fail();
+            }
+            GLogger.i(TAG, "make fail");
+            return false;
+        }
+
+        long l5 = System.currentTimeMillis();
+        GLogger.i(TAG, getEffect().type + " make4:" + (l5 - l4));
+
+        return true;
+    }
+
+    public static class ParamsModel {
+
+        private String effectKey;
+        private String key;
+        private String value;
+
+        public ParamsModel(ParamsModel model) {
+            setEffectKey(new String(model.getEffectKey()));
+            setKey(new String(model.getKey()));
+            setValue(new String(model.getValue()));
+        }
+
+        public ParamsModel() {
+
+        }
+
+        public void setEffectKey(String effectKey) {
+            this.effectKey = effectKey;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getEffectKey() {
+
+            return effectKey;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
+    }
+}

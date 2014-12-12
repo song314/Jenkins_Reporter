@@ -1,0 +1,392 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.AESEncrypt;
+import com.pinguo.edit.sdk.utils.LocaleSupport;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import us.pinguo.android.effect.group.sdk.effect.model.ResourceManagerUtils;
+
+/**
+ * Created by huowaa on 14-6-9.
+ */
+public class CompositeEffect extends LocaleSupport<CompositeEffect> implements Comparable<CompositeEffect>, Cloneable {
+    private static final String TAG = CompositeEffect.class.getSimpleName();
+
+    public static final String COMPOSITE_ICON_PREFIX = "ce_";
+    public final static String COMPOSITE_ICON_POSTFIX = ".jpg";
+
+    @Expose
+    public String key = "";
+    @Expose
+    public String name = "";
+    @Expose
+    public String author = "";
+    @Expose
+    public String description = "";
+    @Expose
+    public String locale = "";
+    @Expose
+    public int version;
+    @Expose
+    public String icon = "";
+    @Expose
+    public String color = "";
+    @Expose
+    public String typeKey = "";
+    @Expose
+    public long createTime;
+    @Expose
+    public long lastModifyTime;
+    @Expose
+    public int installation = 0; // 安装状态
+    @Expose
+    public int isDefault = 0; // 0，无特效（不能删）；1：官方特效；2：用户新建特效； 3：滤镜库特效（不可见）
+    public String jsonStr = "";
+    @Expose
+    public List<Effect> effectList;
+
+    public String tags = "";  // 从滤镜库中获取的滤镜，需要关注此字段; "tag1,tag2,tag3"
+
+    private Bitmap mIconBitmap;
+
+    public static CompositeEffect loadFromJsonStr(String jsonStr) {
+        if (jsonStr == null || jsonStr.isEmpty() || jsonStr.equals(" ")) {
+            return null;
+        }
+
+        // decrypt
+        if (isJsonStrEncrypt(jsonStr)) {
+            jsonStr = AESEncrypt.decrypt(AESEncrypt.parseHexStr2Byte(jsonStr), AESEncrypt.getPassword());
+        }
+
+        // 从json串解析出基础数据
+        CompositeEffect compositeEffect = null;
+        Gson gson = new Gson();
+        try {
+            compositeEffect = new CompositeEffect();
+            JSONObject jsonObject = new JSONObject(jsonStr);
+            compositeEffect.key = jsonObject.getString("key");
+            compositeEffect.name = jsonObject.getString("name");
+            compositeEffect.author = jsonObject.getString("author");
+            if (jsonObject.has("description")) {
+                compositeEffect.description = jsonObject.getString("description");
+            }
+            if (jsonObject.has("version")) {
+                String version = jsonObject.getString("version");
+                if (version != null && !version.isEmpty() && !version.equals(" ")) {
+                    compositeEffect.version = jsonObject.getInt("version");
+                }
+            }
+            if (jsonObject.has("icon")) {
+                compositeEffect.icon = jsonObject.getString("icon");
+            }
+            if (jsonObject.has("createTime")) {
+                String createTime = jsonObject.getString("createTime");
+                if (createTime != null && !createTime.isEmpty() && !createTime.equals(" ")) {
+                    compositeEffect.createTime = jsonObject.getLong("createTime");
+                }
+            }
+            if (jsonObject.has("lastModifyTime")) {
+                String lastModifyTime = jsonObject.getString("lastModifyTime");
+                if (lastModifyTime != null && !lastModifyTime.isEmpty() && !lastModifyTime.equals(" ")) {
+                    compositeEffect.lastModifyTime = jsonObject.getLong("lastModifyTime");
+                }
+            }
+            if (jsonObject.has("isDefault")) {
+                String isDefault = jsonObject.getString("isDefault");
+                if (isDefault != null && !isDefault.isEmpty() && !isDefault.equals(" ")) {
+                    compositeEffect.isDefault = jsonObject.getInt("isDefault");
+                }
+            }
+            if (jsonObject.has("color")) {
+                compositeEffect.color = jsonObject.getString("color");
+            }
+
+            if (jsonObject.has("locale")) {
+                compositeEffect.locale = jsonObject.getString("locale");
+            }
+
+            if (jsonObject.has("tags")) {
+                compositeEffect.tags = jsonObject.getString("tags");
+            }
+
+            // effect list
+            String encEffectList = jsonObject.getString("effectList");
+            boolean isEffectListEncrypt = isJsonStrEncrypt(encEffectList);
+
+            JSONArray effectList = null;
+            if (isEffectListEncrypt) {
+                String decryptEffectList = AESEncrypt.decrypt(AESEncrypt.parseHexStr2Byte(encEffectList), AESEncrypt.getPassword());
+                effectList = new JSONArray(decryptEffectList);
+
+                // jsonStr(regex)
+                String replaceStr = "\"effectList\":" + decryptEffectList;
+                compositeEffect.jsonStr = jsonStr.replaceFirst("\"effectList\":\"\\w*\"", replaceStr);
+            } else {
+                effectList = jsonObject.getJSONArray("effectList");
+
+                // jsonStr
+                compositeEffect.jsonStr = jsonStr;
+            }
+
+            compositeEffect.effectList = new ArrayList<Effect>();
+            if (null != effectList) {
+                for (int i = 0;
+                     i < effectList.length();
+                     i++) {
+                    JSONObject effect = effectList.getJSONObject(i);
+                    String type = effect.getString("type");
+
+                    Type subType = ResourceManagerUtils.getEffectSubTypeByTypeKey(type);
+                    Effect eft = gson.fromJson(effect.toString(), subType);
+                    if (null != eft) {
+                        // process param according to paramStr
+                        if (effect.has("param")) {
+                            eft.paramStr = effect.getString("param");
+                            eft.buildParamByParamStr();
+                        }
+                        compositeEffect.effectList.add(eft);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            GLogger.e(TAG, "load composite effect object from json string failed");
+        }
+
+        // locale
+        String[] nameArr = compositeEffect.name.split(LocaleSupport.LOCAL_SEPERATOR);
+        if ((null != nameArr) && (nameArr.length > 1)) {
+            compositeEffect = compositeEffect.getLocaleObject(Locale.getDefault());
+        }
+
+        return compositeEffect;
+    }
+
+    protected static boolean isJsonStrEncrypt(String jsonStr) {
+        if (jsonStr.startsWith("{") || jsonStr.startsWith("[")) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public CompositeEffect() {
+        this.createTime = System.currentTimeMillis();
+        this.key = String.valueOf(this.createTime);
+        this.lastModifyTime = this.createTime;
+        this.locale = Locale.getDefault().toString();
+    }
+
+    public void setIconBitmap(Bitmap bitmap) {
+        this.mIconBitmap = bitmap;
+    }
+
+    public Bitmap getmIconBitmap() {
+        return mIconBitmap;
+    }
+
+    public void addEffect(Effect effect) {
+        if (null == effectList) {
+            effectList = new ArrayList<Effect>();
+        }
+
+        effectList.add(effect);
+    }
+
+    public void removeEffect(Effect effect) {
+        if (null != effectList) {
+            int targetIdx = -1;
+            for (int i = 0;
+                 i < effectList.size();
+                 i++) {
+                if (effect.key.equals(effectList.get(i).key)) {
+                    targetIdx = i;
+                }
+            }
+
+            if (targetIdx != -1) {
+                effectList.remove(targetIdx);
+            }
+        }
+    }
+
+    public Effect getEffect(String key) {
+        if (null != effectList) {
+            int targetIdx = -1;
+            for (int i = 0;
+                 i < effectList.size();
+                 i++) {
+                if (key.equals(effectList.get(i).key)) {
+                    targetIdx = i;
+                }
+            }
+
+            if (targetIdx != -1) {
+                return effectList.get(targetIdx);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        CompositeEffect compositeEffect = null;
+
+        try {
+            compositeEffect = (CompositeEffect) super.clone();
+            List<Effect> clonedList = new ArrayList<Effect>();
+            if (null != effectList) {
+                for (Effect effect : effectList) {
+                    clonedList.add((Effect) effect.clone());
+                }
+                compositeEffect.effectList = clonedList;
+            }
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if (null != compositeEffect) {
+            return compositeEffect;
+        } else {
+            return new CompositeEffect();
+        }
+    }
+
+    /**
+     * 序列化成可以存储和传输的字符串（默认加密）
+     *
+     * @return
+     */
+    @Override
+    public String toString() {
+        return toString(true);
+    }
+
+    public String toString(boolean needEncrypt) {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        String jsonStr = gson.toJson(this);
+        if (needEncrypt) {
+            byte[] data = AESEncrypt.encrypt(jsonStr, AESEncrypt.getPassword());
+            GLogger.i("11111111", this.name + ":length:" + data.length);
+            String encJsonStr = AESEncrypt.parseByte2HexStr(data);
+            return encJsonStr;
+
+        } else {
+            return jsonStr;
+        }
+    }
+
+    /**
+     * 根据json string数据反序列化composite effect对象
+     */
+    public void init() {
+        CompositeEffect ce = CompositeEffect.loadFromJsonStr(jsonStr);
+        if (ce.valid()) {
+            this.effectList = ce.effectList;
+        }
+    }
+
+    private boolean valid() {
+        if (!key.isEmpty() && !name.isEmpty()
+                && !author.isEmpty() && effectList != null
+                && effectList.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int compareTo(CompositeEffect another) {
+        // 无特效在最前
+        if (this.key.endsWith("_None") || another.key.endsWith("_None")) {
+            if (this.key.endsWith("_None")) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+
+        // 根据last modify time排序，越大排序越靠前
+        long timeDiff = another.lastModifyTime - this.lastModifyTime;
+        if (timeDiff > 0) {
+            return 1;
+        } else if (timeDiff < 0) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public CompositeEffect getLocaleObject(Locale locale) {
+
+        int idx = getIndex(locale);
+        String locStr = getLocaleString(locale);
+
+        String[] nameArr = name.split(LOCAL_SEPERATOR);
+        String name = this.name;
+        if (null != nameArr && nameArr.length > 0) {
+            if (idx < nameArr.length) {
+                name = nameArr[idx];
+            } else {
+                name = nameArr[0];
+            }
+        }
+
+        String[] desArr = description.split(LOCAL_SEPERATOR);
+        String description = this.description;
+        if (null != desArr && desArr.length > 0) {
+            if (idx < desArr.length) {
+                description = desArr[idx];
+            } else {
+                description = desArr[0];
+            }
+        }
+
+        CompositeEffect ce = null;
+        try {
+            ce = (CompositeEffect) clone();
+            ce.locale = locStr;
+            ce.name = name;
+            ce.description = description;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            GLogger.e(TAG, "Clone effect object fail!");
+        }
+
+        return ce;
+    }
+
+    public String getJsonFilterInfo(Context context) {
+        JSONArray jsonArray = new JSONArray();
+        if (null != effectList) {
+            for (Effect effect : effectList) {
+                List<JSONObject> list = effect.getEffectInfo(context);
+                if (null != list) {
+                    for (JSONObject jsonObject : list) {
+                        jsonArray.put(jsonObject);
+                    }
+                }
+            }
+        }
+
+        return jsonArray.toString();
+    }
+}

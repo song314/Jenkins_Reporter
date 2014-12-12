@@ -1,0 +1,365 @@
+package com.pinguo.edit.sdk.login.model;
+
+import android.content.Context;
+import android.text.TextUtils;
+
+import com.google.gson.Gson;
+import com.pinguo.edit.sdk.login.lib.os.AsyncError;
+import com.pinguo.edit.sdk.login.lib.os.AsyncFuture;
+import com.pinguo.edit.sdk.login.lib.os.AsyncFutureAdapter;
+import com.pinguo.edit.sdk.login.lib.os.AsyncSuccess;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.user.ApiChangeDescription;
+import com.pinguo.edit.sdk.login.user.ApiChangeFace;
+import com.pinguo.edit.sdk.login.user.ApiChangeGender;
+import com.pinguo.edit.sdk.login.user.ApiChangeNickname;
+import com.pinguo.edit.sdk.login.user.UserInfoResponse;
+
+/**
+ * Created by crab on 14-6-11.
+ */
+public class User {
+    public static class Info {
+        public String userId;
+        public String email;
+        public String avatar;
+        public long lastLoginTime;
+        public String nickname;
+        public String description;
+        public String gender;
+        public String birthday;
+        public int certificated;
+        public long regDateTime;
+        public String language;
+        public ThirdSites third;
+        public String token;
+        public String loginmode;
+        public int forgetPass;
+        public int setPass;
+        public String mobile;
+
+        public static class ThirdSites {
+            public QQSite qzone;
+            public SinaSite sina;
+            public FacebookSite facebook;
+            public TwitterSite twitter;
+            public KupanSite kupan;
+
+            //TODO 没有测试继承是否可以应用gson
+            public static class QQSite {
+                public String id;
+                public String nickname;
+                public long addTime;
+                public String avatar;
+            }
+
+            public static class SinaSite {
+                public String id;
+                public String nickname;
+                public long addTime;
+                public String avatar;
+            }
+
+            public static class FacebookSite {
+                public String id;
+                public String nickname;
+                public long addTime;
+                public String avatar;
+            }
+
+            public static class TwitterSite {
+                public String id;
+                public String nickname;
+                public long addTime;
+                public String avatar;
+            }
+
+            public static class KupanSite {
+                public String id;
+                public String nickname;
+                public long addTime;
+                public String avatar;
+            }
+        }
+    }
+
+    private Info mInfo;
+    private Context mContext;
+
+    /**
+     * @param context
+     * @return
+     */
+    public static User create(Context context) {
+        return new User(context);
+    }
+
+    User(Context context) {
+        mContext = context;
+
+        String gsonResult = UserHelper.getPGLoginUserInfo(mContext);
+        if (TextUtils.isEmpty(gsonResult)) {
+            mInfo = null;
+            return;
+        }
+
+        Gson gson = new Gson();
+        try {
+            mInfo = gson.fromJson(gsonResult, Info.class);
+        } catch (Exception e) {
+            mInfo = null;
+        }
+    }
+
+    public User(Context context, Info info) {
+        mContext = context;
+        mInfo = info;
+    }
+
+    /**
+     * 获取用户是否已经登录过
+     *
+     * @return true表示用户已经登录
+     */
+    public boolean isLogin() {
+        return isValidate();
+    }
+
+    public boolean isValidate() {
+        if (mInfo == null || TextUtils.isEmpty(mInfo.userId) || TextUtils.isEmpty(mInfo.token)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @return 用户存在则返回一个Info对象，否则返回null
+     */
+    public Info getInfo() {
+        return mInfo;
+    }
+
+    /**
+     * 获取用户头像
+     */
+    public String getAvatar() {
+        if (!isValidate()) {
+            return "";
+        }
+        String loginmode = mInfo.loginmode;
+        Info.ThirdSites third = mInfo.third;
+        //头像
+        String avatar = mInfo.avatar;
+        //如果服务端没有返回头像字段，我们从第三方帐号区获取头像字段
+        //第三方信息不能够为空
+        if (TextUtils.isEmpty(avatar) && third != null) {
+            User.Info.ThirdSites.QQSite qqSite = third.qzone;
+            User.Info.ThirdSites.SinaSite sinaSite = third.sina;
+            User.Info.ThirdSites.FacebookSite facebookSite = third.facebook;
+            User.Info.ThirdSites.TwitterSite twitterSite = third.twitter;
+            User.Info.ThirdSites.KupanSite kupanSite = third.kupan;
+            if (loginmode.equals("qzone")) {
+                if (qqSite != null) {
+                    avatar = qqSite.avatar;
+                }
+            } else if (loginmode.equals("sina")) {
+                if (sinaSite != null) {
+                    avatar = sinaSite.avatar;
+                }
+            } else if (loginmode.equals("facebook")) {
+                if (facebookSite != null) {
+                    avatar = facebookSite.avatar;
+                }
+            } else if (loginmode.equals("twitter")) {
+                if (twitterSite != null) {
+                    avatar = twitterSite.avatar;
+                }
+            } else if (loginmode.equals("kupan")) {
+                if (kupanSite != null) {
+                    avatar = kupanSite.avatar;
+                }
+            }
+        }
+        if (TextUtils.isEmpty(avatar)) {
+            avatar = "";
+        }
+        return avatar;
+    }
+
+    /**
+     * 用户登出
+     */
+    public void logout() {
+        UserHelper.putPGLoginUserInfo(mContext, "");
+    }
+
+    /**
+     * 存储用户信息
+     */
+    public void save() {
+        if (mInfo == null || mContext == null) {
+            return;
+        }
+        Gson gson = new Gson();
+        String result = gson.toJson(mInfo, Info.class);
+        UserHelper.putPGLoginUserInfo(mContext, result);
+    }
+
+    /**
+     * 修改个性签名
+     *
+     * @param description
+     * @return
+     */
+    public AsyncFuture<Void> changeDescription(final String description) {
+        if (!isValidate()) {
+            return new AsyncError<Void>(new IllegalArgumentException("用户不合法"));
+        }
+
+        if (description != null && description.equals(mInfo.description)) {
+            return new AsyncSuccess<Void>(null);
+        }
+
+        return new AsyncFutureAdapter<Void, UserInfoResponse>(new ApiChangeDescription(mContext, description)) {
+
+            @Override
+            public Void adapte(UserInfoResponse v) throws Exception {
+                if (v.status != 200) {
+                    throw new Fault(v.status, v.message);
+                } else {
+                    Info info = getInfo();
+                    info.description = description;
+                    save();
+
+                    return null;
+                }
+            }
+        };
+    }
+
+    /**
+     * 修改用户头像
+     *
+     * @param avatar
+     * @return
+     */
+    public AsyncFuture<Void> changeAvatar(final String avatar) {
+        if (!isValidate()) {
+            return new AsyncError<Void>(new IllegalArgumentException("用户不合法"));
+        }
+        return new AsyncFutureAdapter<Void, UserInfoResponse>(new ApiChangeFace(mContext, avatar)) {
+
+            @Override
+            public Void adapte(UserInfoResponse v) throws Exception {
+                if (v.status != 200) {
+                    throw new Fault(v.status, v.message);
+                } else {
+                    Info info = getInfo();
+                    info.avatar = v.data.avatar;
+                    save();
+                    return null;
+                }
+            }
+        };
+    }
+
+    public AsyncFuture<Void> changeNickname(final String nickname) {
+        if (!isValidate()) {
+            return new AsyncError<Void>(new IllegalArgumentException("用户不合法"));
+        }
+        if (nickname != null && nickname.equals(mInfo.nickname)) {
+            return new AsyncSuccess<Void>(null);
+        }
+        return new AsyncFutureAdapter<Void, UserInfoResponse>(new ApiChangeNickname(mContext, nickname)) {
+
+            @Override
+            public Void adapte(UserInfoResponse v) throws Exception {
+                if (v.status != 200) {
+                    throw new Fault(v.status, v.message);
+                } else {
+                    Info info = getInfo();
+                    info.nickname = nickname;
+                    save();
+                    return null;
+                }
+            }
+        };
+    }
+
+    /**
+     * 修改用户性别
+     *
+     * @param gender
+     * @return
+     */
+    public AsyncFuture<Void> changeGener(final String gender) {
+        if (!isValidate() || !checkGenderValidate(gender)) {
+            return new AsyncError<Void>(new IllegalArgumentException("用户不合法"));
+        }
+        if (mInfo.gender.equals(gender)) {
+            return new AsyncSuccess<Void>(null);
+        }
+        return new AsyncFutureAdapter<Void, UserInfoResponse>(new ApiChangeGender(mContext, gender)) {
+
+            @Override
+            public Void adapte(UserInfoResponse v) throws Exception {
+                if (v.status != 200) {
+                    throw new Fault(v.status, v.message);
+                } else {
+                    Info info = getInfo();
+                    info.gender = gender;
+                    save();
+                    return null;
+                }
+            }
+        };
+    }
+
+    /**
+     * 检测用户输入的性别是否合法
+     *
+     * @param gender
+     * @return
+     */
+    private boolean checkGenderValidate(String gender) {
+        if (gender == null) {
+            return false;
+        }
+        if (gender.equals("1")) {
+            return true;
+        }
+        if (gender.equals("2")) {
+            return true;
+        }
+        return false;
+    }
+
+    public void saveLastUserName() {
+        Info info = mInfo;
+        Context context = mContext;
+        if (info != null && context != null) {
+            String loginMode = info.loginmode;
+            String currentAccount = null;
+            if ("email".equals(loginMode)) {
+                currentAccount = info.email;
+            } else if ("mobile".equals(loginMode)) {
+                currentAccount = info.mobile;
+            }
+            if (!TextUtils.isEmpty(currentAccount)) {
+                UserHelper.saveProperties(context, UserHelper.KEY_ACCOUNT_NAME, currentAccount);
+            }
+        }
+    }
+
+    public String getLastUserName() {
+        Context context = mContext;
+        if (context != null) {
+            return UserHelper.getProperties(context, UserHelper.KEY_ACCOUNT_NAME);
+        } else {
+            return null;
+        }
+    }
+}

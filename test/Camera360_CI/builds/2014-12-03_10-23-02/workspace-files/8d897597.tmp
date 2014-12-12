@@ -1,0 +1,83 @@
+package com.pinguo.intent;
+
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+
+import com.pinguo.edit.sdk.camera.CameraActivity;
+import com.pinguo.edit.sdk.camera.CcCameraFragment;
+import com.pinguo.mix.StatisticManager;
+import com.umeng.analytics.MobclickAgent;
+
+/**
+ * Created by taoli on 14-9-2.
+ */
+public class IntentCameraActivity extends CameraActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.pinguo.edit.sdk.INTENT_FINISH");
+        registerReceiver(mFinishBroadcastReceiver, intentFilter);
+
+        String action = getIntent().getAction();
+        if (null != action) {
+            if (action.equals(MediaStore.ACTION_IMAGE_CAPTURE)) {
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_IMAGE_CAPTURE);
+                StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_START_FROM_OTHER_APP);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        MobclickAgent.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        MobclickAgent.onPause(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        unregisterReceiver(mFinishBroadcastReceiver);
+    }
+
+    @Override
+    protected CcCameraFragment getCameraFragment() {
+        return new IntentCcCameraFragment();
+    }
+
+    private BroadcastReceiver mFinishBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (null == action) {
+                return;
+            }
+
+            if (!action.equals("com.pinguo.edit.sdk.INTENT_FINISH")) {
+                return;
+            }
+
+            Uri uri = intent.getParcelableExtra("URI");
+            intent.setData(uri);
+            IntentCameraActivity.this.setResult(Activity.RESULT_OK, intent);
+            finish();
+        }
+    };
+}

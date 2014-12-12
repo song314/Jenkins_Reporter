@@ -1,0 +1,64 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import java.io.Serializable;
+import java.util.Map;
+
+public class Camera360FeedbackData implements Serializable {
+    private String message;
+    private String name;
+    private long time = -1L;
+    private int status;
+    private Map<String, String> extra;
+
+    public Camera360FeedbackData() {
+        super();
+    }
+
+    public Camera360FeedbackData(String message, String name, long time, int status) {
+        super();
+        this.message = message;
+        this.name = name;
+        this.time = time;
+        this.status = status;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public void setExtra(Map<String, String> extraData) {
+        this.extra = extraData;
+    }
+
+    public Map<String, String> getExtra() {
+        return extra;
+    }
+}

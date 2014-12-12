@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout style="@style/OptionsItemClickable">
+
+        <ImageView
+            android:id="@+id/option_item_icon"
+            style="@style/OptionsItemIcon"
+            android:contentDescription="@string/empty_string" />
+
+        <TextView
+            android:id="@+id/option_item_title"
+            android:layout_toRightOf="@+id/option_item_icon"
+            style="@style/OptionsItemText"
+            android:layout_centerVertical="true" />
+
+        <ImageView
+            android:id="@+id/option_item_more"
+            style="@style/OptionsItemIconMore" />
+
+        <TextView
+            android:id="@+id/option_item_summary"
+            android:layout_toLeftOf="@id/option_item_more"
+            android:layout_marginRight="6dp"
+            android:singleLine="true"
+            style="@style/OptionsItemSummaryTextStyle" />
+
+        <ImageView
+            android:id="@+id/option_item_new"
+            android:visibility="gone"
+            android:layout_marginRight="6dp"
+            android:layout_toLeftOf="@id/option_item_more"
+            style="@style/OptionsItemIconMoreNew" />
+
+        <com.pinguo.edit.sdk.option.view.RoundImageView
+            android:id="@+id/option_item_new_custom"
+            android:layout_toLeftOf="@id/option_item_more"
+            android:visibility="gone"
+            android:layout_marginRight="100dp"
+            style="@style/OptionsItemIconMoreNewTag" />
+
+    </RelativeLayout>
+
+    <ImageView style="@style/TranslucentStripsWhite" />
+</RelativeLayout>

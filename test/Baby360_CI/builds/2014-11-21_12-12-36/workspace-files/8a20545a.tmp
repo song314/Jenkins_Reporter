@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+    <SurfaceView
+            android:id="@+id/sur_camera"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true">
+    </SurfaceView>
+
+    <include layout="@layout/composite_sdk_camera_touch_layout"/>
+
+    <RelativeLayout
+            android:id="@+id/focus_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <!--所有相机操作相关的视图全部放在这个父视图里方便隐藏-->
+        <include layout="@layout/composite_sdk_camera_focus_indicator"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+            android:id="@+id/camera_operation_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <include layout="@layout/composite_sdk_camera_bottom_menu_layout"/>
+        <include layout="@layout/composite_sdk_camera_top_menu_layout"/>
+
+    </RelativeLayout>
+
+    <!--自拍补光蒙层-->
+    <View
+            android:id="@+id/fill_flash_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="#00ff00"/>
+
+    <!--拍照动画蒙层-->
+    <View
+            android:id="@+id/take_picture_mask"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:background="#000000"/>
+
+    <include layout="@layout/progress_dialog"
+             android:layout_centerInParent="true"
+             android:id="@+id/progress_layout"/>
+</RelativeLayout>

@@ -1,0 +1,42 @@
+package com.pinguo.edit.sdk.filter.square.Info.excute;
+
+import android.os.Bundle;
+
+import com.pinguo.edit.sdk.filter.square.Info.bean.FilterData;
+import com.pinguo.mix.api.ApiConstants;
+import com.pinguo.mix.api.BaseBean;
+import com.pinguo.mix.api.BaseRequest;
+
+import org.json.JSONException;
+
+/**
+ * Created by taoli on 14-10-22.
+ */
+public class GetFilterDataById extends BaseRequest {
+    @Override
+    protected void paramValidCheck(Bundle bundle) throws IllegalArgumentException {
+    }
+
+    @Override
+    protected Bundle getResultParam(BaseBean bean) {
+        return null;
+    }
+
+    @Override
+    protected FilterData getResultData(BaseBean bean) {
+        FilterData getFilterInfo = (FilterData) bean;
+        return getFilterInfo;
+    }
+
+    @Override
+    protected BaseBean parse(String jsonString) {
+        FilterData getFilterInfoBean = new FilterData();
+        try {
+            getFilterInfoBean.parseJsonToObj(jsonString);
+            return getFilterInfoBean;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}

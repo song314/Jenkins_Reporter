@@ -1,0 +1,340 @@
+package com.pinguo.edit.sdk.utils;
+
+import android.util.Base64;
+
+import com.pinguo.Camera360Lib.utils.MD5;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+/**
+ * Created by taoli on 14-7-29.
+ */
+public class EncryptUtils {
+
+    /**
+     * Encodes a String in AES-256 with a given key
+     *
+     * @param stringToEncode
+     * @param keyString
+     * @return String Base64 and AES encoded String
+     */
+    public static byte[] encrypt(String stringToEncode, String keyString) throws NullPointerException {
+        if (keyString.length() == 0 || keyString == null) {
+            throw new NullPointerException("Please give Password");
+        }
+
+        if (stringToEncode.length() == 0 || stringToEncode == null) {
+            throw new NullPointerException("Please give text");
+        }
+
+        try {
+            SecretKeySpec skeySpec = getKey(keyString);
+            byte[] clearText = stringToEncode.getBytes("UTF8");
+
+            // IMPORTANT TO GET SAME RESULTS ON iOS and ANDROID
+            final byte[] iv = new byte[16];
+            Arrays.fill(iv, (byte) 0x00);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+            // Cipher is not thread safe
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivParameterSpec);
+
+            return cipher.doFinal(clearText);
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Decodes a String using AES-256 and Base64
+     *
+     * @param encrypedPwdBytes
+     * @param password
+     * @return desoded String
+     */
+    public static String decrypt(byte[] encrypedPwdBytes, String password) throws NullPointerException {
+
+        if (password.length() == 0 || password == null) {
+            throw new NullPointerException("Please give Password");
+        }
+
+        try {
+            SecretKey key = getKey(password);
+
+            // IMPORTANT TO GET SAME RESULTS ON iOS and ANDROID
+            final byte[] iv = new byte[16];
+            Arrays.fill(iv, (byte) 0x00);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+            // cipher is not thread safe
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
+            byte[] decrypedValueBytes = (cipher.doFinal(encrypedPwdBytes));
+
+            String decrypedValue = new String(decrypedValueBytes);
+            return decrypedValue;
+
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    /**
+     * Generates a SecretKeySpec for given password
+     *
+     * @param password
+     * @return SecretKeySpec
+     * @throws UnsupportedEncodingException
+     */
+    private static SecretKeySpec getKey(String password) throws UnsupportedEncodingException {
+
+        // You can change it to 128 if you wish
+        int keyLength = 256;
+        byte[] keyBytes = new byte[keyLength / 8];
+        // explicitly fill with zeros
+        Arrays.fill(keyBytes, (byte) 0x0);
+
+        // if password is shorter then key length, it will be zero-padded
+        // to key length
+        byte[] passwordBytes = password.getBytes("UTF-8");
+        int length = passwordBytes.length < keyBytes.length ? passwordBytes.length : keyBytes.length;
+        System.arraycopy(passwordBytes, 0, keyBytes, 0, length);
+        SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+        return key;
+    }
+
+    public static String parseByte2HexStr(byte buf[]) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < buf.length; i++) {
+            String hex = Integer.toHexString(buf[i] & 0xFF);
+            if (hex.length() == 1) {
+                hex = '0' + hex;
+            }
+            sb.append(hex.toUpperCase());
+        }
+
+        return sb.toString();
+    }
+
+    public static byte[] parseHexStr2Byte(String hexStr) {
+        if (hexStr.length() < 1) {
+            return null;
+        }
+
+        byte[] result = new byte[hexStr.length()/2];
+        for (int i = 0;i< hexStr.length()/2; i++) {
+            int high = Integer.parseInt(hexStr.substring(i*2, i*2+1), 16);
+            int low = Integer.parseInt(hexStr.substring(i*2+1, i*2+2), 16);
+            result[i] = (byte) (high * 16 + low);
+        }
+
+        return result;
+    }
+
+    public static String getQETAG(String path) {
+
+        File file = new File(path);
+        if (file.length() > 1024 * 1024 * 4) {
+            throw new IllegalArgumentException("Do not support file larger than 4M!");
+        }
+
+        byte[] SHA1Byte;
+        try {
+            SHA1Byte = getFileSHA1(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        if (null == SHA1Byte) {
+            throw new IllegalArgumentException("SHA1 must not be empty!");
+        }
+
+        if (SHA1Byte.length != 20) {
+            throw new IllegalArgumentException(
+                    "SHA1 length must be 20! Current length:" + SHA1Byte.length);
+        }
+
+        byte[] QETAGByte = new byte[21];
+        QETAGByte[0] = 0x16;
+
+        System.arraycopy(SHA1Byte, 0, QETAGByte, 1, 20);
+
+        return Base64.encodeToString(QETAGByte, Base64.URL_SAFE | Base64.NO_WRAP);
+    }
+
+    public static byte[] getFileSHA1(String path) throws IOException {
+
+        File file = new File(path);
+        FileInputStream in = new FileInputStream(file);
+        MessageDigest messagedigest;
+        try {
+            messagedigest = MessageDigest.getInstance("SHA-1");
+
+            byte[] buffer = new byte[1024 * 64];
+            int len;
+
+            while ((len = in.read(buffer)) > 0) {
+                messagedigest.update(buffer, 0, len);
+            }
+
+            return messagedigest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            throw e;
+        }
+
+        finally{
+            in.close();
+        }
+
+        return null;
+    }
+
+    // 普通密码加密，这里使用的是MD5两次论寻
+    public static String passwordMD5(String password) {
+        String strResult;
+
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+
+            md5.update(password.getBytes("UTF-8"));
+
+            byte[] byte_password_1 = md5.digest();
+
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < byte_password_1.length; ++i)
+                sb.append(String.format("%02x", byte_password_1[i]));
+            md5.update(sb.toString().getBytes("UTF-8"));
+
+            sb = new StringBuffer();
+            byte[] byte_password_2 = md5.digest();
+            for (int i = 0; i < byte_password_2.length; ++i)
+                sb.append(String.format("%02x", byte_password_2[i]));
+            strResult = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+
+            return null;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+
+            return null;
+        }
+
+        return strResult;
+    }
+
+    public static String byte2hex(byte[] b)
+    {
+        StringBuffer buffer = new StringBuffer();
+        String stamp;
+
+        for (int n = 0; n < b.length; n++) {
+            stamp = (Integer.toHexString(b[n] & 0XFF));
+            if (stamp.length() == 1) {
+                buffer.append("0").append(stamp);
+            } else {
+                buffer.append(stamp);
+            }
+
+            if (n < b.length - 1) {
+                buffer.append(":");
+            }
+        }
+        final String hs = buffer.toString();
+        if (hs.length() > 0) {
+            return hs.toUpperCase();
+        }
+
+        return null;
+    }
+
+    public static String getSig(Map<String, String> params, String secret) {
+
+        StringBuilder sb = new StringBuilder();
+        for (String key : params.keySet()) {
+            String value = params.get(key);
+            sb.append(key);
+            sb.append("=");
+            sb.append(value);
+            sb.append("&");
+        }
+
+        sb.deleteCharAt(sb.length() - 1);
+        String[] array = sb.toString().split("&");
+        List<String> list = Arrays.asList(array);
+        Collections.sort(list, new Comparator<String>() {
+
+            @Override
+            public int compare(String arg0, String arg1) {
+                return arg0.compareTo(arg1);
+            }
+
+        });
+
+        StringBuilder sigSB = new StringBuilder();
+        for (String s : list) {
+            sigSB.append(s);
+        }
+
+        try {
+            return MD5.pinguoMD5(sigSB.toString(), secret);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+}

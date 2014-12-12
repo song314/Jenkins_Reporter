@@ -1,0 +1,55 @@
+package com.pinguo.edit.sdk.option.push.utils;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import org.json.JSONObject;
+
+public class PushSimpleBean {
+    public static final String KEY_INTENT_HEADER_HTTP = "http";
+    public static final String KEY_INTENT_HEADER = "app://";
+
+    //与消息中心跳转协议相同
+    public static final String ACTION_INTENT_C = "app://camera360/";
+    public static final String ACTION_INTENT_C_OTHER = "component://";
+    //相机
+    public static final String ACTION_CAMERA = "app://pinguo.android.team.cameraView";
+    //相册
+    public static final String ACTION_GALLERy = "app://pinguo.android.team.albumView";
+    //云相册
+    public static final String ACTION_CLOUD = "app://pinguo.android.team.cloud";
+    //特效商店
+    public static final String ACTION_EFFECT_STORE = "app://pinguo.android.team.effectStore";
+    //用户反馈
+    public static final String ACTION_FEEDBACK = "app://pinguo.android.team.feedback";
+    //消息中心
+    public static final String ACTION_MSG_CENTER = "app://com.pinguo.camera360.mycenter.MsgCenterActivity";
+    //更新banner广告
+    public static final String ACTION_BANNER_UPDATE = "app://com.pinguo.camera360.shop.model.ShopBannerUpdateTask";
+    public static final String ACTION_NEW_WELCOME_AD = "app://pinguo.android.team.new_welcome_ad";
+    private static final String KEY_LINK = "link";
+    private static final String KEY_GUID = "guid";
+    private static final String TAG = "PushSimpleBean";
+    private String link = null;
+    private String guid = null;
+
+    public static PushSimpleBean getDataBean(String json) {
+        try {
+            JSONObject obj = new JSONObject(json);
+            PushSimpleBean bean = new PushSimpleBean();
+            bean.link = obj.getString(KEY_LINK);
+//            bean.guid = obj.getString(KEY_GUID);
+            return bean;
+        } catch (Exception e) {
+            GLogger.v(TAG, "push error:" + e);
+            return null;
+        }
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public String getGuid() {
+        return guid;
+    }
+}

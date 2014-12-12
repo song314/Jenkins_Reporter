@@ -1,0 +1,81 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.content.Context;
+import android.content.res.Resources;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by liubo on 9/12/13.<br/>
+ * 相机参数配置管理类
+ */
+public final class PreferenceGroupMap {
+    private static final String TAG = PreferenceGroupMap.class.getSimpleName();
+    private static final Map<String, ListPreference> PREFERENCE_MAP = new HashMap<String, ListPreference>();
+
+    static {
+        initFlash();
+        initPicSize();
+    }
+
+    /**
+     * 取得相机参数的信息,该参数还未经过实际的相机配置匹配，不能直接使用
+     *
+     * @param key 参数的Key
+     * @return ListPreference
+     */
+    public static ListPreference findPreference(String key) {
+        ListPreference preference = PREFERENCE_MAP.get(key);
+        if (preference == null) {
+            return null;
+        }
+
+        try {
+            return (ListPreference) preference.clone();
+        } catch (CloneNotSupportedException e) {
+            GLogger.e(TAG, e);
+            return null;
+        }
+    }
+
+    private static void initPicSize() {
+        ListPreference sizeList = new ListPreference(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE,
+                PGCompositeSDKApi.getAppContext().getString(
+                        R.string.composite_sdk_pref_camera_picturesize_title));
+        PREFERENCE_MAP.put(CameraPrefKeys.KEY_CAMERA_PICTURE_SIZE, sizeList);
+    }
+
+
+    private static void initFlash() {
+        Context context = PGCompositeSDKApi.getAppContext();
+        Resources res = PGCompositeSDKApi.getAppContext().getResources();
+        IconListPreference flash = new IconListPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE,
+                PGCompositeSDKApi.getAppContext().getString(
+                        ResourceHelper.getIdByName(
+                                context, "string", "composite_sdk_pref_camera_flashmode_title")));
+        String defaultValues = "off";
+        String[] entryValues = res.getStringArray(R.array.composite_sdk_pref_camera_flashmode_entryvalues);
+        String[] entryIds = new String[]{
+                res.getResourceName(ResourceHelper.getIdByName(
+                        context, "string", "composite_sdk_pref_camera_flashmode_entry_on")),
+                res.getResourceName(ResourceHelper.getIdByName(
+                        context, "string", "composite_sdk_pref_camera_flashmode_entry_off"))
+        };
+
+        int[] iconIds = new int[]{
+            ResourceHelper.getIdByName(context, "drawable", "composite_sdk_camera_top_bar_flash_on_normal"),
+            ResourceHelper.getIdByName(context, "drawable", "composite_sdk_camera_top_bar_flash_off_normal")
+        };
+
+        flash.setDefault(defaultValues);
+        flash.setEntryValues(entryValues);
+        flash.setEntries(entryIds);
+        flash.setIconIds(iconIds);
+        PREFERENCE_MAP.put(CameraPrefKeys.KEY_CAMERA_FLASH_MODE, flash);
+    }
+}

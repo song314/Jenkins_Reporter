@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- camera module begin-->
+    <color name="composite_sdk_camera_main_menu_bg">#1a1c1e</color>
+    <color name="composite_sdk_common_text_yellow">#ffe049</color>
+    <color name="composite_sdk_bg_pressed_normal">#b2111213</color>
+    <color name="composite_sdk_bg_text_pressed_normal">#111111</color>
+    <color name="composite_sdk_popup_item_text_color">#FFFFFFFF</color>
+    <!-- camera module end-->
+    <!-- gallery module begin-->
+    <color name="composite_sdk_album_main_menu_bg">#1a1c1e</color>
+    <!-- gallery module end-->
+
+    <!-- 组合滤镜界面，顶部和底部的颜色 -->
+    <color name="composite_sdk_effect_group_menu_bg">#1a1c1e</color>
+    <!-- 组合滤镜界面，中间背景颜色 -->
+    <color name="composite_sdk_effect_group_photo_bg">#1c2024</color>
+    <!-- 组合滤镜界面，特效背景颜色 -->
+    <color name="composite_sdk_beauty_composite_bg">#1a1c1e</color>
+
+    <color name="composite_sdk_beauty_menu_bg">#1a1c1e</color>
+
+    <color name="composite_sdk_effect_menu_txt_bg_selected">#ffe049</color>
+    <color name="composite_sdk_effect_menu_txt_bg_normal">#ffffff</color>
+
+    <color name="composite_sdk_fiter_square_title">#afffffff</color>
+
+    <color name="composite_sdk_beauty_adjust_bg_normal">#1a1c1e</color>
+    <color name="composite_sdk_beauty_adjust_bg_selected">#323437</color>
+
+    <color name="composite_sdk_group_photo_bg">#3E464B</color>
+
+    <color name="composite_sdk_composite_group_item_bg">#0b0b0b</color>
+
+    <color name="composite_sdk_mix_main_instagram_click">#b3ffe049</color>
+    <color name="composite_sdk_mix_main_instagram_normal">#b3ffffff</color>
+
+    <color name="composite_sdk_hsl_colors_red_bg_normal">#ffd24444</color>
+    <color name="composite_sdk_hsl_colors_orange_bg_normal">#ffe87a43</color>
+    <color name="composite_sdk_hsl_colors_yellow_bg_normal">#ffcec04e</color>
+    <color name="composite_sdk_hsl_colors_green_bg_normal">#ff4ea552</color>
+    <color name="composite_sdk_hsl_colors_cyan_bg_normal">#ff4fb6ab</color>
+    <color name="composite_sdk_hsl_colors_blue_bg_normal">#ff4585c4</color>
+    <color name="composite_sdk_hsl_colors_purple_bg_normal">#ff8b5db6</color>
+    <color name="composite_sdk_hsl_colors_magenta_bg_normal">#ffbf58ab</color>
+
+    <color name="composite_sdk_hsl_colors_red_bg_click">#ffc84040</color>
+    <color name="composite_sdk_hsl_colors_orange_bg_click">#ffe0733d</color>
+    <color name="composite_sdk_hsl_colors_yellow_bg_click">#ffc6b948</color>
+    <color name="composite_sdk_hsl_colors_green_bg_click">#ff479c4b</color>
+    <color name="composite_sdk_hsl_colors_cyan_bg_click">#ff47aca1</color>
+    <color name="composite_sdk_hsl_colors_blue_bg_click">#ff3e7cb9</color>
+    <color name="composite_sdk_hsl_colors_purple_bg_click">#ff8153ab</color>
+    <color name="composite_sdk_hsl_colors_magenta_bg_click">#ffb452a0</color>
+
+    <color name="holo_blue_bright">#ff00ddff</color>
+    <color name="holo_green_light">#ff99cc00</color>
+    <color name="holo_orange_light">#ffffbb33</color>
+    <color name="holo_red_light">#ffff4444</color>
+
+    <!--  通用  -->
+    <color name="color_login_head_title_bg">#373839</color>
+    <color name="color_login_head_title_text">#565555</color>
+    <drawable name="transparent_background">#00000000</drawable>
+    <color name="color_pg_login_error_tip">#f2545f</color>
+    <color name="common_title_bg">#FF111213</color>
+    <color name="common_title_text">#565555</color>
+    <color name="bg_tips_black">#B2111213</color>
+    <color name="popup_title_color">#c9cdd1</color>
+    <color name="advance_setting_item_bg">#f8f8f8</color>
+
+    <color name="login_btn_register_normal">#ff45c798</color>
+    <color name="login_btn_register_click">#ff39b588</color>
+    <color name="dialog_color">#e5111213</color>
+    <color name="common_text_yellow">#ffe049</color>
+    <color name="advance_dialog_divide">#1aFFFFFF</color>
+    <color name="dialog_selector_color">#ffe049</color>
+    <color name="login_bottom_node_normal">#24c4cd</color>
+    <color name="login_bottom_node_cure">#25c4cd</color>
+    <color name="login_alert_dialog_bg">#F02d333a</color>
+
+    <color name="bg_update_item1_click">#e0cc24</color>
+    <color name="bg_update_item2_normal">#f6de18</color>
+    <color name="bg_update_item2_click">#d8c315</color>
+    <color name="bg_update_item3_normal">#f2e8aa</color>
+    <color name="bg_update_item3_click">#d5cc95</color>
+    <color name="composite_sdk_option_item_bg">#232629</color>
+    <color name="square_neck_text_selected">#39ffef</color>
+</resources>
+    

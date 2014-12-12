@@ -1,0 +1,165 @@
+package com.pinguo.edit.sdk.login.view;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
+import android.widget.ImageView;
+
+import com.pinguo.edit.sdk.R;
+
+
+/**
+ * Created by crab on 14-6-26.
+ */
+public class CheckEmailViewGroup extends ViewGroup {
+    private EditTextWithPrompt mEmailInput;
+    private ImageView mPromptImg;
+    public static final int EYE_PADDING_RIGHT = 20;
+    public static final int EYE_CLICK_RANGE_MODIFY = 10;
+    private UpateUIHandler mHandler;
+    private Animation mRotationAnim;
+    private int mState = STATE_BASE;
+    private int mEditHeight;
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        mEmailInput = (EditTextWithPrompt) findViewById(R.id.id_email_edittext);
+        mPromptImg = (ImageView) findViewById(R.id.id_email_edittext_prompt_ic);
+        mPromptImg.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mState == STATE_FAIL) {
+                    mEmailInput.setText("");
+                }
+            }
+        });
+    }
+
+    public CheckEmailViewGroup(Context context) {
+        super(context);
+        init(context);
+    }
+
+    public CheckEmailViewGroup(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public CheckEmailViewGroup(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init(context);
+    }
+
+    private void init(Context context) {
+        mEditHeight = (int) getResources().getDimension(R.dimen.pg_login_input_height);
+        mRotationAnim = AnimationUtils.loadAnimation(context, R.anim.anim_rotate_clockwise);
+        mRotationAnim.setInterpolator(new LinearInterpolator());
+        mHandler = new UpateUIHandler();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        mPromptImg.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        mEmailInput.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(mEditHeight, MeasureSpec.EXACTLY));
+
+        int height = mEmailInput.getMeasuredHeight();
+        setMeasuredDimension(width, height);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (changed) {
+            mEmailInput.layout(0, 0, r - l, b - t);
+
+            int eyeWidth = mPromptImg.getMeasuredWidth();
+            int eyeHeight = mPromptImg.getMeasuredHeight();
+            int eyeXStart = r - l - eyeWidth - EYE_PADDING_RIGHT;
+            int eyeYStart = (b - t - eyeHeight) / 2;
+            mPromptImg.layout(eyeXStart, eyeYStart, eyeXStart + eyeWidth, eyeYStart + eyeHeight);
+        }
+    }
+
+    public void cancelAllMessage() {
+        mHandler.removeMessages(STATE_HIDE);
+        mHandler.removeMessages(STATE_SHOW);
+        mHandler.removeMessages(STATE_PROGRESS);
+        mHandler.removeMessages(STATE_FAIL);
+        mHandler.removeMessages(STATE_SUCCESS);
+        mHandler.removeMessages(STATE_EXCEPTION);
+    }
+
+    /**
+     * @param state STATE_HIDE,STATE_HIDE,STATE_PROGRESS
+     *              ,STATE_FAIL,STATE_SUCCESS,STATE_EXCEPTION
+     */
+    public void changePromptIconState(int state) {
+        mState = state;
+        mHandler.sendEmptyMessage(state);
+    }
+
+    public static final int STATE_BASE = 0;
+    public static final int STATE_HIDE = STATE_BASE + 1;
+    public static final int STATE_SHOW = STATE_BASE + 2;
+    public static final int STATE_PROGRESS = STATE_BASE + 3;
+    public static final int STATE_FAIL = STATE_BASE + 4;
+    public static final int STATE_SUCCESS = STATE_BASE + 5;
+    public static final int STATE_EXCEPTION = STATE_BASE + 6;
+
+    public class UpateUIHandler extends Handler {
+        public UpateUIHandler() {
+            super();
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            int what = msg.what;
+            switch (what) {
+                case STATE_HIDE:
+                    if (mPromptImg.getVisibility() != View.INVISIBLE) {
+                        mPromptImg.setVisibility(View.INVISIBLE);
+                    }
+                    break;
+                case STATE_SHOW:
+                    if (mPromptImg.getVisibility() != View.VISIBLE) {
+                        mPromptImg.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                case STATE_PROGRESS:
+                    if (mPromptImg.getVisibility() != View.VISIBLE) {
+                        mPromptImg.setVisibility(View.VISIBLE);
+                    }
+                    mPromptImg.setImageResource(R.drawable.icon_loading);
+                    mPromptImg.startAnimation(mRotationAnim);
+                    break;
+                case STATE_FAIL:
+                    mPromptImg.clearAnimation();
+                    mPromptImg.setImageResource(R.drawable.person_info_wrong_ic);
+                    if (mPromptImg.getVisibility() != View.VISIBLE) {
+                        mPromptImg.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                case STATE_SUCCESS:
+                    mPromptImg.clearAnimation();
+                    mPromptImg.setImageResource(R.drawable.person_info_right_ic);
+                    if (mPromptImg.getVisibility() != View.VISIBLE) {
+                        mPromptImg.setVisibility(View.VISIBLE);
+                    }
+                    break;
+                case STATE_EXCEPTION:
+                    mPromptImg.clearAnimation();
+                    if (mPromptImg.getVisibility() != View.INVISIBLE) {
+                        mPromptImg.setVisibility(View.INVISIBLE);
+                    }
+                    break;
+            }
+        }
+    }
+}

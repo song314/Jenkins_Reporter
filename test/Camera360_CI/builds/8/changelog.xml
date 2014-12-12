@@ -1,0 +1,586 @@
+commit f61c7401727d8c710dec759be84ea2636a130d84
+tree ee50767a70bd677a6904b4764fc365bc425aaa03
+parent 22ed1905c9da23f6e592d9b368d38d1bae62d62f
+author hlffeng <helinfeng@camera360.com> 1416464256 +0800
+committer hlffeng <helinfeng@camera360.com> 1416464256 +0800
+
+    [何林峰]去掉滤镜广场的代码
+
+:100644 100644 ec1827fb7d9bf44a8f2a9f760683a48220087ad0 6fc3f84883099d4c69e04e0277d9d878453b7087 M	README.md
+:100644 100644 34965bc9edeb3b2652420736c490a96fe821e8ed 2e6b319290d9e91380b42b06b3591559e133a44d M	res/layout/composite_sdk_filter_square_list.xml
+:100644 100644 b2a39b35c78d8ca5b802ba08edcc7b413c2fce9b 33aecc3b2c5ea5be94a23e92a6eb8a4748195746 M	res/layout/layout_mix_main.xml
+:100644 100644 15c8bcf2accb64b9fd14c590424f5436c5b77786 a520226ce70bac5c8d91134b00cec9ae85e9b926 M	src/com/pinguo/edit/sdk/filter/square/Info/FilterInfoManager.java
+:100644 100644 689b0825097cba6cd9b34051c4a2604609b93967 77963ccaf14b5474d6a2496d26c5b2f2399e886b M	src/com/pinguo/edit/sdk/filter/square/Info/GetFilterInfoApi.java
+:100644 100644 d717b9e0065de0d3fadd6d11588e9590484cbbc3 a553250f531a616dd7c58cafd926777980e4d967 M	src/com/pinguo/mix/api/ApiConstants.java
+
+commit 68e8c9dade22f8aa70032a9de1eb1b0d966c7417
+tree 53a6986221898deda9b95fc51253be5554f4a44a
+parent 137a3d6e8de666331a4ff0d65566d8bfd1c6955e
+author hlffeng <helinfeng@camera360.com> 1416399375 +0800
+committer hlffeng <helinfeng@camera360.com> 1416399375 +0800
+
+    [何林峰]sky显示到第二个位置
+
+:100644 100644 ffbf734b939c41472b413119fe81e5c8114b5984 67fc6f73d101f016b004478024e780101ba78586 M	src/us/pinguo/android/effect/group/sdk/PGStarInsApi.java
+
+commit 137a3d6e8de666331a4ff0d65566d8bfd1c6955e
+tree 70237118d9b2b8ca79e6ef55646600866cf57803
+parent 92372e344992a38a174cace32193bee85c91d19e
+author hlffeng <helinfeng@camera360.com> 1416395441 +0800
+committer hlffeng <helinfeng@camera360.com> 1416395441 +0800
+
+    [何林峰]解决升级安装星空特效位置不对的问题
+
+:100644 100644 bac07655db1bf90010f4a0e6940b5bf83c7d2ead 52334eec6490cc51b735aa9a9918291e1ac2bd9e M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 dea88f3067ef9cf487d0ccfa58a0c32b012c7e58 ffbf734b939c41472b413119fe81e5c8114b5984 M	src/us/pinguo/android/effect/group/sdk/PGStarInsApi.java
+
+commit a9e77b6438f83650864cc238e8643b473b3fb742
+tree 44977f033710624dd8dfa01178f33fa5e7d51b40
+parent c68f0b917e31a5934d1869acc8da054341990f1c
+author lt <litao@camera360.com> 1416311280 +0800
+committer lt <litao@camera360.com> 1416311280 +0800
+
+    ［李涛］UI调整
+
+:100644 100644 6c9f71eb75ab757f72f581018f001feec0cbca59 2cb573ba6ea292ae3b0da073eea418694946b126 M	libprojects/Android_UI_Widget/res/layout/progress_dialog.xml
+:100644 100644 1cc128404beda9f76045fc24a55334633a21ef9e 22abbfcb950ec74078092f040c14b2ea84bf8685 M	res/layout/composite_sdk_camera_bottom_menu_layout.xml
+:100644 100644 60196fad16073030ac5862620f260d15c984cec5 fb088c9438ce574af1686ebf0d80261b57a5333d M	res/values-xhdpi/composite_sdk_dimens.xml
+:100644 100644 7ff7af9f367a5be0181478fae5e7680e6cb7df27 e025719b8bfb6fbb421dea75369180136ccef9d9 M	res/values-xxhdpi/composite_sdk_dimens.xml
+:100644 100644 a11dc11e2e530a023610e2f57eebe4e4282ddfc3 8dff07bacfde77b3aef490fed3f68a9defdb2943 M	res/values-zh-rCN/composite_sdk_strings.xml
+:100644 100644 15a7afeb9b72516cce0223e103c6298687200964 57524db1696424ebb28cc931a17d42437b72e1af M	res/values/composite_sdk_dimens.xml
+
+commit f7102df278f2a20e424b8ff01d0536afaa7ce433
+tree 960ec82c299499e01ee429251fc234e682b19243
+parent 3b8a4f23f6b476ed28ac41ddd3e6173787fbd87c
+author hlffeng <helinfeng@camera360.com> 1416310412 +0800
+committer hlffeng <helinfeng@camera360.com> 1416310412 +0800
+
+    [何林峰]新的滤镜
+
+:000000 100644 0000000000000000000000000000000000000000 a43b9ccfcbdf6b82eaeac8321c8c7be0ead8aba0 A	assets/newFilter/c360_night.zip
+
+commit 33d3d755778f5f1794ea8770f012513928234c63
+tree 72c4ff30e7aac81643d1f2084a0fe3c5701ebf3c
+parent e7ba5d30825dbd5f93521332c347d03e49d3f527
+author hlffeng <helinfeng@camera360.com> 1416310345 +0800
+committer hlffeng <helinfeng@camera360.com> 1416310345 +0800
+
+    [何林峰]滤镜升级功能
+
+:100644 100644 e4a93c096d547422ce405b1a07d6fb06bd504d47 bac07655db1bf90010f4a0e6940b5bf83c7d2ead M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 e3c151ab2547e006a1ea8f44eb6f802856d27760 dea88f3067ef9cf487d0ccfa58a0c32b012c7e58 M	src/us/pinguo/android/effect/group/sdk/PGStarInsApi.java
+
+commit c68f0b917e31a5934d1869acc8da054341990f1c
+tree fe6bfa747b4c8879380857b8f6d5f2bab1c5a7ae
+parent e7ba5d30825dbd5f93521332c347d03e49d3f527
+author lt <litao@camera360.com> 1416303872 +0800
+committer lt <litao@camera360.com> 1416303872 +0800
+
+    ［李涛］更新分享创作历程色值
+
+:100644 100644 8019af208cf49b8998e0f74a455e124d0c6658f1 cdb6cc9d808b87b6ea4af1f1e200c8c36989b803 M	res/drawable/composite_sdk_share_instagram_btn_click.xml
+:100644 100644 c6afb7a6ec1daeda7e82a5423847c3c54fb8a95a f941cecc8fad69d4f7e40c20694cfe92abcd4f13 M	res/drawable/composite_sdk_share_instagram_btn_normal.xml
+
+commit e7ba5d30825dbd5f93521332c347d03e49d3f527
+tree a92293d21d48228b8cece0fa83e20c595d66c107
+parent 50d68252b929ebf3960f9629720e32e92a52b49c
+author lt <litao@camera360.com> 1416301574 +0800
+committer lt <litao@camera360.com> 1416301574 +0800
+
+    ［李涛］修复bug 18639
+
+:100644 100644 07108eaa292481bf39173888db6246aaed6ca86d be4b9166d83340483116c8f2d3083bbb6fba02df M	src/us/pinguo/android/effect/group/sdk/group/menu/TiltShiftMenu.java
+
+commit 50d68252b929ebf3960f9629720e32e92a52b49c
+tree 1e1e539f49f59f16d4b71142ed15dfde0816dbdd
+parent 9d29cee5fc5a0dc628a8548668233e2fd3e4aec8
+author lt <litao@camera360.com> 1416300979 +0800
+committer lt <litao@camera360.com> 1416300979 +0800
+
+    ［李涛］修改Toast弹出位置
+
+:100644 100644 0f1eb997d0d258032da75a86967a17a0251e666f c62fbaf5179f8416e7dac26e38746b27eaac5809 M	src/com/pinguo/edit/sdk/CompositeSDKEntryActivity.java
+:100644 100644 c1e8d3c8842fd1e1625362b1004a47a1fc1dd011 92ecbd676ee82ba06f6053209f7673402134bb11 M	src/com/pinguo/edit/sdk/camera/CameraFragment.java
+:100644 100644 5da742ec4636eea5aebb3e3d69144e5a8da186a8 d8becd772ed393aea670bb4ec81f429207919c6f M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 1ec6e8599ded3d3ba824bc3a79ad768b0a488ffe d90737d730e0b97ee734313a3e2925570deb2eb9 M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+:100644 100644 777b3b24ff0c0ba4f98f816239c7d2cd57caf468 55ba0e6430c1819e746d897e26e419e75a9d73f2 M	src/com/pinguo/edit/sdk/gallery/AlbumPage.java
+:100644 100644 61babff9f81e538f6c3df77c3d05fd0595919d4e ba839dcdece6dc6e0c5813b2fe68376c3370cfba M	src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java
+:000000 100644 0000000000000000000000000000000000000000 47ebf8f7f487bd448e96e5e1e24266deafbafb32 A	src/com/pinguo/edit/sdk/utils/ToastUtils.java
+:100644 100644 41f5b1375ba04d5e13f2ba9c0fe1407f55afc244 75ea592f67844ef78801773eb09a01336afcb1d8 M	src/com/pinguo/intent/IntentGroupController.java
+:100644 100644 c5eaa376f931d8fee24eb5a13b73bd6539762c0b e4a93c096d547422ce405b1a07d6fb06bd504d47 M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 5227058f02e45729e7ede88cbcee62c89cbe6251 ac94a818f9bae024dfbbd221998ca8ef80c2c520 M	src/com/pinguo/mix/MixShareActivity.java
+:100644 100644 c033c6efe89500a92e63471d2208f56b94ead382 4f88d97ae49958cd5339cf9d0789105ade641659 M	src/com/pinguo/mix/MixShareFilterActivity.java
+:100644 100644 904400649e4d9536ec35436a21db058d36ee4854 f8e959149d13be934c1271f4253090834543ce6b M	src/us/pinguo/android/effect/group/sdk/group/CompositeSaveDialog.java
+:100644 100644 a2ccead96dfc39db2e61ca64bcde11d0aeb55a38 47a219ee09fcf01344a0177a4ae064f5250a5356 M	src/us/pinguo/sdk/BeautyController.java
+:100644 100644 2ed32aef9774ff31ff1552704f115a059025eb3c edebd8d2dcf2eb90f7aa6a610b510187edbb0665 M	src/us/pinguo/sdk/GroupController.java
+
+commit 9d29cee5fc5a0dc628a8548668233e2fd3e4aec8
+tree 4f7a5eb89abe42017f0de09330034fc865afecf1
+parent 77d58c830d2d01812323dce42cfe34cbf54480d2
+author lt <litao@camera360.com> 1416298516 +0800
+committer lt <litao@camera360.com> 1416298516 +0800
+
+    ［李涛］修改dialog提示样式
+
+:100644 100644 1cfe8902e0007907a23d3fe938148948882d8cf2 3dff4e1138f813ae057b94136b282c8ecf873460 M	libprojects/Android_UI_Widget/res/drawable-xhdpi/seek_bar_cancel_click.png
+:100644 100644 677f6d35fb93d0c90d1a59200c0fe36fcea4044d ea4860816db89742cb409d89222c0ead929ad82f M	libprojects/Android_UI_Widget/res/drawable-xhdpi/seek_bar_cancel_normal.png
+:100644 100644 1ab509f12e9548e1e840d40dd72f5610cf26bc83 42d6d774c53ba0fdccadfcfcd41cc82b1358a2fb M	libprojects/Android_UI_Widget/res/drawable-xhdpi/seek_bar_confirm_click.png
+:100644 100644 cdf616c8675c8300c3c5c474da7bb7359935aee5 cb901e9ae416462930c2758e9f241a62cd217712 M	libprojects/Android_UI_Widget/res/drawable-xhdpi/seek_bar_confirm_normal.png
+:100644 100644 555bbb196ca4787d5490d2ac88e5f314f82e00f5 6c9f71eb75ab757f72f581018f001feec0cbca59 M	libprojects/Android_UI_Widget/res/layout/progress_dialog.xml
+
+commit 77d58c830d2d01812323dce42cfe34cbf54480d2
+tree 2d014a832b4e5ed3454bab181f6dd6f060397d85
+parent eac0359e87b6df403149fe4df9bcc9e3d3e9380b
+author lt <litao@camera360.com> 1416297880 +0800
+committer lt <litao@camera360.com> 1416297880 +0800
+
+    ［李涛］分享文案修改，seekbar按钮图标修改
+
+:000000 100644 0000000000000000000000000000000000000000 3dff4e1138f813ae057b94136b282c8ecf873460 A	res/drawable-xhdpi/seek_bar_cancel_click.png
+:000000 100644 0000000000000000000000000000000000000000 ea4860816db89742cb409d89222c0ead929ad82f A	res/drawable-xhdpi/seek_bar_cancel_normal.png
+:000000 100644 0000000000000000000000000000000000000000 42d6d774c53ba0fdccadfcfcd41cc82b1358a2fb A	res/drawable-xhdpi/seek_bar_confirm_click.png
+:000000 100644 0000000000000000000000000000000000000000 cb901e9ae416462930c2758e9f241a62cd217712 A	res/drawable-xhdpi/seek_bar_confirm_normal.png
+:000000 100644 0000000000000000000000000000000000000000 b5a0152515f6b4c6abc81905a061c7f40480033b A	res/drawable/seek_bar_cancel.xml
+:000000 100644 0000000000000000000000000000000000000000 2c504610d1827c7bd2216ce09a7a5e3e8dffa822 A	res/drawable/seek_bar_confirm.xml
+:100644 100644 fbbe008be4c57cb5251e77d86b846328530bc240 b7dbf87adbd5e4a2e7e2da4b805b664057167c66 M	res/layout-zh-rCN/composite_sdk_colors_seekbar_layout.xml
+:100644 100644 25627c1ccf223457470acf90e02da2e10f28de19 1b57763e37cfe808968621f6955b040a13ba4256 M	res/layout-zh-rCN/composite_sdk_discoloration_seekbar_layout.xml
+:100644 100644 33459fcbdc4c9683e15357011e03b162ecf0cede c82d5847e5f5a506695e362552c1306d12714124 M	res/layout/composite_sdk_beauty_seekbar_layout.xml
+:100644 100644 f9a434673be0aad277f59b250649571aeecaf2df a194a886f56e8772bf180fb42de0f6c371f53b1e M	res/layout/composite_sdk_colors_seekbar_layout.xml
+:100644 100644 a29b87d0baacb1a7ad06298aeb9b307a8c6e089f 8756b90767e4208c1b0912555b2944c22c14cc8d M	res/layout/composite_sdk_details_seekbar_layout.xml
+:100644 100644 bd8b65088d9f8fac35b7bca2b545f7b787b75479 af3c4c4f72312e3eb10e87a129ad77ffa371858a M	res/layout/composite_sdk_discoloration_seekbar_layout.xml
+:100644 100644 386b67ad5b8f1dfa61bcb2bebdd03a3118d39068 357937dfb6b5f1ccb71411b334047798d68911ec M	res/layout/composite_sdk_tilt_shift_seekbar_layout.xml
+:100644 100644 cb914c5173abd125bc5864db0299bdf093fd8a44 65cfec37e87e6798efce017ec031ff98bbb17237 M	res/values-zh-rCN/composite_sdk_effects_setting.xml
+:100644 100644 7c0bb4be6dc8140d5849b614a35501328ce15c92 a11dc11e2e530a023610e2f57eebe4e4282ddfc3 M	res/values-zh-rCN/composite_sdk_strings.xml
+:100644 100644 a59d4f0db58c264c2db540b3ebdc27a3546f6ee0 f94664390197471f3d7ec733d19886f0144d20f9 M	res/values/composite_sdk_effects_setting.xml
+:100644 100644 2acf276eaab5e67ba2a46fb6f8e32fa5fba6f3b9 b45265bd7ec5939c3902bb42e040db7975a7cddd M	res/values/composite_sdk_strings.xml
+:100644 100644 de9d0e9e0231a20759a5429f63c4b08a5780fdd8 5227058f02e45729e7ede88cbcee62c89cbe6251 M	src/com/pinguo/mix/MixShareActivity.java
+:100644 100644 d361833a5bcbe5963d2e728be989a695e79f9a0f c033c6efe89500a92e63471d2208f56b94ead382 M	src/com/pinguo/mix/MixShareFilterActivity.java
+
+commit eac0359e87b6df403149fe4df9bcc9e3d3e9380b
+tree 78a953a269c31d61e80705e1200a00d0b7770852
+parent 2cc19cd5cd31e616ddf32325a4530cc6b346c998
+author lt <litao@camera360.com> 1416293371 +0800
+committer lt <litao@camera360.com> 1416293371 +0800
+
+    ［李涛］修改分享照片页面按钮样式
+
+:000000 100644 0000000000000000000000000000000000000000 891484e18b150ee39ab6bba16fb49c6372507834 A	res/drawable/composite_sdk_share_photo_btn.xml
+:000000 100644 0000000000000000000000000000000000000000 feb9765deb572caa7a925121853a174978b9805c A	res/drawable/composite_sdk_share_photo_btn_click.xml
+:000000 100644 0000000000000000000000000000000000000000 67d3f648cb4bf590d336fc7c5c2b36dbfb4463e6 A	res/drawable/composite_sdk_share_photo_btn_normal.xml
+:100644 100644 50cf948ab69a355312a79ece56ccb59302d61fc7 561574684c0125967cddbd1650155781cd4b4690 M	res/layout/layout_mix_share.xml
+
+commit 2cc19cd5cd31e616ddf32325a4530cc6b346c998
+tree fdb5eda5c2381864a0f76f4ef67ab2cdd3f314cc
+parent ab7d180e6852603b1451238594c3848cd333c3cb
+author lt <litao@camera360.com> 1416291169 +0800
+committer lt <litao@camera360.com> 1416291169 +0800
+
+    ［李涛］本地化文案修改
+
+:100644 100644 23b269350303e7c5b2ac3a6334d64c82d082a90e a59d4f0db58c264c2db540b3ebdc27a3546f6ee0 M	res/values/composite_sdk_effects_setting.xml
+
+commit daf2f09e65fabdffa239d124b291cb86252b4bd5
+tree f67858786ffb67338eabe48e9ff05b8291cfb928
+parent acd7cf113444317390262cbc59cae85c430bfcf8
+author lt <litao@camera360.com> 1416291024 +0800
+committer lt <litao@camera360.com> 1416291024 +0800
+
+    ［李涛］更新分享创作历程按钮色值
+
+:100644 100644 47d1d48378a1ba573758f5f9b5c7d5b5b26be761 8019af208cf49b8998e0f74a455e124d0c6658f1 M	res/drawable/composite_sdk_share_instagram_btn_click.xml
+:100644 100644 e9ad5f05d09db72a046d7243a082a83472bcf749 c6afb7a6ec1daeda7e82a5423847c3c54fb8a95a M	res/drawable/composite_sdk_share_instagram_btn_normal.xml
+
+commit 953e2ce07a3eea019e50fb0c9a014bef65b4f9fc
+tree 47cb7905245f7f3656480006f3a53e4e667a0f83
+parent ec81bbce603b81a107da22bc21c9d42fe8f9cf13
+author hlffeng <helinfeng@camera360.com> 1416289605 +0800
+committer hlffeng <helinfeng@camera360.com> 1416289605 +0800
+
+    [何林峰]增量更新星空特效
+
+:100644 100644 246a92fd730cd69de9e27f88f217e89a92c58644 c5eaa376f931d8fee24eb5a13b73bd6539762c0b M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 20ebc024f02bfe2593dd1d5833387ce0a8ff2abc 6b1cb4bc8c5592ccdbdc560122a974d6f0f415a3 M	src/us/pinguo/android/effect/group/sdk/PGCompositeSDKApi.java
+:000000 100644 0000000000000000000000000000000000000000 e3c151ab2547e006a1ea8f44eb6f802856d27760 A	src/us/pinguo/android/effect/group/sdk/PGStarInsApi.java
+
+commit ec81bbce603b81a107da22bc21c9d42fe8f9cf13
+tree 8115e00cf5add1ecdcf894ca5f2f027c1b90842d
+parent acd7cf113444317390262cbc59cae85c430bfcf8
+author hlffeng <helinfeng@camera360.com> 1416275533 +0800
+committer hlffeng <helinfeng@camera360.com> 1416275533 +0800
+
+    [何林峰]新的滤镜
+
+:100644 100644 e1ed3fcd52672b9559335ad6e7cb532511408dbf 685fb1cacccab8542ea4b46e187a60e5150eba61 M	assets/init/composite/icon/icon.zip
+:100644 100644 e61f34eb5a0a8113250702c4a7091b4f0e3f4525 1f653d3fab1743c73c9131324e1d49bf2b8e81dd M	assets/init/filter/icon/icon.zip
+:100644 100644 eb09420180e154556767c4782d53c8a332bd3cbf 4565ff4d5435eac2ddc0eb03b3d41c695dd89286 M	assets/init/filter/texture/texture.zip
+:100644 100644 532c3131d37aa373e92771abf44f7be04ffcc278 95ac441e3d50c6a57b506284f2fff5de01a101d0 M	assets/init/guids
+:100644 100644 7960a78af292415f6e439a2bb42a2f164d1de824 947417d4331081b62ec65dedd8f36f4605e85047 M	assets/init/lighting/icon/icon.zip
+:100644 100644 d8fef72a9e362a91eb690b7325a0a87f604e58dc c24bda50c1fea9f5edb30bbaa5b138e780f4870b M	assets/init/lighting/texture/texture.zip
+:100644 100644 7f45d53fae95f6d2bfd73227f0ca4dd3e25dccb4 3ecd414e3f1b450aaa69a06dc800a19153dfefc2 M	res/raw/effect.db
+:100644 100644 87c3e7a12a4ed7b7e4d138a5ca2b8ba2ddc45b73 b3299b73430d0349d67ae2a84049a6309ddc693d M	res/values-zh-rCN/composite_sdk_effect_param_strings.xml
+:100644 100644 fc01085c9a5f2de04a53cc6ea2ca1c558717a0eb eff721bf94293c4d62ce84c25b181322bbae5788 M	res/values/composite_sdk_effect_param_strings.xml
+
+commit acd7cf113444317390262cbc59cae85c430bfcf8
+tree dda1fb3c4b70dd9ea1eafef4471b7192ae0ae310
+parent f6613678e8e8fb11acf5212e0ab923b275e7f609
+author lt <litao@camera360.com> 1416226499 +0800
+committer lt <litao@camera360.com> 1416226499 +0800
+
+    ［李涛］修复微信朋友圈分享文案不正确
+
+:100644 100644 d14de5f9a7b3e75eb5c03648348eebb2230747c7 de9d0e9e0231a20759a5429f63c4b08a5780fdd8 M	src/com/pinguo/mix/MixShareActivity.java
+:100644 100644 6f9b2a7d7345485c2eb1256d96f4f837f41575ea d361833a5bcbe5963d2e728be989a695e79f9a0f M	src/com/pinguo/mix/MixShareFilterActivity.java
+
+commit 3280a8c82427f06cceda69c0554d54c994d95ca0
+tree ea22b1f75d28c06057da5a6439b58f62cd275f71
+parent 7f3fb4f2f49f17474b2280ed70b9b2fa8850d2a5
+author lt <litao@camera360.com> 1416213403 +0800
+committer lt <litao@camera360.com> 1416213403 +0800
+
+    ［李涛］本地化，修复点击移轴Seekbar无效果
+
+:100644 100644 410474c2cb2695e2574f7a41e87323291f1f3492 2acf276eaab5e67ba2a46fb6f8e32fa5fba6f3b9 M	res/values/composite_sdk_strings.xml
+:100644 100644 9ce6fb7f8d7b62616a43b06b2e512a8e242e15e6 6a5959f345270c58c50d7a1ea7fe242344ed983f M	src/com/pinguo/edit/sdk/widget/TiltShiftSeekBar.java
+
+commit 99a3afbdbefaa6c825142bd868f4da60a18427e8
+tree 7210c96e375cc2228af59a6cabe85e925025a4ba
+parent c07529ff8ce5f968a3ce8a1fde26d46e01de5b0d
+author hlffeng <helinfeng@camera360.com> 1416205809 +0800
+committer hlffeng <helinfeng@camera360.com> 1416205809 +0800
+
+    [何林峰]1.2.1的统计项
+
+:100644 100644 652b2d537d2dac8f2b577e8e84f6301281d7655a 1ec6e8599ded3d3ba824bc3a79ad768b0a488ffe M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+:100644 100644 c0d13a0a7a9673eef995d153961c877296998a7b 11c4b57532063d00ebee452fa779655dd54f23a3 M	src/com/pinguo/intent/IntentCcCameraFragment.java
+:100644 100644 1b30ed2c076188fe4cdc38ad4bad0c7ed58402ce d14de5f9a7b3e75eb5c03648348eebb2230747c7 M	src/com/pinguo/mix/MixShareActivity.java
+:100644 100644 9d1796b3d79028b6e9054f78c69669910f5dc5bd 6f9b2a7d7345485c2eb1256d96f4f837f41575ea M	src/com/pinguo/mix/MixShareFilterActivity.java
+:100644 100644 e0e67ef38afffca4e5dec31f0c980673c9410ed5 24b3ad7497d76f62d3300cff8ad64b48b1f3d025 M	src/com/pinguo/mix/StatisticManager.java
+:100644 100644 421ac5aac0308f667153a742e4bb5d44d844742d a2ccead96dfc39db2e61ca64bcde11d0aeb55a38 M	src/us/pinguo/sdk/BeautyController.java
+
+commit d5d5a9fb536c8a4c9773f71151f88880f50757ec
+tree fd505f2ac6a8ff70beb52fe4e405e3f88265ed24
+parent 0134dc0413eea688aafb03130f4743d4025a0b47
+author hlffeng <helinfeng@camera360.com> 1416193921 +0800
+committer hlffeng <helinfeng@camera360.com> 1416193921 +0800
+
+    [何林峰]网络请求中加入基础数据
+
+:100644 100644 28db78a561a12f40a52bab7a65390add1c310afa 509db6b177bccf8908886fcf837fd2bc2e702321 M	src/com/pinguo/edit/sdk/MainApplication.java
+:100644 100644 17dd683648f67c0bfad86d43950f029c3ebc1ca2 1f4dd7902e389ce58e37e9f6b617bd09156cb6cd M	src/com/pinguo/mix/api/BaseRequest.java
+:000000 100644 0000000000000000000000000000000000000000 b23c816ebea2503f6923a589cab1f0b77311f3b9 A	src/com/pinguo/mix/api/Constants.java
+:100644 100644 0e16d8896f551cbad05855851385800c00e3ac10 894baea9c2274369d156c576409c229844a81747 M	src/com/pinguo/mix/api/common/CommonApi.java
+
+commit 7f3fb4f2f49f17474b2280ed70b9b2fa8850d2a5
+tree ed2ab596e8dc8c2b3937358af1b427a805585da2
+parent 0134dc0413eea688aafb03130f4743d4025a0b47
+author lt <litao@camera360.com> 1416191992 +0800
+committer lt <litao@camera360.com> 1416191992 +0800
+
+    ［李涛］修复Note2前置摄像头无法画幅切换，支持底部bar滑动切换画幅
+
+:100644 100644 538d88ec9bf4c225ef3af882871f0f8820135757 5da742ec4636eea5aebb3e3d69144e5a8da186a8 M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 17bb6636bde01f7b82962243714582a2dabe1b8e 9dc2751c15ca3b72b7109127b0d592ef9abb39af M	src/com/pinguo/edit/sdk/camera/setting/CameraSettings.java
+:100644 100644 d660cd49eebd1b06453edb0ec561861bde31c95f 7431120d913091fd4eb821b50b873c1847bfc83a M	src/com/pinguo/edit/sdk/camera/ui/CameraBottomMenuView.java
+
+commit 0134dc0413eea688aafb03130f4743d4025a0b47
+tree f631293d235d9fcc8c8bbe396369156705064cfe
+parent a4689a782071be9788a4768654e2fa9249dfca12
+author hlffeng <helinfeng@camera360.com> 1416037180 +0800
+committer hlffeng <helinfeng@camera360.com> 1416037180 +0800
+
+    [何林峰]解决在全屏界面切换到裁剪界面时不能全图显示在框中的问题
+
+:100644 100644 c7be4a7f1b530462886b9924ab89df81e895d634 e8a069d89c47696befd5e530d69e7f88b50679eb M	src/com/pinguo/edit/sdk/edit/ImageViewTouch.java
+
+commit a4689a782071be9788a4768654e2fa9249dfca12
+tree e6e62432d9a2ed5e25fe12fdd3db4a70a68dedaf
+parent 692b3dadb9977749c380c5b3ef78c7c3fa69accc
+author lt <litao@camera360.com> 1415948533 +0800
+committer lt <litao@camera360.com> 1415948533 +0800
+
+    ［李涛］支持拍照时尺寸替换
+
+:000000 100644 0000000000000000000000000000000000000000 4fda4dd9c03bc24591a9efd17977b3250682ca9b A	res/drawable-xhdpi/composite_sdk_camera_capture_mode_indicator.png
+:100644 100644 dff18043ea02cf3dd17368f55144075c011c0844 97a1d25e80657d04c577ffac4c01b7baad72ffab M	res/drawable-xhdpi/composite_sdk_camera_shutter_click.png
+:100644 100644 1c6ec738c04ab0f7da3edbaccd37779f2307e5a1 96dc893892bca170921cad1e77f22d158b051afa M	res/drawable-xhdpi/composite_sdk_camera_shutter_normal.png
+:100644 100644 6563ce8e3f8bb307e4b0064ac0bb79c92c2e9e67 1cc128404beda9f76045fc24a55334633a21ef9e M	res/layout/composite_sdk_camera_bottom_menu_layout.xml
+:100644 100644 c90a25d7dc80e3276af179aab16049153323b1db f57ad03929acfa2c5742673711117dbf6c1f8c85 M	res/layout/composite_sdk_camera_top_menu_layout.xml
+:000000 100644 0000000000000000000000000000000000000000 08754b0c6d799f194bb73e2a8d84f0e13a906d9e A	res/layout/composite_sdk_capture_mode_selector.xml
+:100644 100644 54f76fbf78738b1f7ecf3389418ff7a30c0dc245 7ff7af9f367a5be0181478fae5e7680e6cb7df27 M	res/values-xxhdpi/composite_sdk_dimens.xml
+:100644 100644 d982e8fc160ac7b51826e78d9ffc2f8c72ccd6b3 7c0bb4be6dc8140d5849b614a35501328ce15c92 M	res/values-zh-rCN/composite_sdk_strings.xml
+:100644 100644 2288e1cc286f1080a1c38fc924e602bacc0bebfb 410474c2cb2695e2574f7a41e87323291f1f3492 M	res/values/composite_sdk_strings.xml
+:100644 100644 90f49875dc0411fa11c47679981b715816171c3b 538d88ec9bf4c225ef3af882871f0f8820135757 M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 8ec445ed2e5272e406df22ee18933985c7c55ee2 d660cd49eebd1b06453edb0ec561861bde31c95f M	src/com/pinguo/edit/sdk/camera/ui/CameraBottomMenuView.java
+:000000 100644 0000000000000000000000000000000000000000 875544110c41c47c38010bf664778782c9094986 A	src/com/pinguo/edit/sdk/camera/ui/CameraCaptureModeSelector.java
+:100644 100644 b55778994d3cb19f193343d6096dd1ff347f5d95 d8ba02f4712996c57a0670038016630f4fe8c894 M	src/com/pinguo/edit/sdk/utils/ConstantUtil.java
+
+commit 692b3dadb9977749c380c5b3ef78c7c3fa69accc
+tree 9987300913a6d1e3df6c4859232872f22a5744e7
+parent ac1ad2820d09e5da7379a9fad6f2e4f33947345e
+author hlffeng <helinfeng@camera360.com> 1415931900 +0800
+committer hlffeng <helinfeng@camera360.com> 1415931900 +0800
+
+    [何林峰]修改版本号
+
+:100644 100644 2a997410e611feba80ce4bffa2408532f2069579 8a170c08212ddcd93465001b2a4bc02827f74a11 M	AndroidManifest.xml
+
+commit ac1ad2820d09e5da7379a9fad6f2e4f33947345e
+tree a812f0732c5dc103c07e81088161a162940e0ddb
+parent bc684d7f59097b70394009d0e00e729143a398aa
+author lt <litao@camera360.com> 1415929802 +0800
+committer lt <litao@camera360.com> 1415929802 +0800
+
+    ［李涛］初步支持全画幅取景
+
+:100644 100644 335d2a93c128fb34faf08087a1a2fb3903ab8d0b 90f49875dc0411fa11c47679981b715816171c3b M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+
+commit 62be767b65eb8117e5f8074ffa1032743a8d2a9c
+tree 1ed8d027d349e9b8658fc376bbb4caec1cbd7a56
+parent 6a2a92e3d02564dc1734b578f45b93dae5f7e72d
+author lt <litao@camera360.com> 1415929610 +0800
+committer lt <litao@camera360.com> 1415929610 +0800
+
+    ［李涛］初步支持全画幅取景
+
+:100644 100644 4c618d8b52c9802cad170b9551b3dd8cf9079d1c 6563ce8e3f8bb307e4b0064ac0bb79c92c2e9e67 M	res/layout/composite_sdk_camera_bottom_menu_layout.xml
+:100644 100644 cee2af45cace8a0a50626a9fe0107bf81c907b4f c90a25d7dc80e3276af179aab16049153323b1db M	res/layout/composite_sdk_camera_top_menu_layout.xml
+:100644 100644 8a965bbaf54bc460b94a609d809b8d668ec3b903 60196fad16073030ac5862620f260d15c984cec5 M	res/values-xhdpi/composite_sdk_dimens.xml
+:100644 100644 82428efe290a6ba46cdef98961acefceebacc964 15a7afeb9b72516cce0223e103c6298687200964 M	res/values/composite_sdk_dimens.xml
+:100644 100644 ff223dc8b742362348d85bfc1ccdb057d50c8214 5e4d2933e8a6cf8a04f65c54d767e7fa6e3a1449 M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 84147b532f82abe6283ed3f7313fcd91fbf8dc2e 17bb6636bde01f7b82962243714582a2dabe1b8e M	src/com/pinguo/edit/sdk/camera/setting/CameraSettings.java
+:100644 100644 f2a9d4d5a8483ca29c53da57203e7652db66089f 874112fbe2f1b74ee14976facc1f9df4bf854d96 M	src/com/pinguo/edit/sdk/camera/ui/CameraBottomMenuView.java
+:100644 100644 13b6c6c4dee7bb086f60e3a39eed15188a5bba1e 423cf5a1da00229612b31eab21263aeaccde238c M	src/com/pinguo/edit/sdk/camera/ui/PreviewFrameView.java
+:100644 100644 c68ad908bd2b2fa1d58d4a3efc8e8ef3b80fff26 e273a35f61b0b4e19f1bcefddb1d5a33e391ae98 M	src/com/pinguo/edit/sdk/camera/ui/PreviewTouchLayout.java
+
+commit 0b0e9acbd0e389ddfd2f1a771d0f7e001c95354c
+tree 334acf0b8294a26b63a4808dd5ce9544446a3883
+parent d50e660fad2aeb090a3323741a3417088daebc88
+author hlffeng <helinfeng@camera360.com> 1415871026 +0800
+committer hlffeng <helinfeng@camera360.com> 1415871026 +0800
+
+    [何林峰]裁剪界面默认为全屏显示界面
+
+:100644 100644 568cadc0a1007a7473801790983e75a3e2ceb87b 60664586c6d08c340ceec5c506121d3994f8a4df M	res/layout/composite_sdk_photo_crop_layout.xml
+:100644 100644 a47f51f4ae16fb7318c24b7b235fe88ee4ae78e3 c7be4a7f1b530462886b9924ab89df81e895d634 M	src/com/pinguo/edit/sdk/edit/ImageViewTouch.java
+:100644 100644 9ced05423a8a2c32818069a3f297212a3761bad9 652b2d537d2dac8f2b577e8e84f6301281d7655a M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+
+commit d50e660fad2aeb090a3323741a3417088daebc88
+tree f47db0ac94cf39899609204d2ce6bcc14d6afef8
+parent 61ba2525491bbb207d157f08752c66b937d12241
+author hlffeng <helinfeng@camera360.com> 1415862380 +0800
+committer hlffeng <helinfeng@camera360.com> 1415862380 +0800
+
+    [何林峰]修改加载资源的方式
+
+:100644 100644 31ea812dc9f7bdc26e2ea6b3e94a1c1b609bf570 207defc759d7245cec0902ce671527aca062a275 M	src/com/pinguo/edit/sdk/camera/CameraActivity.java
+:100644 100644 1b0321973911ab1050d56e3b0e32794778a8eb6c c1e8d3c8842fd1e1625362b1004a47a1fc1dd011 M	src/com/pinguo/edit/sdk/camera/CameraFragment.java
+:100644 100644 ff223dc8b742362348d85bfc1ccdb057d50c8214 3d6443bfcb3477779e641f19740f41deeccdc792 M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 8ed98ff42bc558aebba387a5a891deb9e7594851 2bc464ffe62daa70cd5ec577c0df5e5f28bcf469 M	src/com/pinguo/edit/sdk/camera/model/SoundManager.java
+:100644 100644 1ecd8114e9893fd712817cc059ed249bd298acb4 1a46cd645a7b3a9e5ca9b7861abf464f094a7ca6 M	src/com/pinguo/edit/sdk/camera/setting/PreferenceGroupMap.java
+:100644 100644 f2a9d4d5a8483ca29c53da57203e7652db66089f 1c0f4b25576a252128488d97fb37af3eabb2b53d M	src/com/pinguo/edit/sdk/camera/ui/CameraBottomMenuView.java
+:100644 100644 bf68295ffc64c1946897b5e71dcb11430bc13db6 cf2a5a92cb722cd786725fc239d7d0dcae41c563 M	src/com/pinguo/edit/sdk/camera/ui/CameraMenuBarPopupView.java
+:100644 100644 385e7d33990bcf5d6f7ee4eed52080f1e4be2170 77bce1e512836d72f39d1bd96279277e34a6d79c M	src/com/pinguo/edit/sdk/camera/ui/CameraTopMenuView.java
+:100644 100644 eebc009b8d0aca7e32b1d3df8a1b6dbbbc2d6252 c981a993656a4789dab0496da72d07a86c324e2f M	src/com/pinguo/edit/sdk/camera/ui/FocusViewUIManager.java
+:100644 100644 c68ad908bd2b2fa1d58d4a3efc8e8ef3b80fff26 01bf0ded627fd4f042048f1b7aa3ee3b15a1e1cd M	src/com/pinguo/edit/sdk/camera/ui/PreviewTouchLayout.java
+:100644 100644 f7353c85b17c28d6b4df08eba067f8c5f447cd93 f1fc358c912bfa357879ca2d44b995456c3aa6a6 M	src/com/pinguo/edit/sdk/camera/ui/ThumbnailView.java
+:100644 100644 e796d7fb6894b8090aee1b68e1ac16c559a8449f 784bfd0b49965ff233f05dbc6b5c662040e6235c M	src/com/pinguo/edit/sdk/edit/CropImageView.java
+:100644 100644 f3516fd15830e362c2880fa1eeca8fa2aef72505 9ced05423a8a2c32818069a3f297212a3761bad9 M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+:100644 100644 f8757616688f4fc0d0263a163c3689a5d7734f62 777b3b24ff0c0ba4f98f816239c7d2cd57caf468 M	src/com/pinguo/edit/sdk/gallery/AlbumPage.java
+:100644 100644 0941e5c8914d8282b2916b1c2f20a77729d046d0 61babff9f81e538f6c3df77c3d05fd0595919d4e M	src/com/pinguo/edit/sdk/gallery/AlbumSetPage.java
+:100644 100644 ddeb542d5352e9cb8bc03bdba334a34046512215 f78813feb31c9494e4b3bfbd7f42ff25cf22e174 M	src/com/pinguo/edit/sdk/gallery/GalleryActivity.java
+:100644 100644 44cfe06f60bd95f92ba97b9165fb6243e5ea6928 0e96ee48a8e1bfb3a47d038040e50de639f42e3d M	src/com/pinguo/edit/sdk/gallery/RootActivity.java
+:100644 100644 632a51d6c882a909c842f3229f0b15a2bc09d8e2 478824f2c27ff58e0346b8190b5e278195447373 M	src/com/pinguo/edit/sdk/gallery/data/MediaDetails.java
+:100644 100644 ddaa2d9befcfcd9c1a60ac194e54a9170e2cbbc9 47adbd371214a5d85a9ab0626d897955f4ee4043 M	src/com/pinguo/edit/sdk/gallery/ui/AbstractSlotRenderer.java
+:100644 100644 137adec30682c8eb8eccb096c97ec802bb222e84 f01cb9121ef46e3defaaf15b79ec4640b34ca243 M	src/com/pinguo/edit/sdk/gallery/ui/AlbumSetSlidingWindow.java
+:100644 100644 92f32b260aaa09fbc7708235387fc4a64b0529b3 6497de5d50f92949b71b58da9682f0d7c10c2d4c M	src/com/pinguo/edit/sdk/gallery/ui/EdgeEffect.java
+:100644 100644 13372b0c4602825ef70fbc6ef83c6cc2a8462847 bd2fedeb6c1a8c9f22a4d58858088614c0898574 M	src/com/pinguo/edit/sdk/gallery/ui/GLRootView.java
+:100644 100644 0a78e198d4291738dc9513f154b3c46a3a4527ff 332177405d5f5475cea4babe887795b321cf65c8 M	src/com/pinguo/edit/sdk/gallery/util/AlbumUtils.java
+:100644 100644 25c72deb7e003186b3855828daa2a027db6bdf91 8c2b2a41c75bf73b844d8650d41b1fb2f08c315e M	src/com/pinguo/edit/sdk/utils/ResourceHelper.java
+:100644 100644 56e1e8e059719ab79cc59a82089faf2c93985647 c5d686c9779be9c16f080853e86f22928e505dc6 M	src/com/pinguo/edit/sdk/widget/CompositeSDKDialog.java
+:100644 100644 2b346c4a18702f22981c84fafd71ab3e4bea9213 54bf6d2712108c1c62de916a8a935d17bd570878 M	src/com/pinguo/mix/MixVersionUpdateDialog.java
+:100644 100644 1b7f8afc25b542ebd04e1c16801411066b07c77b 20ebc024f02bfe2593dd1d5833387ce0a8ff2abc M	src/us/pinguo/android/effect/group/sdk/PGCompositeSDKApi.java
+:100644 100644 d1ffc58c97060514b4ac78d6cd4ecfd8df4a15c7 586b2aea27a1f75e0bb5b432b07a1f9b2a5edc9e M	src/us/pinguo/android/effect/group/sdk/androidsdk/SeniorAdjustmentEnum.java
+:100644 100644 c737035a3c9a9c763ca8102fab85294dcf405244 789a77444edc14c14f69ea07dba13fc554a1f794 M	src/us/pinguo/android/effect/group/sdk/group/BaseMenu.java
+:100644 100644 9a94308493139352c73902e2d8d7cc51f65708e3 be695f614fe79ef0f8ca08d09257d41f85cf623f M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceHSLHighlightShadowMenu.java
+:100644 100644 7a0d5a33632c551ea8fc61aa61292c156c5c9024 a0dd130bf4163ec462c5c94e9c96aae1196d4119 M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceHSLMenu.java
+:100644 100644 27a85644de47b8fc9ba3632610941ee7498b450c 643a7d1118d065d09ce807a1b807531642134ebe M	src/us/pinguo/android/effect/group/sdk/group/menu/AdvanceVignetteMenu.java
+:100644 100644 5c2dd7d8642151d46885f29d666bae6d706a2c7b 0bf954f4faf67be7fbc1dd6d6b8ec6c59b40ab46 M	src/us/pinguo/android/effect/group/sdk/group/menu/DetailMenu.java
+:100644 100644 ea6937c09d077268cec55f195c30bebabfa985ef 4c8145f78f0a1217f9590de925b457d56982ec17 M	src/us/pinguo/android/effect/group/sdk/group/menu/DiscolorationMenu.java
+:100644 100644 f873b59986aad6cdb3aa7213df097bc003681fa1 b10dca914943b30df1a104dfc58b828bd2cb8890 M	src/us/pinguo/android/effect/group/sdk/group/menu/FrameMenu.java
+:100644 100644 8ad21e022137c223033ed8f0b103c5cb042a23d9 1625a255c42105944eeb656fd1707da426830d92 M	src/us/pinguo/android/effect/group/sdk/group/menu/HDRMenu.java
+:100644 100644 215e79028ac9a3a7e9df1425947286c2fecb3c1f 3186a8fbffd043c91344d0462a423055d62326ab M	src/us/pinguo/android/effect/group/sdk/group/menu/SharpenMenu.java
+:100644 100644 7d856cc09f251353a04d47df88ea40d514464feb c571d7c2648014a471c9e0918f7513ce6ed00ffe M	src/us/pinguo/android/effect/group/sdk/group/menu/SkinMenu.java
+:100644 100644 e56cfa24bd49d3a820b38fbc12aed7466ca235e5 07108eaa292481bf39173888db6246aaed6ca86d M	src/us/pinguo/android/effect/group/sdk/group/menu/TiltShiftMenu.java
+:100644 100644 f18173e0d44a76051dd3ef0539fe9a805e3e6476 fd2f6b60075faad335aa92340f994aa80fb5056b M	src/us/pinguo/android/effect/group/sdk/view/AdjustContainerViewGroup.java
+:100644 100644 df6e35570773fffa67d8fbf813bbeb18ddedc3c8 d000c5eeb59239d9fc272dfaeb46b77877b1ffe8 M	src/us/pinguo/android/effect/group/sdk/view/EffectMenuHorizontalLayout.java
+:100644 100644 36b50cebf2d57ed0bd9f9887dc501df2e1895979 c9b9e0363993529fd95763774a9ef24e537b1b82 M	src/us/pinguo/android/effect/group/sdk/view/HorizontalLayout.java
+:100644 100644 079ebd079e6d739a22aa1582645a41d707bc3a57 13f7c4e1afe2f9d602f4c23b3f9c4b16c895bc20 M	src/us/pinguo/android/effect/group/sdk/view/VerticalScrollImageView.java
+:100644 100644 74f83a05ecb7f0efb45267faea2f37b937715ad3 9124c7591bb4e7d25d23808478bc22faa582ac13 M	src/us/pinguo/sdk/BeautyActivity.java
+:100644 100644 42ed3c660b4f00d0e68e2afbf3bbd936c9dd081b 421ac5aac0308f667153a742e4bb5d44d844742d M	src/us/pinguo/sdk/BeautyController.java
+:100644 100644 d1cde724c2c3d28be2d414b942c333d885b26646 65d2a624d3ba8122c2e95ec4da1cdbd7a37ed03e M	src/us/pinguo/sdk/GroupActivity.java
+:100644 100644 da2f8f37531d9540f266ae9ce112cd1c1ef0d840 2ed32aef9774ff31ff1552704f115a059025eb3c M	src/us/pinguo/sdk/GroupController.java
+
+commit 61ba2525491bbb207d157f08752c66b937d12241
+tree 2c901dea510711c3f9cac3d5184ab77262bc7f4c
+parent 6a2a92e3d02564dc1734b578f45b93dae5f7e72d
+author hlffeng <helinfeng@camera360.com> 1415846863 +0800
+committer hlffeng <helinfeng@camera360.com> 1415846863 +0800
+
+    [何林峰]增加裁剪界面全屏的功能
+
+:100644 100644 1207dbcdf1d9d9c9ccf0d1bd5b6ed9d059751cb5 e796d7fb6894b8090aee1b68e1ac16c559a8449f M	src/com/pinguo/edit/sdk/edit/CropImageView.java
+:100644 100644 7eaaad854f43b6b109a06c4b0a34b8814b78e8b8 a47f51f4ae16fb7318c24b7b235fe88ee4ae78e3 M	src/com/pinguo/edit/sdk/edit/ImageViewTouch.java
+:100644 100644 e05d0e835feac59b406e1e822430a3d21a33f2e7 f3516fd15830e362c2880fa1eeca8fa2aef72505 M	src/com/pinguo/edit/sdk/edit/PhotoCropActivity.java
+
+commit 22f8ec71db644667fa22ee6c5ce19f0136cc5cba
+tree 3b59a03a589a738095e78d63770ceaee5aabffb3
+parent dc1cbbacf1d347e3be1873d201852b17f2b20572
+author pinguo-zhongzheng <zhongzheng@camera360.com> 1414725510 +0800
+committer pinguo-zhongzheng <zhongzheng@camera360.com> 1414725510 +0800
+
+    [zhongzheng]fix the pre commit error
+
+:100644 100644 fdb2533cf2886ca620b0e96a29a3ddd668b082c7 a85e258f6124a47975cf95b3d2008294867b0378 M	AndroidManifest.xml
+:100644 100644 afff72adc01c7f2850130eeba8d4c3b9c72ddfa2 772f5bf9e3a914d1452d0eb1e95b3e2229317cc3 M	src/com/pinguo/edit/sdk/filter/square/FilterSquareActivity.java
+
+commit 229309b77bc15070f5b842e6e4e8b2a5f3294a39
+tree e8cc9f656102a411a7c7451b2e924c4f40d87d99
+parent 0cde6b6790e8f8786edde90307a926f8e6dec135
+author 钟铮 <zhongzheng@camera360.com> 1414722833 +0000
+committer 钟铮 <zhongzheng@camera360.com> 1414722833 +0000
+
+    Delete local.properties
+
+:100644 000000 f830db873cb0574316e89f334590b2f57a19e0a8 0000000000000000000000000000000000000000 D	local.properties
+
+commit 0cde6b6790e8f8786edde90307a926f8e6dec135
+tree 97a7c3e197fa28616754072b51770cb948d9169b
+parent 04074389fb15fc677ef8d2117db5887007c4532c
+author lt <litao@camera360.com> 1414395664 +0800
+committer lt <litao@camera360.com> 1414722280 +0800
+
+    ［李涛］修复Bug 18027
+    (cherry picked from commit 6b42a48)
+
+:100644 100644 65445559a805d5ea9aa84051159291cd4c26deb3 c54b34785856fa1c90dae52fba82e40d35e5de7e M	src/com/pinguo/mix/MixShareFilterActivity.java
+
+commit 04074389fb15fc677ef8d2117db5887007c4532c
+tree 2f43d24291cae9e28d90ccc222f1306028ab9ad7
+parent dc1cbbacf1d347e3be1873d201852b17f2b20572
+author lt <litao@camera360.com> 1414395480 +0800
+committer lt <litao@camera360.com> 1414722243 +0800
+
+    ［李涛］修复Bug 18020
+    (cherry picked from commit ca884b3)
+
+:100644 100644 e96c5381ebc6d194d2e69fabf1b1b8dfb9cb5c55 542420b9d8166b16dbd8b91564394d5ae7823317 M	libprojects/Android_UI_Widget/res/layout/progress_dialog.xml
+:100644 100644 4eee11249f6ca71515845f906c593cecb09da33d e792d79f8dfa079d4d8b6fd7cfe1ed5fb5d0e29b M	libprojects/Android_UI_Widget/src/com/pinguo/ui/widget/ProgressDialog.java
+:100644 100644 e1737a784b33757c291bf00c9b7319a9ab4dcee4 a2d589e8b92b490bac304ed7eb0a55dece20114b M	res/values-zh-rCN/composite_sdk_strings.xml
+:100644 100644 a59bad78afd07b1d503886e6e6ff75eadb4733c7 c91fce988a7047e85391b4bbbcd6dc8776e7ff27 M	res/values/composite_sdk_strings.xml
+:100644 100644 68f9dc66693b09ef3e261ff8a389de086cd52a98 62636275a13f5842e0c9ac224615138c3f5a4efb M	src/com/pinguo/edit/sdk/camera/CcCameraFragment.java
+:100644 100644 2645f49e8cde632b51090dc355fd11b2e0b00034 c373d556443d2eeba2a005729997bea9baf6efa4 M	src/com/pinguo/mix/MixShareActivity.java
+:100644 100644 683ccce5a1e82517ca95647445cff5f5f0fd1699 65445559a805d5ea9aa84051159291cd4c26deb3 M	src/com/pinguo/mix/MixShareFilterActivity.java
+
+commit dc1cbbacf1d347e3be1873d201852b17f2b20572
+tree 0f9de576ecedc16eebfa1be583028f0a8c290d49
+parent 558bc397035d2929fe11d2ed593045982063481d
+author pinguo-zhongzheng <zhongzheng@camera360.com> 1414670868 +0800
+committer pinguo-zhongzheng <zhongzheng@camera360.com> 1414670868 +0800
+
+    add filter square module
+
+:100644 100644 f38e78d8b473b44a2b1f2117cc22ba579d5edc3c fdb2533cf2886ca620b0e96a29a3ddd668b082c7 M	AndroidManifest.xml
+:000000 100644 0000000000000000000000000000000000000000 02f786324545c7bbf478dd8b4ae4d331a4d56f37 A	doc/mixFilterSquare/FilterSquare_imageListView.jpg
+:000000 100644 0000000000000000000000000000000000000000 f830db873cb0574316e89f334590b2f57a19e0a8 A	local.properties
+:000000 100644 0000000000000000000000000000000000000000 d18eb5960ab5071f5e894b9ee0ddd33fda594e9e A	res/anim/fade.xml
+:000000 100644 0000000000000000000000000000000000000000 e5e4759f2adbc52bbefe33d8e87585bbc0e175ab A	res/drawable/composite_sdk_filter_square_refresh_down.png
+:000000 100644 0000000000000000000000000000000000000000 ed27c84f89bda9ab505645871bd3584826b003e4 A	res/drawable/composite_sdk_filter_square_refresh_up.png
+:000000 100644 0000000000000000000000000000000000000000 cc58f2cece77cd9232bbc1b61fc6cde5594b2039 A	res/layout/composite_sdk_filter_square_grid_item.xml
+:000000 100644 0000000000000000000000000000000000000000 17280c221d2884238cc5e5617d1933bc40045109 A	res/layout/composite_sdk_filter_square_layout.xml
+:000000 100644 0000000000000000000000000000000000000000 34965bc9edeb3b2652420736c490a96fe821e8ed A	res/layout/composite_sdk_filter_square_list.xml
+:000000 100644 0000000000000000000000000000000000000000 b61d7a668d2a1ee89de8d9eb5fc6d6bfeaefd9fe A	res/layout/composite_sdk_filter_square_list_item.xml
+:000000 100644 0000000000000000000000000000000000000000 dd48324f12a61245c389875a7dbf8716a984dd6c A	res/layout/composite_sdk_filter_square_list_refresh.xml
+:000000 100644 0000000000000000000000000000000000000000 7c0d1081e82e6aa870022f1218a87a7bf4a4e70e A	res/layout/composite_sdk_filter_square_tab_layout.xml
+:100644 100644 5b43d68f5c1df1051d658202d888418a2ce2774a f73925dca9404788f2307a28909882d91e18efef M	res/layout/layout_mix_main.xml
+:100644 100644 e61123ca6be74277d7ed082f9b0f5ef0fc8cd66a e1737a784b33757c291bf00c9b7319a9ab4dcee4 M	res/values-zh-rCN/composite_sdk_strings.xml
+:100644 100644 d29d41848730a1361ef7d2cd2958f84bc4858aa5 23daf68deb4d09d7df2884237f8e997a136625fb M	res/values/composite_sdk_attrs.xml
+:100644 100644 f015d99a8fc9534ddc7c8c7010f372b1aadac0ad be81386a981ce511b97b0773e53a9a140e9ff1b7 M	res/values/composite_sdk_colors.xml
+:100644 100644 ecf660dbd644c2940d60c57a53ec3da3183e4145 7e5df5140696306daec0ec4c3b2e66ff37efcf80 M	res/values/composite_sdk_dimens.xml
+:100644 100644 b40407e58ea93d5ca50e7a211cbf4759eb103a3d eca4513e17cf6959511d5f166ed4b954d3c0f472 M	res/values/composite_sdk_styles.xml
+:000000 100644 0000000000000000000000000000000000000000 afff72adc01c7f2850130eeba8d4c3b9c72ddfa2 A	src/com/pinguo/edit/sdk/filter/square/FilterSquareActivity.java
+:000000 100644 0000000000000000000000000000000000000000 bce63b05053d38d2fb4bd9035d9698b91874bbb9 A	src/com/pinguo/edit/sdk/filter/square/FilterSquareConst.java
+:000000 100644 0000000000000000000000000000000000000000 b56c918c1f3f80b0ea680f7ed6165423c8d0c995 A	src/com/pinguo/edit/sdk/filter/square/Image/ImageManager.java
+:000000 100644 0000000000000000000000000000000000000000 1c4887b419bc74240f5d901d85eca030c03c7cd8 A	src/com/pinguo/edit/sdk/filter/square/Info/AddFilterInfo.java
+:000000 100644 0000000000000000000000000000000000000000 6d38d8a9b420deff171f1be5dfe335542fd109e6 A	src/com/pinguo/edit/sdk/filter/square/Info/AddFilterInfoBean.java
+:000000 100644 0000000000000000000000000000000000000000 3ad5434df5c39a7fd142fe1abd6bdc539a77f5c2 A	src/com/pinguo/edit/sdk/filter/square/Info/DownloadFilterInfo.java
+:000000 100644 0000000000000000000000000000000000000000 3780125be9f0e0c51c85e97bad99ed43174dc3da A	src/com/pinguo/edit/sdk/filter/square/Info/DownloadFilterInfoBean.java
+:000000 100644 0000000000000000000000000000000000000000 15c8bcf2accb64b9fd14c590424f5436c5b77786 A	src/com/pinguo/edit/sdk/filter/square/Info/FilterInfoManager.java
+:000000 100644 0000000000000000000000000000000000000000 ed79eefb788cf3bbf163d4e2a620f798b1456163 A	src/com/pinguo/edit/sdk/filter/square/Info/GetFilterInfo.java
+:000000 100644 0000000000000000000000000000000000000000 689b0825097cba6cd9b34051c4a2604609b93967 A	src/com/pinguo/edit/sdk/filter/square/Info/GetFilterInfoApi.java
+:000000 100644 0000000000000000000000000000000000000000 3e2cac2a603c22ec082384841512649bcc7adbe5 A	src/com/pinguo/edit/sdk/filter/square/Info/GetFilterInfoBean.java
+:000000 100644 0000000000000000000000000000000000000000 3bd3ee1441b8e081d0e35a1c5889ec7aef4a31c8 A	src/com/pinguo/edit/sdk/filter/square/Info/NewestFilterInfoList.java
+:000000 100644 0000000000000000000000000000000000000000 45419efcfba4b38d3af925e5a8b5bed76f1a08a3 A	src/com/pinguo/edit/sdk/filter/square/Info/NewestFilterInfoListBean.java
+:000000 100644 0000000000000000000000000000000000000000 5b07f61b74719e8f67fe338eca49520e3f6b244e A	src/com/pinguo/edit/sdk/filter/square/Info/UpdateFilterInfo.java
+:000000 100644 0000000000000000000000000000000000000000 bcaba7d98f866717f96b965f6311ad0d75568e00 A	src/com/pinguo/edit/sdk/filter/square/page/BaseFragment.java
+:000000 100644 0000000000000000000000000000000000000000 00bbd47fea2d4a3a9d6edb8ea4cecf1485069ac4 A	src/com/pinguo/edit/sdk/filter/square/page/PageAdapter.java
+:000000 100644 0000000000000000000000000000000000000000 e98a972d17718b535908612585238921ffec0295 A	src/com/pinguo/edit/sdk/filter/square/page/list/ImageListFragment.java
+:000000 100644 0000000000000000000000000000000000000000 bfcbb0c7c31e4e19a7210bd319853361a0f17470 A	src/com/pinguo/edit/sdk/filter/square/page/list/ListViewController.java
+:000000 100644 0000000000000000000000000000000000000000 fa4740c5411a79f4cd8ed0e5757cdfe591224b93 A	src/com/pinguo/edit/sdk/filter/square/page/refresh/NLPullRefreshView.java
+:000000 100644 0000000000000000000000000000000000000000 a5ced7a3b7795502f70c395836716ccb48f8289f A	src/com/pinguo/edit/sdk/filter/square/page/refresh/RefreshFragment.java
+:000000 100644 0000000000000000000000000000000000000000 884a5ea1878bac4bc039d172d85c625f90475fe3 A	src/com/pinguo/edit/sdk/filter/square/tab/IcsLinearLayout.java
+:000000 100644 0000000000000000000000000000000000000000 1cdc2abc9455d44fdde1c8f249c69ff23a989562 A	src/com/pinguo/edit/sdk/filter/square/tab/TabPageIndicator.java
+:100644 100644 8cc70497b5e31234e82db20c10c713f3554f1bb0 cc11b78ae8b3ecd657e6afe3b025c0bb2dab3a00 M	src/com/pinguo/mix/MixMainActivity.java
+:100644 100644 f055fde44c01daaa510e336455b77e2feb909835 f878c2f1d2223b8842cda155ff519f4ff50cd6c1 M	src/com/pinguo/mix/StatisticManager.java
+:100644 100644 e3330e26c50aab719fbead27b272521ed3cbd885 00fd1492f6e97fc2c4bfbde0a90bc53c1861d854 M	src/com/pinguo/mix/api/ApiConstants.java
+:100644 100644 b745a0a26ced66babc33cdb1592e8bffd958e24d c7d6e070a0e9379b01628639f8db61a0c221921f M	src/com/pinguo/mix/api/BaseBean.java
+:100644 100644 1b7f8afc25b542ebd04e1c16801411066b07c77b db4f86df20f7c250d31ba5d1a1d0724c4278e1aa M	src/us/pinguo/android/effect/group/sdk/PGCompositeSDKApi.java
+:100644 100644 846344447d1f33b6d6e062aef9d35f7a480abd00 d31ff238014765dc7c679847734f0ed6d53aefb9 M	src/us/pinguo/sdk/BeautyController.java
+
+commit 558bc397035d2929fe11d2ed593045982063481d
+tree 180ae377339d1258b28661ecd26febdaad972249
+parent 1318200c37a93812c23f50c69970c8d1abd5659d
+author huowaa <huowaa@gmail.com> 1414568248 +0800
+committer huowaa <huowaa@gmail.com> 1414568248 +0800
+
+    【陈杰】：修改version为number（从string）
+
+:100644 100644 157c9a5ffff798e6c52e991e3904f40ea62ef627 673d494680f99d4f2fefd05af94fed4e9289a628 M	script/sdkDataPacker.py
+
+commit 3404e3c7ac8105b1cd0afa0ca06601835768d61f
+tree ea1b2e75c9023afc00c9f2d99d178f3634aafb97
+parent 3ca3e072aa0f90fbf4d7ba10e22587cc24f9b856
+author huowaa <huowaa@gmail.com> 1414464643 +0800
+committer huowaa <huowaa@gmail.com> 1414464643 +0800
+
+    【陈杰】：update script
+
+:100644 100644 9ab44f6cf44d5be6ccf9a17acb8cc0524a4cf91d ef0d4b54033ba7c44bac92998a0b5cce4ad2c5fe M	doc/record2
+:000000 100644 0000000000000000000000000000000000000000 09dfb654d5d1d34e426d7b7d946e774ce3cf7257 A	script/360EffectPacker.py
+:100644 100644 353c53159a20afeb34c3e5cae61b1bdd94c35fab ffe65814b427298fb7fd15355508ac920b4cc469 M	script/ce.xls
+:100644 100644 908f0534f91c97edf0560e9c1782dd0892354223 3ed8d04698107b6773b88c76510b8ca54a2ada3d M	script/cePacker.py
+:100644 100644 c0700a9aee9e5ea1d632e64ccc90cfca055fa669 16502bee5e5756e905359c159dcb3c5225d87107 M	"script/excel\350\241\250\346\240\274\350\257\264\346\230\216"
+:100644 100644 3f67bc8d21bf36d6a28bc2ab41221a377f11125c da82d4bf0a4b957faf631de40d845d522ec7fa59 M	script/filters.xls
+:100644 100644 c82bad24d02db1dcb89232fd153f80941ac0672c f68643474023155f479c4f67b2c46f8fd94902e2 M	script/frames.xls
+:100644 100644 9a737825fea4359b1e00855dd901406d29939ccc 9d2d70c16f3d8a1bb6ccb3fa81e5823a3e0883d8 M	script/lightings.xls
+:100644 100644 e98549d49f69c36bb170c9914ce91cd5588d2c2a 157c9a5ffff798e6c52e991e3904f40ea62ef627 M	script/sdkDataPacker.py
+:100644 100644 da8b24bb442ccf52741c744394e90ca7185cc9fa 1944e5a3df1b43a5adde0e05f02ed825fe617f61 M	script/update.sh
+
+commit 3ca3e072aa0f90fbf4d7ba10e22587cc24f9b856
+tree b52e4577d46b23923303856398c898293883f58f
+parent 9bd63173e3633ff300809ed54325907ae2f1a2be
+author huowaa <huowaa@gmail.com> 1413438452 +0800
+committer huowaa <huowaa@gmail.com> 1413438452 +0800
+
+    【陈杰】：sdkDataPacker.py SDK数据打包脚本
+
+:000000 100644 0000000000000000000000000000000000000000 e98549d49f69c36bb170c9914ce91cd5588d2c2a A	script/sdkDataPacker.py
+
+commit cb98d0cf0137f2228460e3c5688291b780ec617f
+tree 0bb9df5b459e44b8ef70016d2cb190bd8d43f957
+parent df4f62071d61ab22ead6b6258424cc20e008fa36
+author huowaa <huowaa@gmail.com> 1413356905 +0800
+committer huowaa <huowaa@gmail.com> 1413356905 +0800
+
+    Merge branch 'develop' of /Users/huowaa/AndroidDeveloper/pinguo/Android-Common-Effect-SDK with conflicts.
+
+:100644 100644 aa99d78b5fcfb1d04ccfbbaf17879cd7ad2a8a7c b6637764d9f18496bf3e3945e92f15f34da477b6 M	tests/tests.iml

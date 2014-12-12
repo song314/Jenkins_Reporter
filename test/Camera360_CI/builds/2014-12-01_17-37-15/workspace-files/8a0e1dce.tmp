@@ -1,0 +1,290 @@
+package com.pinguo.edit.sdk.login.activity;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.TextView;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.StatusErrorCodeMessage;
+import com.pinguo.edit.sdk.login.lib.Base64;
+import com.pinguo.edit.sdk.login.lib.os.AsyncFuture;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.os.Fault;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.login.lib.util.ViewUtils;
+import com.pinguo.edit.sdk.login.model.GetUserInfo;
+import com.pinguo.edit.sdk.login.model.User;
+import com.pinguo.edit.sdk.login.view.TitleView;
+import com.pinguo.edit.sdk.option.view.RoundImageView;
+import com.pinguo.edit.sdk.utils.cropImage.CropImage;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Iterator;
+import java.util.Set;
+
+
+/**
+ * 个人信息登录页面
+ *
+ * @author 谢朝军
+ */
+public class PersonalInformation extends PGLoginBaseActivity implements OnClickListener {
+    //tag标记
+    private static final String TAG = "PersonalInformation";
+    //用户头像与昵称
+    private RoundImageView mFace;
+    private TextView mNickname;
+    private float mDensity;
+    private static final int BASE_INTEGER = 0;
+    private static final int REQUEST_CODE_SYSTEM_ALBUM = BASE_INTEGER + 1;
+    private static final int REQUEST_CODE_CROP_IMAGE = BASE_INTEGER + 2;
+    private static final String IMAGE_UNSPECIFIED = "image/*";
+    //裁剪完成后图片的大小
+    private static int CROP_IMAGE_SIZE = 100;
+    //处理用户销毁账户
+    private static final int REQUEST_CODE_DESTROY_ACCOUNT = 1000;
+    public static final int RESULT_CODE_DESTROY_ACCOUNT = 1001;
+    public static final String DESTROY_KEY = "destroy_account";
+
+    private AsyncFuture<Void> mChangeAvatarFuture;
+    private AsyncFuture<Void> mGetUserInfoFuture;
+
+    //是否是大陆用户
+    private boolean mIsMainLandUser = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.composite_sdk_personal_information);
+        mIsMainLandUser = SystemUtils.isMainLandUser(this);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        mDensity = dm.density;
+        // 头像大小折中方案：考虑不同机器可以设置头像查看头像
+        float defaultSize = 94 * 1.5f;
+        float thisMachineSize = 94 * mDensity;
+        CROP_IMAGE_SIZE = Math.round(Math.max(defaultSize, thisMachineSize));
+        initView();
+        getUserInfo();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mGetUserInfoFuture != null) {
+            mGetUserInfoFuture.cancel(true);
+        }
+        if (mChangeAvatarFuture != null) {
+            mChangeAvatarFuture.cancel(true);
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateView();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    /**
+     * 更新ui的显示
+     */
+    private void updateView() {
+        User user = User.create(this);
+        if (user.isValidate()) {
+            User.Info userInfo = user.getInfo();
+            //显示头像
+            mFace.setImageUrl(user.getAvatar());
+            //显示昵称
+            mNickname.setText(userInfo.nickname);
+        }
+    }
+
+    @Override
+    public void onClick(final View v) {
+        int viewId = v.getId();
+        v.setClickable(false);
+        ViewUtils.setDelayedClickable(v, true, 500);
+        switch (viewId) {
+            case R.id.id_personal_information_face_parent: {
+                if (!SystemUtils.hasNet(getApplicationContext())) {
+                    showMessage(getString(R.string.pg_login_network_exception));
+                    return;
+                }
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType(IMAGE_UNSPECIFIED);
+                Intent wrapperIntent = Intent.createChooser(intent, null);
+                startActivityForResult(wrapperIntent, REQUEST_CODE_SYSTEM_ALBUM);
+
+                break;
+            }
+            case R.id.confirm_button: {
+                finish();
+            }
+            default:
+        }
+
+    }
+
+    private void logout() {
+        User user = User.create(PersonalInformation.this);
+        user.saveLastUserName();
+        user.logout();
+        finish();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+        Uri uri = null;
+        if (requestCode == REQUEST_CODE_SYSTEM_ALBUM) {
+            if (resultCode == RESULT_CANCELED) {
+                return;
+            }
+            if (data != null) {
+                uri = data.getData();
+                if (uri != null) {
+                    Intent cropIntent = new Intent(this, CropImage.class);
+                    cropIntent.setData(uri);
+                    cropIntent.putExtra("return-data", true);
+                    //裁剪成圆形图片
+                    //cropIntent.putExtra("circleCrop", "true");
+                    cropIntent.putExtra("aspectX", 1);
+                    cropIntent.putExtra("aspectY", 1);
+                    cropIntent.putExtra("outputX", CROP_IMAGE_SIZE);
+                    cropIntent.putExtra("outputY", CROP_IMAGE_SIZE);
+                    startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE);
+                }
+            }
+            return;
+        } else if (requestCode == REQUEST_CODE_CROP_IMAGE) {
+            if (resultCode == RESULT_CANCELED) {
+                return;
+            }
+            if (data != null) {
+                Bundle bundle = data.getExtras();
+                if (bundle != null) {
+                    Set<String> keys = bundle.keySet();
+                    Iterator<String> iterator = keys.iterator();
+                    Rect rect = null;
+                    Bitmap returnBitmap = null;
+                    while (iterator.hasNext()) {
+                        String key = iterator.next();
+                        GLogger.i(TAG, "key=" + key);
+                        if (key.equals("cropped-rect")) {
+                            rect = bundle.getParcelable(key);
+                            GLogger.i(TAG, "l=" + rect.left + ",t=" + rect.top + ",r=" + rect.right + ",b=" + rect.bottom);
+                        } else if (key.equals("data")) {
+                            returnBitmap = bundle.getParcelable(key);
+                        }
+                    }
+                    if (returnBitmap != null) {
+                        final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        returnBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
+                        byte[] tempData = os.toByteArray();
+                        if (tempData == null || tempData.length == 0) {
+                            return;
+                        }
+                        byte[] encode = Base64.encode(tempData);
+                        if (encode == null || encode.length == 0) {
+                            return;
+                        }
+                        String face = new String(encode);
+                        onModifyAvatar(face);
+                    }
+                }
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void initView() {
+        mRootView = findViewById(R.id.id_personal_root_view);
+        setRootViewBackground(mRootView);
+
+        //头信息
+        TitleView personalInfoTitle = (TitleView) findViewById(R.id.pg_login_head);
+        personalInfoTitle.setTiTleText(R.string.person_info);
+        personalInfoTitle.setOnTitleViewClickListener(this);
+
+        mFace = (RoundImageView) findViewById(R.id.id_personal_information_face);
+//        mFace.setDefaultImage(R.drawable.default_face);
+        mNickname = (TextView) findViewById(R.id.personal_nick_name);
+
+        findViewById(R.id.id_personal_information_face_parent).setOnClickListener(this);
+        findViewById(R.id.confirm_button).setOnClickListener(this);
+    }
+
+    private void onModifyAvatar(String avatar) {
+        final User user = User.create(PersonalInformation.this);
+        if (mChangeAvatarFuture != null) {
+            mChangeAvatarFuture.cancel(true);
+        }
+        mChangeAvatarFuture = user.changeAvatar(avatar);
+        showDialog();
+        mChangeAvatarFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                dismissDialog();
+                updateView();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissDialog();
+                String errorMessage = null;
+                if (e instanceof Fault) {
+                    Fault fault = (Fault) e;
+                    if (fault.getStatus() == 420) {
+                        logout();
+                        return;
+                    }
+                    errorMessage = StatusErrorCodeMessage.getServerStatusErrorMessage(PersonalInformation.this, fault.getStatus());
+                }
+                if (TextUtils.isEmpty(errorMessage)) {
+                    errorMessage = getString(R.string.modify_avatar_fail1);
+                }
+                showMessage(errorMessage);
+            }
+        });
+    }
+
+    /**
+     * 跟新一次用户信息
+     */
+    private void getUserInfo() {
+        if (mGetUserInfoFuture != null) {
+            mGetUserInfoFuture.cancel(true);
+        }
+        mGetUserInfoFuture = new GetUserInfo(this);
+        mGetUserInfoFuture.get(new AsyncResult<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                updateView();
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+    }
+
+    @Override
+    public void setRootViewBackground(View rootView) {
+        rootView.setBackgroundColor(0x232629);
+    }
+
+}

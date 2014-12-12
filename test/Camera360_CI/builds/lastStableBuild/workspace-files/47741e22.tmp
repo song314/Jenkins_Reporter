@@ -1,0 +1,278 @@
+package com.pinguo.edit.sdk.filter.square.page.list;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.app.FragmentActivity;
+import android.text.format.DateUtils;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.filter.square.FilterSquareActivity;
+import com.pinguo.edit.sdk.filter.square.FilterSquareConst;
+import com.pinguo.edit.sdk.filter.square.Info.GetFilterInfoApi;
+import com.pinguo.edit.sdk.filter.square.Info.bean.FilterData;
+import com.pinguo.mix.api.ApiCallback;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+
+/**
+ * Created by zhongzheng on 14-11-7.
+ */
+public class FilterListController {
+    private final int MSG_REFRESH_LIST = 0;
+    private final int MSG_LIST_UPDATE_FINISH = 1;
+    private final int MSG_START_GET_LIST = 2;
+    private final int MSG_START_DOWNLOAD = 3;
+    private final int MSG_START_ADD = 4;
+    private final int MSG_START_GET_DATA = 5;
+    private final int MSG_START_GET_INFO = 6;
+
+    private int mModel;
+    private static final String TAG = FilterListFragment.class.getSimpleName();
+
+    private final int mDataAccessRefreshLimit = 5;
+    private final int mDataAccessDownLimit = 5;
+    private int mDataAccessDownSkip;
+
+
+    private List<CompositeEffect> mCompositeList;
+    private FragmentActivity mContext;
+
+    private List<FilterData> mGetFilterList;
+
+    private ListViewAdapter mAdapter;
+    private PullToRefreshBase.OnLastItemVisibleListener mOnLastItemListener = new PullToRefreshBase.OnLastItemVisibleListener() {
+        @Override
+        public void onLastItemVisible() {
+            Toast.makeText(getActivity(), "End of List!", Toast.LENGTH_SHORT).show();
+            sendMessage(MSG_START_DOWNLOAD);
+        }
+    };
+
+
+    private PullToRefreshBase.OnRefreshListener2<ListView> mRefreshFinishListener = new PullToRefreshBase.OnRefreshListener2<ListView>() {
+        @Override
+        public void onPullDownToRefresh(PullToRefreshBase<ListView> refreshView) {
+            String label = DateUtils.formatDateTime(getActivity(), System.currentTimeMillis(),
+                    DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
+            // Update the LastUpdatedLabel
+            refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
+            mGetFilterList.clear();
+            sendMessage(MSG_START_GET_LIST);
+        }
+
+        @Override
+        public void onPullUpToRefresh(PullToRefreshBase<ListView> refreshView) {
+            String label = DateUtils.formatDateTime(getActivity(), System.currentTimeMillis(),
+                    DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
+            // Update the LastUpdatedLabel
+            refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
+            sendMessage(MSG_START_DOWNLOAD);
+        }
+    };
+
+    public PullToRefreshBase.OnRefreshListener2<ListView> getRefreshFinishListener() {
+        return mRefreshFinishListener;
+    }
+
+    public PullToRefreshBase.OnLastItemVisibleListener getOnLastItemListener() {
+        return mOnLastItemListener;
+    }
+
+    public ListViewAdapter getListAdapter() {
+        return mAdapter;
+    }
+
+    private void finishGetList() {
+        sendMessage(MSG_REFRESH_LIST);
+    }
+
+    public static FilterListFragment newInstance(int num) {
+        FilterListFragment f = new FilterListFragment();
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putInt("num", num);
+        f.setArguments(args);
+        return f;
+    }
+
+    public int getModel() {
+        return mModel;
+    }
+
+    public void onCreate(Bundle bundle) {
+        if (bundle != null) {
+            mModel = bundle.getInt("num", 0);
+        } else {
+            mModel = 0;
+        }
+        if (mModel == FilterSquareConst.PAGE_MODEL_NEW) {
+            mGetFilterList = ((FilterSquareActivity) getActivity()).getNewFilterDataList();
+        } else if (mModel == FilterSquareConst.PAGE_MODEL_HOT) {
+            mGetFilterList = ((FilterSquareActivity) getActivity()).getHotFilterDataList();
+        }
+        mAdapter = new ListViewAdapter(getActivity());
+    }
+
+    public void onStart() {
+        mAdapter.setBeans(mGetFilterList);
+        sendMessage(MSG_START_GET_LIST);
+//        addComposite();
+        sendMessage(MSG_REFRESH_LIST);
+    }
+
+    private void addComposite() {
+        EffectModel mEffectModel = EffectModel.getInstance().init(getActivity());
+        List<EffectType> effectTypeList = mEffectModel.getEffectTypeList(Effect.Type.Composite);
+        if (effectTypeList.size() != 0) {
+            mCompositeList = effectTypeList.get(0).compositeEffects;
+            for (CompositeEffect effects : mCompositeList) {
+                FilterData data = new FilterData();
+                data.setOriginEtag(effects.icon);
+                data.setEditEtag(effects.icon);
+                data.setNickName("zhongzheng");
+                data.setData(effects.toString());
+                data.setinfo(effects.getJsonFilterInfo(getActivity()));
+                data.setFilterName(effects.name);
+                mGetFilterList.add(data);
+            }
+        }
+    }
+
+    private void sendMessage(int what) {
+        Message message = new Message();
+        message.what = what;
+        myHandler.sendMessage(message);
+    }
+
+    private void startGetFilterInfo(String id) {
+        GLogger.i(TAG, "Start add filter info!");
+        final List<FilterData> result = new ArrayList<FilterData>();
+        GetFilterInfoApi.getFilterInfo(id, new ApiCallback() {
+            @Override
+            public void onResponse(Object data, Object... params) {
+                GLogger.i(TAG, "Add filter info succeed!");
+                result.add((FilterData) data);
+            }
+
+            @Override
+            public void onError(String error) {
+                GLogger.i(TAG, "Add filter info failed:" + error);
+            }
+        });
+    }
+
+    protected String startGetList(int limit, int skip) {
+        if (mModel == FilterSquareConst.PAGE_MODEL_NEW) {
+            startGetNewFilterInfoList(limit, skip);
+        } else if (mModel == FilterSquareConst.PAGE_MODEL_HOT) {
+            startGetHotFilterInfoList(limit, skip);
+        }
+        return null;
+    }
+
+    private void startGetNewFilterInfoList(int limit, int skip) {
+        GLogger.i(TAG, "Start get user info!");
+        GetFilterInfoApi.getNewestFilterInfo(limit, skip, new ApiCallback() {
+            @Override
+            public void onResponse(Object data, Object... params) {
+                GLogger.i(TAG, "Add process info succeed!");
+                addFilterList((List<FilterData>) data);
+            }
+
+            @Override
+            public void onError(String error) {
+                GLogger.i(TAG, "Add process info failed:" + error);
+            }
+        });
+    }
+
+    private void startGetHotFilterInfoList(int limit, int skip) {
+        GLogger.i(TAG, "Start get user info!");
+        GetFilterInfoApi.getHotFilterInfo(limit, skip, new ApiCallback() {
+            @Override
+            public void onResponse(Object data, Object... params) {
+                GLogger.i(TAG, "Add process info succeed!");
+                addFilterList((List<FilterData>) data);
+            }
+
+            @Override
+            public void onError(String error) {
+                GLogger.i(TAG, "Add process info failed:" + error);
+            }
+        });
+    }
+
+    private void addFilterList(List<FilterData> filterDatas) {
+        if (filterDatas != null) {
+            for (FilterData data : filterDatas) {
+                String aa = data.getNickName();
+                if (data.getNickName().equals("zhongzheng")) {
+                    continue;
+                }
+                data.setEditEtag(FilterSquareConst.API_URL_ETAG_TO_URL +
+                        FilterSquareConst.API_SLASH + data.getEditEtag());
+                data.setOriginEtag(FilterSquareConst.API_URL_ETAG_TO_URL +
+                        FilterSquareConst.API_SLASH + data.getOriginEtag());
+                mGetFilterList.add(data);
+            }
+        }
+        finishGetList();
+    }
+
+    Handler myHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_REFRESH_LIST:
+                    mAdapter.notifyDataSetChanged();
+                    mRevListener.onDataRev();
+                    break;
+                case MSG_LIST_UPDATE_FINISH:
+                    break;
+                case MSG_START_GET_INFO:
+                    break;
+                case MSG_START_GET_DATA:
+                    break;
+                case MSG_START_ADD:
+                    break;
+                case MSG_START_GET_LIST:
+                    mGetFilterList.clear();
+                    startGetList(mDataAccessRefreshLimit, 0);
+                    mDataAccessDownSkip = mDataAccessRefreshLimit;
+                    break;
+                case MSG_START_DOWNLOAD:
+                    startGetList(mDataAccessDownLimit, mDataAccessDownSkip);
+                    mDataAccessDownSkip += mDataAccessDownLimit;
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+
+    private OnFilterDataReVListener mRevListener;
+
+    public void setRefreshFinishListener(OnFilterDataReVListener listener) {
+        mRevListener = listener;
+    }
+
+    public interface OnFilterDataReVListener {
+        void onDataRev();
+    }
+
+    public FilterListController(FragmentActivity context) {
+        mContext = context;
+    }
+
+    private FragmentActivity getActivity() {
+        return mContext;
+    }
+}

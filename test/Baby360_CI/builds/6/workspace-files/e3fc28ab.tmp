@@ -1,0 +1,37 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.annotations.Expose;
+
+/**
+ * Created by huowaa on 14-7-2.
+ */
+public class ParamCurveItem extends ParamItem{
+    private static final String TAG = ParamCurveItem.class.getSimpleName();
+
+    @Expose
+    public String defaultValue = ""; // 默认值
+    @Expose
+    public String noEffectValue = ""; // 无特效值
+    @Expose
+    public String value = ""; // 特效值
+
+    public ParamCurveItem(String key, String effectKey, String defaultValue, String noEffectValue) {
+        super(key, effectKey, Type.CurveItem);
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+    }
+
+    public ParamCurveItem(String key, String effectKey, String defaultValue, String noEffectValue, String iconName, String nameKey) {
+        super(key, effectKey, Type.CurveItem);
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.noEffectValue = noEffectValue;
+        this.icon = iconName;
+        this.name = nameKey;
+    }
+
+    public ParamCurveItem() {
+
+    }
+}

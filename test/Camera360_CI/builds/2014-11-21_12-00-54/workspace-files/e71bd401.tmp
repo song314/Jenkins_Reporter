@@ -1,0 +1,194 @@
+package com.pinguo.edit.sdk.camera;
+
+import android.hardware.Camera;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.SurfaceHolder;
+import android.widget.Toast;
+
+import com.pinguo.edit.sdk.camera.focus.FocusManager;
+import com.pinguo.edit.sdk.camera.model.CameraManager;
+import com.pinguo.edit.sdk.camera.model.CameraModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettingModel;
+import com.pinguo.edit.sdk.camera.setting.CameraSettings;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+
+/**
+ * Created by marui on 13-10-9.
+ * 相机基本流程控制类
+ */
+public abstract class CameraFragment extends Fragment implements SurfaceHolder.Callback,
+        Camera.PreviewCallback,
+        CameraModel.CameraProcessCallback {
+
+    private static final String TAG = CameraFragment.class.getSimpleName();
+    private CameraModel mCameraModel;
+    protected FocusManager mFocusManager;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        CMLogger.d(TAG, "onCreate");
+        mCameraModel = initCameraModel();
+        mCameraModel.setCameraProcessCallback(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        CMLogger.d(TAG, "onResume");
+        //打开相机
+        openCamera();
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        CMLogger.d(TAG, "surfaceCreated surfaceHolder =" + surfaceHolder);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        CMLogger.d(TAG, "onPause");
+        stopPreview();
+        releaseCamera();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        CMLogger.d(TAG, "surfaceChanged" + " width=" + width + " height=" + height + mCameraModel.getCameraState());
+        if (mCameraModel.getCameraState() == CameraManager.CameraState.IDLE || mCameraModel.getCameraState() == CameraManager.CameraState.PREVIEW_STOPPED) {
+            startPreview();
+        }
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        CMLogger.d(TAG, "surfaceDestroyed");
+    }
+
+    /**
+     * 开启相机
+     */
+    protected void openCamera() {
+        if (mCameraModel.getCameraState() == CameraManager.CameraState.CAMERA_STOPPED) {
+            CameraSettingModel cameraSettingModel = CameraSettingModel.instance();
+            int cameraId = cameraSettingModel.getCameraId();
+            mCameraModel.openCamera(cameraId);
+        }
+    }
+
+    /**
+     * 开启预览
+     */
+    protected void startPreview() {
+        CMLogger.i(TAG, "startPreview state = " + mCameraModel.getCameraState());
+        if (mCameraModel.getCameraState() == CameraManager.CameraState.PREVIEW_STOPPED) {
+            mCameraModel.startPreview();
+            return;
+        }
+    }
+
+    protected void stopPreview() {
+        if (mCameraModel.getCameraState() == CameraManager.CameraState.IDLE || mCameraModel.getCameraState() == CameraManager.CameraState.PREVIEW_STOPPED) {
+            mCameraModel.stopPreview();
+            return;
+        }
+    }
+
+    protected void releaseCamera() {
+        if (mCameraModel.getCameraState() == CameraManager.CameraState.PREVIEW_STOPPED) {
+            mCameraModel.releaseCamera();
+            return;
+        }
+    }
+
+    protected abstract CameraModel initCameraModel();
+
+    protected abstract boolean needEnablePreviewCallback();
+
+    protected CameraModel getCameraModel() {
+        return mCameraModel;
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, Camera camera) {
+
+    }
+
+    //---------相机生命周期流程回调---------
+    @Override
+    public void preCameraOpen() {
+        CMLogger.i(TAG, "preCameraOpen");
+        // Get default focus array from XML. which include "continuous" and "auto".
+        String[] defaultFocusModes = getResources().getStringArray(
+                ResourceHelper.getArray(getActivity().getApplicationContext(),
+                        "composite_sdk_pref_camera_focusmode_default_array"));
+        mFocusManager = new FocusManager(this.getActivity(), defaultFocusModes);
+        mFocusManager.setCameraRelease(false);
+    }
+
+    @Override
+    public void onCameraOpen(int cameraId, CameraManager.CameraProxy cameraDevice) {
+        //设置参数
+        CameraSettingModel cameraSettingModel = CameraSettingModel.instance();
+        cameraSettingModel.setCameraId(cameraId, getActivity());
+        cameraSettingModel.setCamera(cameraDevice);
+    }
+
+    @Override
+    public void onCameraOpenFail(Exception e) {
+        CMLogger.d(TAG, "onCameraOpenFail:" + e + ", at time:" + System.currentTimeMillis());
+        ToastUtils.makeText(getActivity(),
+                ResourceHelper.getString(getActivity().getApplicationContext(), "composite_sdk_cannot_connect_camera"), Toast.LENGTH_SHORT).show();
+        getActivity().finish();
+    }
+
+    @Override
+    public void preStartPreview() {
+        CMLogger.i(TAG, "preStartPreview");
+        mCameraModel.setDisplayOrientation(CameraSettings.PREVIEW_DEFAULT_DEGREE);
+    }
+
+    @Override
+    public void onStartPreview() {
+        CMLogger.i(TAG, "onStartPreview");
+        mFocusManager.setPreviewPause(false);
+    }
+
+    @Override
+    public void onStartPreviewFail(Exception e) {
+        CMLogger.i(TAG, "onStartPreviewFail");
+    }
+
+    @Override
+    public void onStopPreview() {
+        CMLogger.i(TAG, "onStopPreview");
+        mFocusManager.setPreviewPause(true);
+    }
+
+    @Override
+    public void onPreReleaseCamera() {
+        if (mFocusManager != null) {
+            mFocusManager.setCameraRelease(true);
+            mFocusManager.resetSensorValue();
+            mFocusManager.stopSensor();
+            mFocusManager = null;
+        }
+    }
+
+    @Override
+    public void onReleaseCamera() {
+        CMLogger.i(TAG, "onReleaseCamera");
+    }
+
+    @Override
+    public void onSwitchCamera(boolean isFront) {
+        CMLogger.i(TAG, "onSwitchCamera, facingFront:" + isFront);
+    }
+    //---------相机生命周期流程回调End---------
+
+}
+

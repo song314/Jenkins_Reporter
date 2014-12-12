@@ -1,0 +1,15 @@
+package com.pinguo.edit.sdk.utils;
+
+/**
+ * Created by taoli on 14-8-1.
+ */
+public class ImageClassifier {
+
+    static {
+        System.loadLibrary("image_classifier");
+    }
+
+    public static native int init(String path);
+    public static native double[] getImageClass(byte[] data, int sceneCount);
+    public static native void destroy();
+}

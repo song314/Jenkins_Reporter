@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/composite_sdk_effect_group_menu_bg">
+
+    <!-- 顶部  -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/composite_sdk_beauty_main_top_height"
+        android:id="@+id/share_top"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/composite_sdk_share"
+            android:textSize="20sp"
+            android:textColor="@color/composite_sdk_effect_menu_txt_bg_normal"/>
+
+        <ImageButton
+            android:layout_width="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_height="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:src="@drawable/composite_sdk_album_btn_back"
+            android:layout_marginLeft="@dimen/composite_sdk_common_bar_icon_margin"
+            android:background="#00000000"
+            android:onClick="cancelShare"
+            android:id="@+id/re_take"/>
+
+        <ImageButton
+            android:layout_width="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_height="@dimen/composite_sdk_common_bar_icon_size"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:layout_marginRight="@dimen/composite_sdk_common_bar_icon_margin"
+            android:id="@+id/done"
+            android:onClick="startHome"
+            android:background="#00000000"
+            android:src="@drawable/composite_sdk_share_home_btn"/>
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/share_top"
+        android:scrollbars="none">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="10dp"
+            android:paddingBottom="20dp">
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:id="@+id/preview_org_img"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_centerHorizontal="true"
+                android:scaleType="fitCenter">
+            </us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView>
+
+            <us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView
+                android:id="@+id/preview_img"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_centerHorizontal="true"
+                android:scaleType="fitCenter">
+            </us.pinguo.android.effect.group.sdk.view.SquareImageLoaderView>
+
+            <TextView
+                android:id="@+id/tv_saved"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/preview_img"
+                android:padding="10dp"
+                android:gravity="center"
+                android:text="@string/composite_sdk_saved_to_gallery"
+                android:textColor="#b3ffffff"
+                android:textSize="12sp">
+            </TextView>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/preview_img"
+                android:layout_alignRight="@id/preview_img"
+                android:layout_below="@id/tv_saved"
+                android:id="@+id/divider"
+                android:layout_marginTop="@dimen/composite_sdk_share_divider_margin_top"
+                android:layout_marginBottom="@dimen/composite_sdk_share_divider_margin_bottom">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/composite_sdk_share"
+                    android:textSize="15sp"
+                    android:textColor="#767778"
+                    android:layout_centerInParent="true"
+                    android:id="@+id/share" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2px"
+                    android:background="#767778"
+                    android:layout_toRightOf="@id/share"
+                    android:layout_marginLeft="5dp"
+                    android:layout_centerVertical="true" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2px"
+                    android:background="#767778"
+                    android:layout_toLeftOf="@id/share"
+                    android:layout_marginRight="5dp"
+                    android:layout_centerVertical="true" />
+            </RelativeLayout>
+
+            <Button
+                android:id="@+id/share_picture_btn"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="@dimen/composite_sdk_share_instagram_margin_top"
+                android:layout_marginRight="20dp"
+                android:layout_below="@id/divider"
+                android:orientation="horizontal"
+                android:onClick="sharePicture"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textColor="#ffffff"
+                android:text="@string/composite_sdk_share_picture"
+                android:background="@drawable/composite_sdk_share_photo_btn"></Button>
+
+            <Button
+                android:id="@+id/share_filter_btn"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="20dp"
+                android:layout_below="@id/share_picture_btn"
+                android:orientation="horizontal"
+                android:onClick="shareFilter"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textColor="#ffffff"
+                android:text="@string/composite_sdk_share_filter_creation"
+                android:background="@drawable/composite_sdk_share_instagram_btn">
+            </Button>
+        </RelativeLayout>
+    </ScrollView>
+
+    <include layout="@layout/progress_dialog"
+        android:layout_centerInParent="true"
+        android:id="@+id/progress_layout"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"/>
+
+</RelativeLayout>

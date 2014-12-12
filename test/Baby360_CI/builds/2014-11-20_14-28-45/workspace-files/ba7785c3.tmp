@@ -1,0 +1,107 @@
+package us.pinguo.android.effect.group.sdk.effect.model;
+
+import android.content.Context;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.EffectPackage;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.shop.Product;
+
+import java.io.File;
+import java.util.List;
+
+/**
+ * Created by huowaa on 14-5-22.
+ */
+public interface IEffectModel {
+
+    public interface Callback {
+        public void onPreExecute(Object... param);
+        public void onExecute(Object... param);
+        public void onPostExecute(Object... result);
+    }
+
+    public EffectModel init(Context context);
+
+    public void destroy();
+
+    /**
+     * 根据tag从滤镜库获取组合滤镜列表
+     *
+     * @param tags tags数组
+     * @return
+     */
+    public List<CompositeEffect> getCompositeEffectsByTags(String[] tags);
+
+    /**
+     * 从滤镜库随机获取最多count个滤镜
+     * @param count
+     * @return
+     */
+    public List<CompositeEffect> getCompositeEffectsByRandom(int count);
+
+    /**
+     * 获取特效类型列表
+     * @param type 特效分类：滤镜、光影、边框、高级调整
+     * @return
+     */
+    public List<EffectType> getEffectTypeList(Effect.Type type);
+
+    /**
+     * 根据特效名获取特效
+     * @param key
+     * @return
+     */
+    public Effect getEffectByKey(String key);
+
+    /**
+     * 根据安装包id获取特效列表
+     * @param guid
+     * @return
+     */
+    public List<Effect> getEffectsByPackKey(String guid);
+
+    /**
+     * 获取特效的安装路径
+     * @param type 特效类型
+     * @return
+     */
+    public File getEffectInstalledDir(String type);
+
+    /**
+     * 安装特效包
+     * @param product 特效商品（普通特效包，组合特效包）
+     * @param progressCallback 过程回调
+     * @return
+     */
+    public boolean install(Product product, Callback progressCallback);
+
+    /**
+     * 卸载特效包
+     * @param effectPackage 特效包对象
+     * @param progressCallback 过程回调
+     * @return
+     */
+    public boolean uninstall(EffectPackage effectPackage, Callback progressCallback);
+
+    /**
+     * 失效并重建缓存
+     * @param rebuild 是否重建缓存
+     */
+    public void invalidEffectDict(boolean rebuild);
+
+    /**
+     * 持久化组合特效
+     * 1、如果是新特效，则insert
+     * 2、如果是已有特效，则update
+     * @param compositeEffect
+     * @param callback
+     */
+    public void save(CompositeEffect compositeEffect, Callback callback);
+
+    /**
+     * 删除单个组合特效
+     * @param compositeEffect
+     */
+    public void remove(CompositeEffect compositeEffect);
+}

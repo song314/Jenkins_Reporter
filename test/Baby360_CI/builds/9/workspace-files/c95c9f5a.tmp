@@ -1,0 +1,129 @@
+package us.pinguo.androidsdk;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+
+public class PGNativeMethod {
+    static {
+        System.loadLibrary("PinguoImageSDK");
+    }
+
+    public native final static int createAndroidSDK(String key,
+                                                    Context context, byte[] script_buffer);
+
+    public native final static boolean loadResource(int pointer,
+                                                    byte[] script_bufffer);
+
+    public native final static boolean clearImage(int pointer, int index);
+
+    public native final static boolean renderType(int pointer, int type);
+
+    public native final static boolean setAutoClearShaderCache(int pointer,
+                                                               boolean isauto);
+
+    public native final static boolean setImageFromPath(int pointer, int index,
+                                                        String path, float ratio, float zoom_scale, int max_length);
+
+    public native final static boolean setImageFromJPEG(int pointer, int index,
+                                                        byte[] buffer, float ratio, float zoom_scale, int max_length);
+
+    public native final static boolean setImageFromARGB(int pointer, int index,
+                                                        int[] argb, int width, int height, float ratio, float zoom_scale);
+
+    public native final static boolean setImageFromYUV(int pointer, int index,
+                                                       byte[] yuv, int width, int height, float ratio, float zoom_scale);
+
+    public native final static boolean setImageFromTexture(int pointer,
+                                                           int index, int texture_id, int width, int height);
+
+    public native final static boolean adjustImage(int pointer, int imgIndex,
+                                                   boolean canvasAngle, int rotateAngle, float rect_x_1,
+                                                   float rect_y_1, float rect_x_2, float rect_y_2, boolean mirrorX,
+                                                   boolean mirrorY, int dstMaxWH, boolean useCPURotate);
+
+    // //////////////////////////////////////////////////////////////////////
+    public native final static boolean setSupportImageFromPNGPath(int pointer,
+                                                                  int index, String path, float ratio, float zoom_scale);
+
+    public native final static boolean setSupportImageFromPNG(int pointer,
+                                                              int index, byte[] png_buffer, float ratio, float zoom_scale);
+
+    public native final static boolean setEffect(int pointer, String effect);
+
+    public native final static boolean setEffectParams(int pointer,
+                                                       String effect, String params);
+
+    public native final static void setBackground(int pointer, float r,
+                                                  float g, float b, float a);
+
+    public native final static void setCleanColor(int pointer);
+
+    public native final static boolean makeWithSize(int pointer, int width,
+                                                    int height);
+
+    public native final static boolean make(int pointer);
+
+    public native final static boolean getMakedImage2Screen(int pointer,
+                                                            int mirror, int left, int top, int width, int height);
+
+    public native final static boolean getMakedImage2JpegFile(int pointer,
+                                                              String path, int quality);
+
+    // public native final static boolean getMakedImagePreview2Bitmap(int
+    // pointer, Bitmap bitmap, int max_length);
+
+    public native final static int[] getMakedImagePreview(int pointer,
+                                                          int max_length);
+
+    public native final static int getMakedImagePreviewWidth(int pointer);
+
+    public native final static int getMakedImagePreviewHeight(int pointer);
+
+    public native final static int[] getMakedImage2Buffer(int pointer);
+
+    public native final static int getMakedImage2BufferWidth(int pointer);
+
+    public native final static int getMakedImage2BufferHeight(int pointer);
+
+    public native final static boolean getMakedImage2IntArray(int pointer,
+                                                              int[] buffer);
+
+    public native final static boolean getMakedImage2Bitmap(int pointer,
+                                                            Bitmap bitmap);
+
+    public native final static boolean loadTemplate(int pointer,
+                                                    String pngFilename, String paramString);
+
+    public native final static boolean getTemplateLoadResult(int pointer);
+
+    public native final static int getTemplateWidth(int pointer);
+
+    public native final static int getTemplateHeight(int pointer);
+
+    public native final static int createEGLDisplay();
+
+    public native final static void destroyEGLDisplay(int pointer);
+
+    public native final static void destroyAndroidSDK(int pointer);
+
+    public native final static int getSupportLength(int pointer);
+
+    public native final static int createExternalOESTexture();
+
+    public native final static void destroyExternalOESTexture(int texture_id);
+
+    /**
+     * 取得预览尺寸
+     * @param pointer
+     * @param max_length
+     * @param quality
+     * @return 失败返回null
+     */
+    public native final static byte[] getMakedImagePreviewJpeg(int pointer, int max_length, int quality);
+
+    public native final static boolean setResultImageToInput(int pointer,
+                                                             int index);
+
+    public native final static boolean getMakedImage2PngFile(int pointer,
+                                                             String path, boolean alpha);
+}

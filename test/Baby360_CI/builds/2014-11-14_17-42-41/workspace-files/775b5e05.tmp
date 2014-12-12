@@ -1,0 +1,199 @@
+
+package com.pinguo.edit.sdk.gallery.data;
+
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Handler;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.ImageColumns;
+import com.pinguo.edit.sdk.gallery.AlbumAppImpl;
+import com.pinguo.edit.sdk.gallery.ui.layout.BaseSlotLayout;
+import com.pinguo.edit.sdk.gallery.util.*;
+
+import java.util.ArrayList;
+
+public class AlbumSet extends MediaSet implements FutureListener<ArrayList<MediaSet>> {
+
+    private static final String TAG = "AlbumSet";
+    private static final int INVALID_COUNT = -1;
+    private static final Uri mUriImage = Images.Media.EXTERNAL_CONTENT_URI;
+    private static final String[] PROJECTION_BUCKET = {ImageColumns.BUCKET_ID, ImageColumns.BUCKET_DISPLAY_NAME, ImageColumns.DATA};
+    private static final int INDEX_BUCKET_ID = 0;
+    private static final int INDEX_BUCKET_NAME = 1;
+    private static final int INDEX_BUCKET_PATH = 2;
+    private static final String BUCKET_GROUP_BY = "1) GROUP BY 1,(2";
+    private static final String BUCKET_ORDER_BY = "MAX(datetaken) DESC";
+    private boolean mIsLoading;
+    protected long mDataVersion;
+    private Future<ArrayList<MediaSet>> mLoadTask;
+    private ArrayList<MediaSet> mLoadBuffer;
+    private final Handler mHandler;
+    //
+    private final ChangeNotifier mNotifierImage;
+    private AlbumAppImpl mApplication;
+    private int mCachedCount = INVALID_COUNT;
+    private ArrayList<MediaSet> mAlbums = new ArrayList<MediaSet>();
+    private final String[] OTHER_ALBUM_FILTER_LIST_LOWER = new String[]{
+            "/dcim",
+            "/mixx",
+            "/cymera",
+            "/camera",
+            "/pictures/repix",
+            "/pictures/instamag",
+            "/pictures/screenshots",
+            "/screenshots",
+            "/myxj",
+            "/photowonder",
+            "/百度魔拍",
+            "/wondercamera",
+            "/bluetooth",
+            "/camera360cloud",
+            "/camera/photo",
+            "/100media",
+            "/dcim/100andro",
+            "/dcim/100lgdsc"
+    };
+
+    public AlbumSet(AlbumAppImpl context, Path path) {
+        super(path, nextVersionNumber());
+        mApplication = context;
+        mNotifierImage = new ChangeNotifier(this, mUriImage, context);
+        mHandler = new Handler(context.getApplication().getMainLooper());
+    }
+
+    @Override
+    public MediaSet getSubMediaSet(int index) {
+        return mAlbums.get(index);
+    }
+
+    @Override
+    public int getSubMediaSetCount() {
+        return mAlbums.size();
+    }
+
+    public int getMediaItemCount() {
+        //if (mCachedCount == INVALID_COUNT) {
+        Cursor cursor = mApplication.getApplication()
+                .getContentResolver().query(mUriImage, new String[]{
+                " count(*) "
+        }, null, null, null);
+        if (cursor == null) {
+            GMLogger.w(TAG, "query fail");
+            return 0;
+        }
+        try {
+            Utils.assertTrue(cursor.moveToNext());
+            mCachedCount = cursor.getInt(0);
+        } finally {
+            cursor.close();
+        }
+        //}
+        //GMLogger.i(TAG, mCachedCount + "-----------------album set getMediaItemCount:" + System.currentTimeMillis());
+        return mCachedCount;
+    }
+
+    public long reload() {
+        if (mNotifierImage.isDirty()) {
+            if (mLoadTask != null)
+                mLoadTask.cancel();
+            mIsLoading = true;
+            mLoadTask = mApplication.getThreadPool().submit(new AlbumSetLoader(), this);
+        }
+        if (mLoadBuffer != null) {
+            mAlbums = mLoadBuffer;
+            mLoadBuffer = null;
+            for (MediaSet mediaset : mAlbums) {
+                mediaset.reload();
+            }
+            mDataVersion = nextVersionNumber();
+        }
+        return mDataVersion;
+    }
+
+    public synchronized boolean isLoading() {
+        return mIsLoading;
+    }
+
+    // 获取bucket信息
+    private ArrayList<MediaSet> getSubMediaSetList() {
+        Cursor cursor = mApplication.getApplication().getContentResolver()
+                .query(mUriImage, PROJECTION_BUCKET, BUCKET_GROUP_BY, null, BUCKET_ORDER_BY);
+        if (cursor == null) {
+            return mAlbums;
+        }
+        ArrayList<MediaSet> mediaSetList = new ArrayList<MediaSet>();
+        try {
+            while (cursor.moveToNext()) {
+                Album album = new Album(mApplication, new Path(DataManager.MEDIA_TYPE_SYSTEM_ALBUM, String.valueOf(cursor
+                        .getInt(INDEX_BUCKET_ID))), cursor.getString(INDEX_BUCKET_NAME));
+                mediaSetList.add(album);
+//                if (!mediaSetList.contains(album)) { // 只计算在预置列表集合中
+//                    String path = cursor.getString(INDEX_BUCKET_PATH);
+//                    if (path != null && path.length() > 0) {
+//                        if (path.endsWith("/")) {
+//                            path = path.substring(0, path.length() - 1);
+//                        }
+//                        if (path.endsWith(".jpg") || path.endsWith(".png") || path.endsWith(".JPG") || path.endsWith(".PNG")) {
+//                            path = path.substring(0, path.lastIndexOf("/"));
+//                        }
+//                        final String pathLowerCase = path.toLowerCase();
+//                        for (String str : OTHER_ALBUM_FILTER_LIST_LOWER) {
+//                            if (pathLowerCase.endsWith(str) && album.getMediaItemCount() > 0) {
+//                                mediaSetList.add(album);
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+            }
+        } finally {
+            cursor.close();
+        }
+        return mediaSetList;
+    }
+
+    // 加载每个ablum的信息
+    private class AlbumSetLoader implements ThreadPool.Job<ArrayList<MediaSet>> {
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public ArrayList<MediaSet> run(ThreadPool.JobContext jc) {
+            // Note: it will be faster if we only select media_type and
+            // bucket_id.
+            // need to test the performance if that is worth
+            return getSubMediaSetList();
+        }
+    }
+
+    @Override
+    public String getName() {
+        return DataManager.MEDIA_PATH_ID_SET;
+    }
+
+    @Override
+    public synchronized void onFutureDone(Future<ArrayList<MediaSet>> future) {
+        if (mLoadTask != future)
+            return; // ignore, wait for the latest task
+        mLoadBuffer = future.get();
+        mIsLoading = false;
+        if (mLoadBuffer == null)
+            mLoadBuffer = new ArrayList<MediaSet>();
+        mHandler.post(new Runnable() {
+
+            @Override
+            public void run() {
+                notifyContentChanged();
+            }
+        });
+    }
+
+    @Override
+    public ArrayList<MediaItem> getMediaItem(int start, int count) {
+        return null;
+    }
+
+    @Override
+    public ArrayList<Path> getMediaItem(ArrayList<BaseSlotLayout.SlotPos> slotPos, int checkedCount) {
+        return null;
+    }
+}

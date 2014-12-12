@@ -1,0 +1,82 @@
+package com.pinguo.edit.sdk.filter.square.adapter;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.BaseAdapter;
+
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.model.entity.OnLineCompositeBean;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.mix.api.ApiConstants;
+
+import java.util.List;
+
+/**
+ * Created by hlf on 14-11-29.
+ * 滤镜广场数据adpater
+ */
+public class SquareItemAdapter extends BaseAdapter {
+
+    private List<OnLineCompositeBean> mList;
+    private AbsListView.LayoutParams mLayoutParams;
+    private Context mContext;
+
+    @Override
+    public int getCount() {
+        return mList.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return mList.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+
+        if (convertView == null) {
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.composite_sdk_square_listview_item, null);
+            convertView.setLayoutParams(mLayoutParams);
+
+            SquareItemViews itemViews = new SquareItemViews();
+            itemViews.compositeBackground = (ImageLoaderView) convertView.findViewById(R.id.composite_background);
+
+            convertView.setTag(itemViews);
+        }
+
+        OnLineCompositeBean bean = mList.get(position);
+        SquareItemViews itemViews = (SquareItemViews) convertView.getTag();
+        itemViews.compositeBackground.setImageUrl(ApiConstants.API_QBOX + bean.getEditEtag());
+
+        return convertView;
+    }
+
+    public void setList(List<OnLineCompositeBean> list) {
+        mList = list;
+    }
+
+    public void setContext(Context context) {
+        mContext = context;
+
+        mLayoutParams = new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.round(mContext.getResources().getDimension(ResourceHelper.getDimen(mContext, "square_listview_item_height"))));
+    }
+
+    public List<OnLineCompositeBean> getList() {
+        return mList;
+    }
+
+    public static class SquareItemViews {
+
+        public ImageLoaderView compositeBackground;
+
+    }
+}

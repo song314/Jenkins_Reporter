@@ -1,0 +1,71 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.TranslateAnimation;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by taoli on 14/11/14.
+ */
+public class CameraCaptureModeSelector extends LinearLayout {
+
+    private TextView mSquareModeTv;
+    private TextView mLongModeTv;
+
+    public static final int CAPTURE_MODE_LONG = 1;
+    public static final int CAPTURE_MODE_SQUARE = 0;
+    private int mCurrentPictureMode = CAPTURE_MODE_LONG;
+
+    public CameraCaptureModeSelector(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        mSquareModeTv = (TextView) findViewById(R.id.square_mode_tv);
+        mLongModeTv = (TextView) findViewById(R.id.long_mode_tv);
+    }
+
+    public void selectPictureMode(int mode) {
+        if (mCurrentPictureMode == mode) {
+            return;
+        }
+
+        if (mCurrentPictureMode > mode) {
+            TranslateAnimation animation = new TranslateAnimation(
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.5f,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0);
+            animation.setFillEnabled(true);
+            animation.setFillBefore(true);
+            animation.setFillAfter(true);
+            animation.setInterpolator(new DecelerateInterpolator());
+            animation.setDuration(200);
+            startAnimation(animation);
+            mSquareModeTv.setTextColor(Color.parseColor("#ffffe049"));
+            mLongModeTv.setTextColor(Color.WHITE);
+        } else {
+            TranslateAnimation animation = new TranslateAnimation(
+                    Animation.RELATIVE_TO_SELF, -0.5f, Animation.RELATIVE_TO_SELF, 0,
+                    Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0);
+            animation.setFillEnabled(true);
+            animation.setFillBefore(true);
+            animation.setFillAfter(true);
+            animation.setInterpolator(new DecelerateInterpolator());
+            animation.setDuration(200);
+            startAnimation(animation);
+            mSquareModeTv.setTextColor(Color.WHITE);
+            mLongModeTv.setTextColor(Color.parseColor("#ffffe049"));
+        }
+
+        mCurrentPictureMode = mode;
+    }
+}

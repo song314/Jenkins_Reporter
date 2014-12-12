@@ -1,0 +1,50 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.texture;
+
+import java.util.List;
+
+/**
+ * Created by huowaa on 13-12-14.
+ */
+public class Texture {
+    private final static String TAG = Texture.class.getSimpleName();
+
+    public enum Rule {
+        NONE(0),    //无规则，利用TextureItem的用法
+        FIRST(1),   //选取纹理列表目录中的第一个
+        RANDOM(2);  //从纹理列表目录中随机选取一个
+
+        private int value = 0;
+
+        private Rule(int value) {
+            this.value = value;
+        }
+
+        public int value() {
+            return this.value;
+        }
+    }
+
+    public int type;
+    public String textureDir = "";
+    public List<TextureItem> items;
+
+
+    /**
+     * 纹理对象是否合法
+     */
+    public static boolean isLegal(Texture texture) {
+        if (texture == null) {
+            return false;
+        }
+
+        if (texture.textureDir == null || "".equals(texture.textureDir)) {
+            return false;
+        }
+
+        if (texture.items == null || texture.items.size() == 0) {
+            return false;
+        }
+
+        return true;
+    }
+}

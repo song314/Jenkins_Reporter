@@ -1,0 +1,133 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.utils.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Type;
+import java.util.*;
+
+/**
+ * Created by huowaa on 14-6-10.
+ */
+public class Param implements Cloneable {
+    private static final String TAG = Param.class.getSimpleName();
+
+    @Expose
+    public Map<String, List<ParamItem>> items = new HashMap<String, List<ParamItem>>();
+
+    /**
+     * 解析出完整的Param对象（因为有ParamItem基类，所以直接gson.fromJson会有类型损失）
+     * @param jsonStr
+     * @return
+     */
+    public static Param loadFromJsonStr(String jsonStr) {
+        Param param = null;
+        Gson gson = new Gson();
+        Type type = new TypeToken<Param>() {}.getType();
+        param = gson.fromJson(jsonStr, type);
+
+        try {
+            JSONObject paramRoot = new JSONObject(jsonStr);
+
+            if ( null != param.items && param.items.size() > 0 ) {
+                Set<String> keySet = param.items.keySet();
+
+                for ( String key : keySet ) {
+                    List<ParamItem> paramItems = new ArrayList<ParamItem>();
+
+                    JSONArray paramItemList = paramRoot.getJSONObject("items").getJSONArray(key);
+                    for ( int i = 0; i < paramItemList.length(); i++ ) {
+                        JSONObject paramItem = paramItemList.getJSONObject(i);
+                        String itemType = paramItem.getString("type");
+
+                        Type subType = ParamItem.getParamItemSubTypeByTypeKey(itemType);
+                        ParamItem realItem = gson.fromJson(paramItem.toString(), subType);
+                        paramItems.add(realItem);
+                    }
+
+                    param.items.put(key, paramItems);
+                }
+            }
+
+        } catch (JSONException e) {
+            GLogger.e(TAG, "Load param object from json fail!");
+            e.printStackTrace();
+        }
+
+        return param;
+    }
+
+    public void addParamItem(ParamItem item) {
+        String itemsKey = getItemsKey(item.getClass().getSimpleName());
+
+        List<ParamItem> list = items.get(itemsKey);
+        if ( null == list ) {
+            list = new ArrayList<ParamItem>();
+            items.put(itemsKey, list);
+        }
+
+        list.add(item);
+    }
+
+    /**
+     * 根据ParamItem的子类型名获取items Map的key
+     * @param className 如"ParamFloatItem"
+     * @return
+     */
+    public static String getItemsKey(String className) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(StringUtils.uncapitalize(className.substring("Param".length()))).append("s");
+        return sb.toString();
+    }
+
+    /**
+     * 返回所有ParamItem成一个一维列表
+     * @return
+     */
+    public List<ParamItem> getParamItemList(){
+        List<ParamItem> paramItemList = new ArrayList<ParamItem>();
+
+        if ( null != items ) {
+            for ( List<ParamItem> itemList : items.values() ) {
+                paramItemList.addAll(itemList);
+            }
+        }
+
+        return paramItemList;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+
+        Param clonedParam = new Param();
+        Iterator iterator = items.entrySet().iterator();
+        while(iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            List<ParamItem> oriList = (List<ParamItem>) entry.getValue();
+            if (null == oriList
+                    || oriList.size() <= 0) {
+                continue;
+            }
+
+            for (int i = 0; i < oriList.size(); i++) {
+                ParamItem oriItem = oriList.get(i);
+                ParamItem clonedItem = (ParamItem) oriItem.clone();
+                clonedParam.addParamItem(clonedItem);
+            }
+        }
+
+        return clonedParam;
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
+}

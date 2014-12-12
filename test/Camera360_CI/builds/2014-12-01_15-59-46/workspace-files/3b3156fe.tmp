@@ -1,0 +1,100 @@
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/layout"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- 效果 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="filter"
+
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_filter" />
+
+        </LinearLayout>
+
+        <!-- 调整 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="details"
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_details" />
+        </LinearLayout>
+
+        <!-- 光圈 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="tiltshift"
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_tiltshit" />
+        </LinearLayout>
+
+        <!-- 纹理 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="shadow"
+
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_light" />
+        </LinearLayout>
+
+        <!-- 色彩 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="colors"
+
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_colors" />
+        </LinearLayout>
+
+        <!-- 偏色 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+            android:tag="discoloration"
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_discoloration" />
+
+        </LinearLayout>
+
+        <!-- 边框 -->
+        <LinearLayout
+            style="@style/CompositeSDKEffectMenuLayout"
+
+            android:tag="frame"
+            android:visibility="gone"
+
+            android:gravity="center">
+
+            <TextView
+                style="@style/CompositeSDKEffectMenuText"
+                android:text="@string/composite_sdk_frame" />
+        </LinearLayout>
+
+    </LinearLayout>
+</HorizontalScrollView>

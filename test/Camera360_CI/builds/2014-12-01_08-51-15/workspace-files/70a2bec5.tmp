@@ -1,0 +1,121 @@
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.login.view;
+
+import android.app.Activity;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import com.pinguo.edit.sdk.R;
+
+
+public class RotateTextToast implements Rotatable {
+    public static final int TOAST_DURATION = 3000; // milliseconds
+    public static final int TOAST_DURATION_SHORT = 1500; // milliseconds
+    ViewGroup mLayoutRoot;
+    RotateLayout mToast;
+    Handler mHandler;
+    private boolean stopAnimation;
+
+
+    private final Runnable mRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (stopAnimation)
+                return;
+            AnimUtils.fadeOut(mToast);
+            mLayoutRoot.removeView(mToast);
+            mToast = null;
+        }
+    };
+
+    public RotateTextToast(View anchorView, int textResourceId, int orientation) {
+        CharSequence text = anchorView.getResources().getText(textResourceId);
+        initToast(anchorView, text, orientation);
+    }
+
+    public RotateTextToast(Activity activity, int textResourceId, int orientation) {
+        CharSequence text = activity.getResources().getText(textResourceId);
+        initToast(activity, text, orientation);
+    }
+
+    public RotateTextToast(Activity activity, CharSequence text, int orientation) {
+        initToast(activity, text, orientation);
+    }
+
+    public void show() {
+        show(TOAST_DURATION);
+    }
+
+    public void show(int duration) {
+        mToast.setVisibility(View.VISIBLE);
+        stopAnimation = false;
+        mHandler.postDelayed(mRunnable, duration);
+    }
+
+    public void cancel() {
+        if (mHandler != null) {
+            mHandler.post(mRunnable);
+        }
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+        if (mToast != null) {
+            mToast.setOrientation(orientation, animation);
+        }
+    }
+
+    private void initToast(Activity activity, CharSequence text, int orientation) {
+        mLayoutRoot = (ViewGroup) activity.getWindow().getDecorView();
+        LayoutInflater inflater = activity.getLayoutInflater();
+        View v = inflater.inflate(R.layout.composite_sdk_rotate_text_toast, mLayoutRoot);
+        mToast = (RotateLayout) v.findViewById(R.id.rotate_toast);
+        TextView tv = (TextView) mToast.findViewById(R.id.message);
+        tv.setText(text);
+        mToast.setOrientation(orientation, false);
+        mHandler = new Handler();
+    }
+
+    private void initToast(View anchorView, CharSequence text, int orientation) {
+        mLayoutRoot = (ViewGroup) anchorView.getRootView();
+        View v = View.inflate(anchorView.getContext(), R.layout.composite_sdk_rotate_text_toast, mLayoutRoot);
+        mToast = (RotateLayout) v.findViewById(R.id.rotate_toast);
+        TextView tv = (TextView) mToast.findViewById(R.id.message);
+        tv.setText(text);
+        mToast.setOrientation(orientation, false);
+        mHandler = new Handler();
+    }
+
+    /**
+     * 释放引用
+     */
+    public void destory() {
+        stopAnimation = true;
+        if (mToast != null) {
+            android.view.animation.Animation animation = mToast.getAnimation();
+            if (animation != null) {
+                mToast.clearAnimation();
+                animation.setAnimationListener(null);
+            }
+
+        }
+    }
+}

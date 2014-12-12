@@ -1,0 +1,1903 @@
+package us.pinguo.sdk;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.DisplayMetrics;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+import com.pinguo.edit.sdk.edit.CompositeDataReceiver;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.utils.ToastUtils;
+import com.pinguo.edit.sdk.utils.ToolUtils;
+import com.pinguo.edit.sdk.widget.CompositeSDKDialog;
+import com.pinguo.mix.MixMainActivity;
+import com.pinguo.mix.MixShareActivity;
+import com.pinguo.mix.StatisticManager;
+import com.pinguo.ui.widget.MenuItemViewBig;
+import com.pinguo.ui.widget.SeekBar;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.microedition.khronos.opengles.GL10;
+
+import us.pinguo.android.effect.group.sdk.PGCompositeSDKApi;
+import us.pinguo.android.effect.group.sdk.androidsdk.EffectGroupRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeForPathRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GLSurfaceViewCompositeRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.GetGLSurfaceViewBitmapRendererMethod;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.MakePhotoModel;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.TiltShiftMakePhotoModel;
+import us.pinguo.android.effect.group.sdk.data.EffectDataManager;
+import us.pinguo.android.effect.group.sdk.effect.model.EffectModel;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.EffectType;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamVecItem;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.AdvanceHSL;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.EnhanceHdr;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftCircle;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.type.TiltShiftLine;
+import us.pinguo.android.effect.group.sdk.group.PhotoSaveController;
+import us.pinguo.android.effect.group.sdk.view.AutoHideTextView;
+import us.pinguo.android.effect.group.sdk.view.ComparePGGLSurfaceView;
+import us.pinguo.android.effect.group.sdk.view.HorizontalLayout;
+import us.pinguo.android.effect.group.sdk.view.PGEditTiltShiftView;
+import us.pinguo.androidsdk.PGGLSurfaceView;
+import us.pinguo.androidsdk.PGRendererMethod;
+
+/**
+ * Created by pinguo on 14-6-6.
+ */
+public class BeautyController implements View.OnClickListener {
+
+    private final static String TAG = BeautyController.class.getSimpleName();
+    private View mHdrBtn;
+    private View mTiltShiftBtn;
+    private TextView mTitleTextView;
+    private View mSeekBarLayout;
+    private View mAdjustLayout;
+    private View mTiltShiftLayout;
+    private View mDoneBtn;
+    private View mCancelBtn;
+    //    private RandomController mRandomController;
+    private ImageView mTiltShiftMaskView;
+    private PGEditTiltShiftView mTiltShiftOperationView;
+    private Effect mCurTiltShiftEffect;
+    private Effect mCurTiltShiftLine;
+    private Effect mCurTiltShiftCircle;
+    private String mLastCircleParamValue;
+    private String mLastLineParamValue1;
+    private String mLastLineParamValue2;
+    private String mLastEffectKey;
+    private View mTiltShiftCloseBtn;
+    private View mTiltShiftCircleBtn;
+    private View mTiltShiftLineBtn;
+    private GLSurfaceViewCompositeRendererMethod mTiltShiftRenderMethod;
+
+    private AutoHideTextView mAutoHideTextView;
+    private ComparePGGLSurfaceView mComparePGGLSurfaceView;
+    private PGGLSurfaceView mGlSurfaceView;
+    private float mMainTopHeight;
+    private float mMainBottomHeight;
+    private int mShowHeight;
+    private int mShowWidth;
+    private int mBitmapHeight;
+    private GLSurfaceViewCompositeForPathRendererMethod mCompositeForPathRendererMethod;
+
+    private MakePhotoModel[] mMakePhotoModelArray;
+
+    private boolean hasInit = true;
+
+    protected Activity mActivity;
+    private Context mContext;
+
+    private View mReTakeView;
+    private View mDoneView;
+    private View mProgressLayout;
+    private View mMenuAdjustView;
+
+    private HorizontalLayout mEffectsViewGroup;
+    private SDKManager mSDKManager;
+    private DisplayMetrics mDisplayMetrics;
+    private String mPath;
+
+    private CompositeEffect mCurrentCompositeEffect;
+    private MenuItemViewBig mLastSelectedView;
+
+    private EffectModel mEffectModel;
+    private Set<String> mFilterSet = new HashSet<String>();
+
+    private EffectGroupRendererMethod needOnResumeActionRendererMethod;
+    private String mLastHDRValue;
+
+    private boolean mIsInEditMode = false;
+    private boolean mIsSaved = false;
+    private String mLastSavePath;
+
+    private final static int SHOW_EFFECT_PHOTO = 0x10001;
+    private final static int RELOAD_EFFECT_PHOTO = 0x10002;
+    private static final int MSG_LOAD_BITMAP = 0x10003;
+    private static final int MSG_MAKE_TILT_SHIFT = 0x10004;
+    private static final int MSG_SHADER_CHECK_RESULT = 0x100005;
+
+    private boolean mIsInHDRAdjust = false;
+    private boolean mIsInTiltShiftAdjust = false;
+
+    private static final String GPU_VENDOR_ARM = "ARM";
+    private static final String GPU_VENDOR_IT = "Imagination Technologies";
+    private static final String GPU_VENDOR_QUALCOMM = "Qualcomm";
+    private static final String GPU_VENDOR_HISILICON = "Hisilicon Technologies";
+
+    private Handler mHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            if (msg.what == SHOW_EFFECT_PHOTO) {
+                makePhoto();
+                showComposites();
+
+            } else if (msg.what == RELOAD_EFFECT_PHOTO) {
+                GLSurfaceViewCompositeRendererMethod glSurfaceViewCompositeRendererMethod = new GLSurfaceViewCompositeRendererMethod();
+                glSurfaceViewCompositeRendererMethod.setBitmap(mCompositeForPathRendererMethod.getBitmap());
+                glSurfaceViewCompositeRendererMethod.setShowBitmapHeight(mCompositeForPathRendererMethod.getShowBitmapHeight());
+                glSurfaceViewCompositeRendererMethod.setShowBitmapWidth(mCompositeForPathRendererMethod.getShowBitmapWidth());
+                MakePhotoModel[] newMakePhotoModelArray = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(mMakePhotoModelArray, new HashSet<Integer>());
+                if (newMakePhotoModelArray == null) {
+                    glSurfaceViewCompositeRendererMethod.setEffectModeArray(mMakePhotoModelArray);
+
+                } else {
+                    glSurfaceViewCompositeRendererMethod.setEffectModeArray(newMakePhotoModelArray);
+
+                }
+
+                makePhoto(glSurfaceViewCompositeRendererMethod);
+
+            } else if (msg.what == MSG_LOAD_BITMAP) {
+                if (null != mComparePGGLSurfaceView) {
+                    Bitmap bitmap = (Bitmap) msg.obj;
+                    mComparePGGLSurfaceView.setComparePhoto(bitmap);
+                }
+            } else if (msg.what == MSG_MAKE_TILT_SHIFT) {
+
+                Bitmap bitmap = (Bitmap) msg.obj;
+                if (null != mTiltShiftMaskView) {
+                    mTiltShiftMaskView.setImageBitmap(bitmap);
+                    mTiltShiftMaskView.setVisibility(View.VISIBLE);
+                }
+
+                TiltShiftMakePhotoModel model = (TiltShiftMakePhotoModel)
+                        mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()];
+                if (null == model) {
+                    return;
+                }
+
+                model.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PIC);
+
+                if (null == mCompositeForPathRendererMethod) {
+                    return;
+                }
+
+                mCompositeForPathRendererMethod.setRendererMethodActionListener(
+                        new EffectGroupRendererMethod.RendererMethodActionListener() {
+                            @Override
+                            public void success(Bitmap bitmap) {
+
+                            }
+
+                            @Override
+                            public void fail() {
+
+                            }
+
+                            @Override
+                            public void successForGLSurfaceView() {
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Animation alphaAnimation = new AlphaAnimation(1.0f, 0);
+                                        alphaAnimation.setDuration(200);
+                                        mTiltShiftMaskView.startAnimation(alphaAnimation);
+                                        mTiltShiftMaskView.setVisibility(View.GONE);
+                                    }
+                                });
+                            }
+                        });
+                mSDKManager.showPhoto(mCompositeForPathRendererMethod);
+            } else if (msg.what == MSG_SHADER_CHECK_RESULT) {
+
+                SharedPreferences sp = mContext.getSharedPreferences(
+                        PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean(PGCompositeSDKApi.PG_EDIT_SDK_SHADER_CHECK_RESULT, (Boolean) msg.obj);
+                editor.putBoolean(PGCompositeSDKApi.PG_EDIT_SDK_SHADER_CHECKED, true);
+                editor.commit();
+
+                if (null == mCurrentCompositeEffect) {
+                    createNewFilter();
+                } else {
+                    editCurrentFilter();
+                }
+
+                if (null != mProgressLayout) {
+                    mProgressLayout.setVisibility(View.GONE);
+                }
+            }
+        }
+    };
+
+    private PGGLSurfaceView.PGGLListener mPGGLListener = new PGGLSurfaceView.PGGLListener() {
+        @Override
+        public void glCreated(GL10 gl) {
+
+            if (hasInit) {
+                hasInit = false;
+                mHandler.sendEmptyMessage(SHOW_EFFECT_PHOTO);
+            } else {
+                mHandler.sendEmptyMessage(RELOAD_EFFECT_PHOTO);
+            }
+
+            ConstantUtil.enableHighPerformance = needEnableHighPerformance(
+                    gl.glGetString(GL10.GL_VENDOR), gl.glGetString(GL10.GL_RENDERER));
+        }
+
+        @Override
+        public void glDestroyed() {
+
+        }
+    };
+
+    private boolean needEnableHighPerformance(String glVendor, String glRenderer) {
+        if (GAdapter.IS_MTK) {
+            return false;
+        }
+
+        int gpuVersion;
+        if (GPU_VENDOR_ARM.equals(glVendor)) {
+            gpuVersion = getGPUVersion(glRenderer, 3);
+            if (gpuVersion >= 400) {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (GPU_VENDOR_IT.equals(glVendor)) {
+            gpuVersion = getGPUVersion(glRenderer, 3);
+            if (gpuVersion >= 544) {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (GPU_VENDOR_QUALCOMM.equals(glVendor)) {
+            gpuVersion = getGPUVersion(glRenderer, 3);
+            if (gpuVersion >= 220) {
+                return true;
+            }
+            return false;
+        }
+
+        if (GPU_VENDOR_HISILICON.equals(glVendor)) {
+
+            ConstantUtil.needClearTexture = true;
+
+            gpuVersion = getGPUVersion(glRenderer, 2);
+            if (gpuVersion >= 16) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    private int getGPUVersion(String glRenderer, int versionLen) {
+
+        GLogger.i("", "get gpu check result render:" + glRenderer);
+
+        Pattern p = Pattern.compile("\\d{" + versionLen + "}");
+        Matcher m = p.matcher(glRenderer);
+        if (m.find()) {
+            String versionStr = m.group();
+            GLogger.i("", "get gpu check result version:" + versionStr);
+
+            int version = 0;
+            try {
+                version = Integer.valueOf(versionStr);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+
+            return version;
+        }
+
+        return 0;
+    }
+
+    private View.OnClickListener mOnCompositeClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            mIsSaved = false;
+
+            quitEditMode();
+
+            mCurrentCompositeEffect = (CompositeEffect) v.getTag();
+
+            setMakePhotoModelArray();
+
+            mCompositeForPathRendererMethod.setRendererMethodActionListener(
+                    new EffectGroupRendererMethod.RendererMethodActionListener() {
+                        @Override
+                        public void success(Bitmap bitmap) {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void fail() {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void successForGLSurfaceView() {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+                    });
+
+            if (!mSDKManager.isActionResume()) {
+                needOnResumeActionRendererMethod = mCompositeForPathRendererMethod;
+            } else {
+                showProgress();
+                makePhoto();
+            }
+
+            if (mLastSelectedView != null) {
+                mLastSelectedView.hideScrollView();
+            }
+            mLastSelectedView = (MenuItemViewBig) v;
+        }
+    };
+
+    private View.OnClickListener mOnScrollViewClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            quitEditMode();
+        }
+    };
+
+    private View.OnLongClickListener mOnLongClick = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+
+            if (null == mEffectsViewGroup) {
+                return false;
+            }
+
+            enterEditMode();
+
+            return true;
+        }
+    };
+
+    private View.OnClickListener mOnDeleteViewClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (null == v.getTag()) {
+                return;
+            }
+
+            CompositeEffect compositeEffect = (CompositeEffect) v.getTag();
+            mEffectModel.remove(compositeEffect);
+        }
+    };
+
+    public BeautyController(Activity activity, Bundle savedInstanceState) {
+        this.mActivity = activity;
+        this.mPath = activity.getIntent().getStringExtra(ConstantUtil.PHOTO_PATH);
+        this.mContext = activity.getApplicationContext();
+
+        if (null != savedInstanceState) {
+            mPath = savedInstanceState.getString(INSTANCE_STATE_PATH);
+        }
+
+        mCompositeDataReceiver.registerCallback(mContext,
+                CompositeDataReceiver.EVENT_UPDATE_COMPOSITE_EFFECT, mCompositeDataObserver);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(mPath, options);
+        if (options.outWidth <= 0 || options.outHeight <= 0) {
+            StatisticManager.onEvent(mContext,
+                    StatisticManager.KEY_ERROR_FORCE_CLOSE, "Edit_Decode_Failed");
+            final CompositeSDKDialog dialog = new CompositeSDKDialog(mActivity);
+            dialog.setCancelable(false);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.setMessage(R.string.composite_sdk_crop_load_failed);
+            dialog.setNegativeBtn(0, R.string.composite_sdk_ok,
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            dialog.dismiss();
+                            mActivity.finish();
+                        }
+                    });
+            dialog.show();
+            return;
+        }
+
+        EffectDataManager.getInstance().init(mContext);
+
+        mDisplayMetrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(mDisplayMetrics);
+
+        mReTakeView = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "re_take"));
+        mReTakeView.setOnClickListener(this);
+
+        mDoneView = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "done"));
+        mDoneView.setOnClickListener(this);
+
+        mMenuAdjustView = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "menu_adjust"));
+        mMenuAdjustView.setOnClickListener(this);
+
+        mHdrBtn = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "hdr_btn"));
+        mHdrBtn.setOnClickListener(this);
+
+        mTiltShiftBtn = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "tilt_shift_btn"));
+        mTiltShiftBtn.setOnClickListener(this);
+        if (mDisplayMetrics.density < 1.5f) {
+            mTiltShiftBtn.setVisibility(View.GONE);
+        }
+
+        mTitleTextView = (TextView) activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "scroll_value_name"));
+        mTitleTextView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                return true;
+            }
+        });
+
+        mSeekBarLayout = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "beauty_seekbar_layout"));
+
+        mAdjustLayout = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "adjust_layout"));
+        mTiltShiftLayout = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "tilt_shift_layout"));
+
+        mDoneBtn = mSeekBarLayout.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "done"));
+        mDoneBtn.setOnClickListener(this);
+
+        mCancelBtn = mSeekBarLayout.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "quit"));
+        mCancelBtn.setOnClickListener(this);
+
+        mTiltShiftCloseBtn = mSeekBarLayout.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "tilt_shift_close"));
+        mTiltShiftCloseBtn.setOnClickListener(mOnCloseBtnClickListener);
+
+        mTiltShiftCircleBtn = mSeekBarLayout.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "tilt_shift_circle"));
+        mTiltShiftCircleBtn.setOnClickListener(mOnCircleBtnClickListener);
+
+        mTiltShiftLineBtn = mSeekBarLayout.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "tilt_shift_line"));
+        mTiltShiftLineBtn.setOnClickListener(mOnLineBtnClickListener);
+
+        mAutoHideTextView = (AutoHideTextView) activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "auto_hide_textview"));
+
+        mEffectsViewGroup = (HorizontalLayout) activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "main_bottom_composites"));
+        mProgressLayout = activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "progress_layout"));
+
+        mComparePGGLSurfaceView = (ComparePGGLSurfaceView) activity.findViewById(
+                ResourceHelper.getId(activity.getApplicationContext(), "main_compare_glsurfaceview"));
+
+        mGlSurfaceView = mComparePGGLSurfaceView.getPGGLSurfaceView();
+        mGlSurfaceView.setListener(mPGGLListener);
+
+        mMainTopHeight = mContext.getResources().getDimension(
+                ResourceHelper.getDimen(activity.getApplicationContext(), "composite_sdk_beauty_main_top_height"));
+        float bottomHeight = mContext.getResources().getDimension(
+                ResourceHelper.getDimen(activity.getApplicationContext(), "composite_sdk_beauty_main_bottom_composite_height"));
+        float menuHeight = mContext.getResources().getDimension(
+                ResourceHelper.getDimen(activity.getApplicationContext(), "composite_sdk_beauty_main_bottom_menu_height"));
+
+        int rotate = ToolUtils.getRotatedDegree(mPath);
+        int outWidth = options.outWidth;
+        int outHeight = options.outHeight;
+        if (rotate == 90 || rotate == 270) {
+            outHeight = options.outWidth;
+            outWidth = options.outHeight;
+        }
+
+        mMainBottomHeight = bottomHeight + menuHeight;
+        int centerHeight = Math.round(mDisplayMetrics.heightPixels - mMainTopHeight - bottomHeight - menuHeight);
+        int height = Math.min(centerHeight, mDisplayMetrics.widthPixels);
+        int width = mDisplayMetrics.widthPixels;
+        if ((float) width / outWidth < (float) height / outHeight) {
+            mShowWidth = width;
+            mShowHeight = mShowWidth * outHeight / outWidth;
+        } else {
+            mShowHeight = height;
+            mShowWidth = mShowHeight * outWidth / outHeight;
+        }
+
+        mComparePGGLSurfaceView.setLayoutParamSize(mShowWidth, mShowHeight);
+        mBitmapHeight = Math.round(mShowHeight * ConstantUtil.ZOOM_RATE);
+
+        mMakePhotoModelArray = new MakePhotoModel[Effect.Type.values().length];
+
+        mSDKManager = new SDKManager(mContext, mGlSurfaceView);
+        mCompositeForPathRendererMethod = new GLSurfaceViewCompositeForPathRendererMethod();
+        mCompositeForPathRendererMethod.setPath(mPath);
+        mCompositeForPathRendererMethod.setBitmapHeight(mBitmapHeight);
+        mCompositeForPathRendererMethod.setEffectModeArray(mMakePhotoModelArray);
+        mCompositeForPathRendererMethod.setShowBitmapHeight(mShowHeight);
+        mCompositeForPathRendererMethod.setShowBitmapWidth(mShowWidth);
+        mCompositeForPathRendererMethod.setOnRendererActionListener(new GLSurfaceViewCompositeForPathRendererMethod.OnRendererActionListener() {
+            @Override
+            public void loadBitmap(Bitmap bitmap) {
+                if (null == mHandler) {
+                    return;
+                }
+                mHandler.obtainMessage(MSG_LOAD_BITMAP, bitmap).sendToTarget();
+            }
+        });
+        mEffectModel = EffectModel.getInstance().init(mContext);
+    }
+
+    private void excludeTiltShiftModelAndMakePhoto(
+            final EffectGroupRendererMethod.RendererMethodActionListener listener) {
+
+        mTiltShiftRenderMethod = new GLSurfaceViewCompositeRendererMethod();
+        mTiltShiftRenderMethod.setBitmap(mCompositeForPathRendererMethod.getBitmap());
+        mTiltShiftRenderMethod.setShowBitmapWidth(mCompositeForPathRendererMethod.getShowBitmapWidth());
+        mTiltShiftRenderMethod.setShowBitmapHeight(mCompositeForPathRendererMethod.getShowBitmapHeight());
+
+        HashSet<Integer> set = new HashSet<Integer>();
+        set.add(Effect.Type.TiltShift.ordinal());
+        MakePhotoModel[] filterBackMakePhotoModelArray
+                = MakePhotoModel.getNewMakePhotoModelArrayWithFilter(mMakePhotoModelArray, set);
+
+        if (filterBackMakePhotoModelArray != null) {
+            EffectGroupRendererMethod effectGroupRendererMethod = new EffectGroupRendererMethod();
+            effectGroupRendererMethod.setEffectModeArray(filterBackMakePhotoModelArray);
+            effectGroupRendererMethod.setBitmap(mCompositeForPathRendererMethod.getBitmap());
+            effectGroupRendererMethod.setRendererMethodActionListener(
+                    new EffectGroupRendererMethod.RendererMethodActionListener() {
+                        @Override
+                        public void success(Bitmap bitmap) {
+                            mTiltShiftRenderMethod = new GLSurfaceViewCompositeRendererMethod();
+                            mTiltShiftRenderMethod.setBitmap(bitmap);
+                            mTiltShiftRenderMethod.setShowBitmapWidth(
+                                    mCompositeForPathRendererMethod.getShowBitmapWidth());
+                            mTiltShiftRenderMethod.setShowBitmapHeight(
+                                    mCompositeForPathRendererMethod.getShowBitmapHeight());
+
+                            if (null != listener) {
+                                listener.success(bitmap);
+                            }
+                        }
+
+                        @Override
+                        public void fail() {
+                            if (null != listener) {
+                                listener.fail();
+                            }
+                        }
+
+                        @Override
+                        public void successForGLSurfaceView() {
+                            if (null != listener) {
+                                listener.successForGLSurfaceView();
+                            }
+                        }
+                    });
+            mSDKManager.makePhoto(effectGroupRendererMethod);
+        } else {
+            if (null != listener) {
+                listener.success(mCompositeForPathRendererMethod.getBitmap());
+            }
+        }
+    }
+
+    private void setMakePhotoModelArray() {
+        mMakePhotoModelArray = MakePhotoModel.getMakePhotoModelArrayForWithFilter(mCurrentCompositeEffect, mFilterSet);
+        mCompositeForPathRendererMethod.setEffectModeArray(mMakePhotoModelArray);
+    }
+
+    private void showComposites(int defaultSelectedIndex) {
+
+        List<EffectType> effectTypeList = mEffectModel.getEffectTypeList(Effect.Type.Composite);
+        if (effectTypeList.size() != 0) {
+            List<CompositeEffect> compositeList = effectTypeList.get(0).compositeEffects;
+            if (compositeList != null) {
+                for (int i = 0; i < compositeList.size(); i++) {
+
+                    CompositeEffect compositeEffect;
+                    try {
+                        compositeEffect = (CompositeEffect) compositeList.get(i).clone();
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    MenuItemViewBig itemView = new MenuItemViewBig(mContext);
+                    itemView.setIconForImageUrl(compositeEffect.icon);
+                    itemView.setNameText(compositeEffect.name);
+                    itemView.setOnCompositeClick(mOnCompositeClick);
+                    itemView.setOnShowScrollViewClick(mOnScrollViewClick);
+                    itemView.setOnDeleteViewClickListener(mOnDeleteViewClick);
+                    itemView.setOnItemLongClickListener(mOnLongClick);
+
+                    itemView.setDownLineColor("#5a9fcb");
+                    itemView.setScrollViewBgColor("#5a9fcb");
+
+                    itemView.enableDivider(true);
+                    itemView.showDownLine();
+                    itemView.setScrollViewDrawable(ResourceHelper.getDrawable(
+                            mContext, "composite_sdk_beauty_effect_no_scroll"));
+                    itemView.setTag(compositeEffect);
+
+                    mEffectsViewGroup.addChildView(
+                            itemView, itemView.getOnClickListener(), true, false);
+
+                    if (i == defaultSelectedIndex) {
+                        mEffectsViewGroup.clickItem(itemView);
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mEffectsViewGroup.scrollTo(0, 0);
+                            }
+                        }, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    private void showComposites() {
+        showComposites(0);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        quitEditMode();
+
+        if (mReTakeView == v) {
+            quit((Activity) v.getContext());
+
+        } else if (mDoneView == v) {
+            done((Activity) v.getContext());
+
+        } else if (mMenuAdjustView == v) {
+
+            SharedPreferences sp = mContext.getSharedPreferences(
+                    PGCompositeSDKApi.PG_EDIT_SDK_DATA_INIT, Context.MODE_PRIVATE);
+            boolean isShaderChecked = sp.getBoolean(PGCompositeSDKApi.PG_EDIT_SDK_SHADER_CHECKED, false);
+            if (!isShaderChecked) {
+
+                if (null != mProgressLayout) {
+                    mProgressLayout.setVisibility(View.VISIBLE);
+                }
+
+                PGRendererMethod rendererMethod = new PGRendererMethod() {
+                    @Override
+                    public void rendererAction() {
+                        boolean success = setEffect("Effect=" + AdvanceHSL.EFFECT_KEY_LIGHTZ_HSL);
+                        mHandler.obtainMessage(MSG_SHADER_CHECK_RESULT, success).sendToTarget();
+                    }
+                };
+
+                mSDKManager.makePhoto(rendererMethod);
+            } else {
+                if (null == mCurrentCompositeEffect) {
+                    createNewFilter();
+                } else {
+                    editCurrentFilter();
+                }
+            }
+
+        } /* else if (mMixBtn == v) {
+            MakePhotoModel[] makePhotoModelArray = MakePhotoModel.getRandomComposite(mEffectModel, mCompositeRandomArray);
+            mCompositeForPathRendererMethod.setEffectModeArray(makePhotoModelArray);
+            makePhoto();
+        } */ else if (mHdrBtn == v) {
+            enterHDRAdjust();
+
+        } else if (mTiltShiftBtn == v) {
+            enterTiltShiftAdjust();
+
+        } else if (mDoneBtn == v) {
+
+            mIsSaved = false;
+            if (mIsInHDRAdjust) {
+                quitHDRAdjust();
+                confirmHDRChange();
+                return;
+            }
+
+            if (mIsInTiltShiftAdjust) {
+                quitTiltShiftAdjust();
+                confirmTiltShiftChange();
+                return;
+            }
+        } else if (mCancelBtn == v) {
+            if (mIsInHDRAdjust) {
+                quitHDRAdjust();
+                cancelHDRChange();
+                return;
+            }
+
+            if (mIsInTiltShiftAdjust) {
+                quitTiltShiftAdjust();
+                cancelTiltShiftChange();
+                return;
+            }
+        }
+    }
+
+    public void onResume() {
+        if (null != mSDKManager) {
+            mSDKManager.onResume();
+        }
+//        mRandomController.onResume();
+
+        if (needOnResumeActionRendererMethod != null) {
+            makePhoto(needOnResumeActionRendererMethod);
+            needOnResumeActionRendererMethod = null;
+        }
+    }
+
+    public void onPause() {
+        hideProgress();
+        if (null != mSDKManager) {
+            mSDKManager.onPause();
+        }
+//        mRandomController.onPause();
+    }
+
+    public void onStart() {
+
+    }
+
+    public void onStop() {
+
+    }
+
+    public void onDestroy() {
+
+        ImageLoader.getInstance().clearMemoryCache();
+//        mRandomController.onDestroy();
+        if (null != mCompositeDataReceiver) {
+            mCompositeDataReceiver.unregisterCallback(mContext);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE == requestCode) {
+            EffectDataManager.getInstance().init(mActivity.getApplicationContext());
+            if (resultCode == ConstantUtil.COMPOISTE_ACTIVITY_CHANGE_RESULT) {
+
+                mIsSaved = false;
+                int type = data.getIntExtra(ConstantUtil.GROUP_RESULT_TYPE, ConstantUtil.GROUP_RESULT_TYPE_SAVE);
+                if (type == ConstantUtil.GROUP_RESULT_TYPE_JUMP) {
+                    String compositeJson = data.getStringExtra(ConstantUtil.COMPOSITE_JSON);
+                    CompositeEffect compositeEffect = CompositeEffect.loadFromJsonStr(compositeJson);
+
+                    MakePhotoModel[] makePhotoModelArray = MakePhotoModel.getMakePhotoModelArrayForWithFilter(compositeEffect, mFilterSet);
+
+                    mCompositeForPathRendererMethod.setEffectModeArray(makePhotoModelArray);
+
+                    if (!mSDKManager.isActionResume()) {
+                        needOnResumeActionRendererMethod = mCompositeForPathRendererMethod;
+                    } else {
+                        makePhoto();
+                    }
+                    if (mLastSelectedView != null) {
+                        mLastSelectedView.hideScrollView();
+                    }
+
+                } else if (type == ConstantUtil.GROUP_RESULT_TYPE_SAVE) {
+                    mEffectsViewGroup.removeAllChildViews();
+                    showComposites(1);  //选中第二个，因为第一个永远是无特效
+
+                }
+            }
+        }
+    }
+
+
+    private void editCurrentFilter() {
+
+        GetGLSurfaceViewBitmapRendererMethod getRendererMethod = new GetGLSurfaceViewBitmapRendererMethod();
+        getRendererMethod.setWidthHeight(mShowWidth, mShowHeight);
+        getRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+            @Override
+            public void success(Bitmap bitmap) {
+                final String effectPhotoPath = ToolUtils.getCompositeDiskCachePath(mContext, "tmp_adv_eft");
+                File parentFile = new File(effectPhotoPath).getParentFile();
+                if (!parentFile.exists()) {
+                    parentFile.mkdirs();
+                }
+
+                boolean result = false;
+                try {
+                    result = bitmap.compress(Bitmap.CompressFormat.JPEG, ConstantUtil.PHOTO_QUALITY, new FileOutputStream(effectPhotoPath));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                if (result) {
+                    mActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            startMixForEditFilter(mActivity, mPath,
+                                    effectPhotoPath, mCurrentCompositeEffect);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void fail() {
+
+            }
+
+            @Override
+            public void successForGLSurfaceView() {
+
+            }
+        });
+
+        mSDKManager.showPhoto(getRendererMethod);
+    }
+
+    private void createNewFilter() {
+        GetGLSurfaceViewBitmapRendererMethod getRendererMethod = new GetGLSurfaceViewBitmapRendererMethod();
+        getRendererMethod.setWidthHeight(mShowWidth, mShowHeight);
+        getRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+            @Override
+            public void success(Bitmap bitmap) {
+                final String effectPhotoPath = ToolUtils.getCompositeDiskCachePath(mContext, "tmp_adv_eft");
+                File parentFile = new File(effectPhotoPath).getParentFile();
+                if (!parentFile.exists()) {
+                    parentFile.mkdirs();
+                }
+
+                boolean result = false;
+                try {
+                    result = bitmap.compress(Bitmap.CompressFormat.JPEG, ConstantUtil.PHOTO_QUALITY, new FileOutputStream(effectPhotoPath));
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                if (result) {
+                    mActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            startMixForNewFilter(mActivity, mPath, effectPhotoPath);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void fail() {
+
+            }
+
+            @Override
+            public void successForGLSurfaceView() {
+
+            }
+        });
+        mSDKManager.showPhoto(getRendererMethod);
+    }
+
+    private void makePhoto(PGRendererMethod pgRendererMethod) {
+        if (pgRendererMethod == null) {
+            mSDKManager.showPhoto(mCompositeForPathRendererMethod);
+        } else {
+            mSDKManager.showPhoto(pgRendererMethod);
+        }
+    }
+
+    private void makePhoto() {
+        makePhoto(mCompositeForPathRendererMethod);
+    }
+
+    private void showProgress() {
+        mProgressLayout.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgress() {
+        if (null != mProgressLayout) {
+            mProgressLayout.setVisibility(View.GONE);
+        }
+    }
+
+    protected void startMixForNewFilter(Activity activity,
+                                        String photoPath,
+                                        String effectPhotoPath) {
+        StatisticManager.onEvent(activity,
+                StatisticManager.KEY_ACTION_FAST_EDIT_MIX);
+
+        Intent intent = new Intent(activity, GroupActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, photoPath);
+        intent.putExtra(ConstantUtil.EFFECT_PHOTO_PATH, effectPhotoPath);
+        activity.startActivityForResult(intent, ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE);
+    }
+
+    protected void startMixForEditFilter(Activity activity,
+                                         String photoPath,
+                                         String effectPhotoPath,
+                                         CompositeEffect compositeEffect) {
+
+        StatisticManager.onEvent(activity,
+                StatisticManager.KEY_ACTION_FAST_EDIT_MIX);
+
+        Intent intent = new Intent(activity, GroupActivity.class);
+
+        intent.putExtra(ConstantUtil.COMPOSITE_JSON, compositeEffect.toString());
+        intent.putExtra(ConstantUtil.COMPOSITE_KEY, compositeEffect.key);
+        if (!compositeEffect.key.endsWith("None")
+                && compositeEffect.isDefault != 3) {
+            intent.putExtra(ConstantUtil.COMPOSITE_NAME, compositeEffect.name);
+        } else {
+            intent.putExtra(ConstantUtil.COMPOSITE_NAME, "");
+        }
+
+        intent.putExtra(ConstantUtil.PHOTO_PATH, photoPath);
+        intent.putExtra(ConstantUtil.EFFECT_PHOTO_PATH, effectPhotoPath);
+        activity.startActivityForResult(intent, ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE);
+    }
+
+    protected void done(Activity activity) {
+        if (mIsSaved && null != mLastSavePath) {
+            mSaveCallback.onSaveFinished(mLastSavePath);
+            return;
+        }
+
+        StatisticManager.onEvent(activity,
+                StatisticManager.KEY_ACTION_SAVE_PICTURE_QUICK);
+        if (null != mCurrentCompositeEffect) {
+            if (0 == mCurrentCompositeEffect.isDefault) {
+                StatisticManager.onEvent(activity,
+                        StatisticManager.KEY_ACTION_SAVE_PICTURE_QUICK_NONE);
+
+            } else if (1 == mCurrentCompositeEffect.isDefault) {
+                StatisticManager.onEvent(activity,
+                        StatisticManager.KEY_ACTION_SAVE_PICTURE_QUICK_BUILT_IN);
+
+            } else if (2 == mCurrentCompositeEffect.isDefault) {
+                StatisticManager.onEvent(activity,
+                        StatisticManager.KEY_ACTION_SAVE_PICTURE_QUICK_CUSTOM);
+
+            }
+        }
+
+        mProgressLayout.setVisibility(View.VISIBLE);
+        PhotoSaveController.saveBigPhoto(activity, mPath, mSDKManager,
+                mCompositeForPathRendererMethod.getMakePhotoModelArray(),
+                mSaveCallback);
+    }
+
+    public void quit(Activity activity) {
+
+        quitEditMode();
+
+        Intent intent = new Intent(activity, MixMainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("IS_LAUNCH", false);
+        activity.startActivity(intent);
+        activity.finish();
+    }
+
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (KeyEvent.KEYCODE_BACK == event.getKeyCode()) {
+
+            if (mIsInEditMode) {
+                quitEditMode();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void enterEditMode() {
+
+        if (mIsInEditMode) {
+            return;
+        }
+
+        ViewGroup containerView = mEffectsViewGroup.getContainerView();
+
+        for (int i = 0; i < containerView.getChildCount(); i++) {
+            MenuItemViewBig menuItemView = (MenuItemViewBig) containerView.getChildAt(i);
+            CompositeEffect compositeEffect = (CompositeEffect) menuItemView.getTag();
+            if (compositeEffect.isDefault != 0) {
+                if (null != mCurrentCompositeEffect
+                        && !((Object) mCurrentCompositeEffect).equals(compositeEffect)) {
+                    menuItemView.showDeleteView();
+                    menuItemView.startRotateAnimation();
+                }
+            }
+        }
+
+        mIsInEditMode = true;
+    }
+
+    private void quitEditMode() {
+
+        if (!mIsInEditMode) {
+            return;
+        }
+
+        ViewGroup containerView = mEffectsViewGroup.getContainerView();
+
+        for (int i = 0; i < containerView.getChildCount(); i++) {
+            MenuItemViewBig menuItemView = (MenuItemViewBig) containerView.getChildAt(i);
+            menuItemView.hideDeleteView();
+            menuItemView.clearAnimation();
+        }
+
+        mIsInEditMode = false;
+    }
+
+    private void enterHDRAdjust() {
+
+        mIsInHDRAdjust = true;
+
+        mTitleTextView.setText(
+                ResourceHelper.getString(mActivity, "composite_sdk_hdr"));
+        mAdjustLayout.setVisibility(View.VISIBLE);
+        mTiltShiftLayout.setVisibility(View.GONE);
+
+        showScrollView(mTitleTextView, mSeekBarLayout);
+
+        final MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+
+        SeekBar seekBar = (SeekBar) mSeekBarLayout.findViewById(
+                ResourceHelper.getId(mActivity, "adjust_seek_bar"));
+
+        final MakePhotoModel hdrModel;
+        if (null != makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()]) {
+            hdrModel = makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()];
+        } else {
+            hdrModel = new MakePhotoModel();
+        }
+
+        final Effect effect;
+        if (null == mCurrentCompositeEffect.getEffect(EnhanceHdr.class.getSimpleName())) {
+            effect = new EnhanceHdr();
+        } else {
+            effect = mCurrentCompositeEffect.getEffect(EnhanceHdr.class.getSimpleName());
+        }
+
+        hdrModel.setEffect(effect);
+
+        final ParamFloatItem item = (ParamFloatItem) effect.getParamItem(
+                EnhanceHdr.PARAM_KEY_HIGHLIGHT, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+        seekBar.setSeekLength(Math.round(item.min), Math.round(item.max),
+                Math.round(item.noEffectValue), item.step);
+        seekBar.setValue(item.value);
+
+        if (null == mCurrentCompositeEffect.getEffect(EnhanceHdr.class.getSimpleName())) {
+            mLastHDRValue = null;
+        } else {
+            mLastHDRValue = String.valueOf(item.value);
+        }
+
+        seekBar.setOnSeekChangeListener(new SeekBar.OnSeekChangeListener() {
+            @Override
+            public void onSeekChanged(float currentValue, float step) {
+                if (Math.round(currentValue / step) != item.noEffectValue) {
+                    mAutoHideTextView.setTextForShow(
+                            String.valueOf(Math.round(currentValue / step)));
+                    mAutoHideTextView.setVisibility(View.VISIBLE);
+                } else {
+                    mAutoHideTextView.setVisibility(View.GONE);
+                }
+
+                if (!hdrModel.isScrollStopMake()) {
+                    if (item.noEffectValue == currentValue) {
+                        makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = null;
+
+                    } else {
+                        makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = hdrModel;
+                    }
+
+                    setHDRParam(effect, String.valueOf(currentValue), hdrModel);
+
+                    makePhoto();
+                }
+            }
+
+            @Override
+            public void onSeekStopped(float currentValue, float step) {
+                if (hdrModel.isScrollStopMake()) {
+
+                    showProgress();
+
+                    if (item.noEffectValue == Math.round(currentValue / step)) {
+                        makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = null;
+                        mAutoHideTextView.setVisibility(View.GONE);
+
+                    } else {
+                        makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = hdrModel;
+
+                        mAutoHideTextView.setTextForShow(
+                                String.valueOf(Math.round(currentValue / step)));
+                        mAutoHideTextView.setVisibility(View.VISIBLE);
+                    }
+
+                    setHDRParam(effect, String.valueOf(currentValue), hdrModel);
+
+                    makePhoto();
+                }
+            }
+        });
+    }
+
+    private void quitHDRAdjust() {
+
+        hideScrollView(mTitleTextView, mSeekBarLayout, new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                SeekBar seekBar = (SeekBar) mSeekBarLayout.findViewById(
+                        ResourceHelper.getId(mActivity.getApplicationContext(), "adjust_seek_bar"));
+                seekBar.setOnSeekChangeListener(null);
+                seekBar.reset();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
+        mIsInHDRAdjust = false;
+    }
+
+    private void setHDRParam(Effect effect, String currentValue, MakePhotoModel model) {
+        float value = Float.parseFloat(currentValue);
+        ParamFloatItem highLightItem = (ParamFloatItem) effect.getParamItem(
+                EnhanceHdr.PARAM_KEY_HIGHLIGHT, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+        highLightItem.value = value;
+
+        ParamFloatItem shadowItem = (ParamFloatItem) effect.getParamItem(
+                EnhanceHdr.PARAM_KEY_SHADOW, EnhanceHdr.EFFECT_KEY_HDR_LIGHT_L);
+        shadowItem.value = value;
+
+        ParamFloatItem levelItem = (ParamFloatItem) effect.getParamItem(
+                EnhanceHdr.PARAM_KEY_LEVEL, EnhanceHdr.EFFECT_KEY_HDR_AUTO_LEVEL);
+        levelItem.value = Math.abs(value * 2);
+
+        model.setParams(highLightItem.effectKey, highLightItem.key, currentValue);
+        model.setParams(shadowItem.effectKey, shadowItem.key, currentValue);
+        model.setParams(levelItem.effectKey, levelItem.key, String.valueOf(levelItem.value));
+    }
+
+    private void confirmHDRChange() {
+        mLastHDRValue = null;
+        MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+        MakePhotoModel hdrModel = makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()];
+        if (null == hdrModel) {
+            return;
+        }
+
+        Effect effect = hdrModel.getEffect();
+        mCurrentCompositeEffect.removeEffect(effect);
+        mCurrentCompositeEffect.addEffect(effect);
+        effect.paramStr = effect.getParam().toString();
+    }
+
+    private void cancelHDRChange() {
+        MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+        if (null == mLastHDRValue) {
+            makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = null;
+        } else {
+            MakePhotoModel hdrModel = makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()];
+            if (null == hdrModel) {
+                hdrModel = new MakePhotoModel();
+                makePhotoModelArray[Effect.Type.EnhanceHdr.ordinal()] = hdrModel;
+            }
+
+            Effect effect = mCurrentCompositeEffect.getEffect(EnhanceHdr.class.getSimpleName());
+            if (null == effect) {
+                effect = new EnhanceHdr();
+            }
+
+            hdrModel.setEffect(effect);
+
+            setHDRParam(effect, mLastHDRValue, hdrModel);
+            mLastHDRValue = null;
+        }
+
+        makePhoto();
+    }
+
+    private void enterTiltShiftAdjust() {
+
+        mIsInTiltShiftAdjust = true;
+
+        mTitleTextView.setText(
+                ResourceHelper.getString(mActivity, "composite_sdk_tilt_shift"));
+        mAdjustLayout.setVisibility(View.GONE);
+        mTiltShiftLayout.setVisibility(View.VISIBLE);
+
+        showScrollView(mTitleTextView, mSeekBarLayout);
+
+        mTiltShiftOperationView = new PGEditTiltShiftView(mContext);
+        mTiltShiftOperationView.setWidthHeight(
+                mComparePGGLSurfaceView.getWidth(),
+                mComparePGGLSurfaceView.getHeight(),
+                mShowWidth, mShowHeight);
+
+        mComparePGGLSurfaceView.addView(mTiltShiftOperationView);
+
+        mTiltShiftMaskView = new ImageView(mContext);
+        mTiltShiftMaskView.setVisibility(View.INVISIBLE);
+        RelativeLayout.LayoutParams layoutParams
+                = new RelativeLayout.LayoutParams(mShowWidth, mShowHeight);
+        layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        mTiltShiftMaskView.setLayoutParams(layoutParams);
+
+        mComparePGGLSurfaceView.addView(mTiltShiftMaskView);
+
+        mCurTiltShiftCircle = null;
+        mCurTiltShiftLine = null;
+        mCurTiltShiftEffect = null;
+        if (null != mCurrentCompositeEffect.getEffect(TiltShiftCircle.class.getSimpleName())) {
+            Effect effectLite = mCurrentCompositeEffect.getEffect(TiltShiftCircle.class.getSimpleName());
+            mCurTiltShiftCircle = new TiltShiftCircle();
+            mCurTiltShiftCircle.paramStr = effectLite.paramStr;
+            mCurTiltShiftCircle.buildParamByParamStr();
+            mCurTiltShiftEffect = mCurTiltShiftCircle;
+
+        } else if (null != mCurrentCompositeEffect.getEffect(TiltShiftLine.class.getSimpleName())) {
+            Effect effectLite = mCurrentCompositeEffect.getEffect(TiltShiftLine.class.getSimpleName());
+            mCurTiltShiftLine = new TiltShiftLine();
+            mCurTiltShiftLine.paramStr = effectLite.paramStr;
+            mCurTiltShiftLine.buildParamByParamStr();
+            mCurTiltShiftEffect = mCurTiltShiftLine;
+
+        }
+
+        if (null != mCurTiltShiftEffect) {
+
+            excludeTiltShiftModelAndMakePhoto(
+                    new EffectGroupRendererMethod.RendererMethodActionListener() {
+                        @Override
+                        public void success(Bitmap bitmap) {
+
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (null != mCurTiltShiftEffect) {
+                                        if (mCurTiltShiftEffect.key.equals(TiltShiftCircle.class.getSimpleName())) {
+                                            ParamItem circleParamItem = mCurTiltShiftEffect.getParamItem(
+                                                    TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM, TiltShiftCircle.EFFECT_KEY_SINGLE);
+                                            mLastCircleParamValue = ((ParamVecItem) circleParamItem).value;
+
+                                            mTiltShiftOperationView.showCircleTiltShift((ParamVecItem) circleParamItem);
+                                            updateSelectedState(true, false, false);
+
+                                        } else if (mCurTiltShiftEffect.key.equals(TiltShiftLine.class.getSimpleName())) {
+                                            ParamItem lineParamItem1 = mCurTiltShiftEffect.getParamItem(
+                                                    TiltShiftLine.PARAM_KEY_LINE_PARAM1, TiltShiftLine.EFFECT_KEY_SINGLE);
+                                            ParamItem lineParamItem2 = mCurTiltShiftEffect.getParamItem(
+                                                    TiltShiftLine.PARAM_KEY_LINE_PARAM2, TiltShiftLine.EFFECT_KEY_SINGLE);
+                                            mLastLineParamValue1 = ((ParamVecItem) lineParamItem1).value;
+                                            mLastLineParamValue2 = ((ParamVecItem) lineParamItem2).value;
+                                            mTiltShiftOperationView.showLineTiltShift((ParamVecItem) lineParamItem1,
+                                                    (ParamVecItem) lineParamItem2);
+                                            updateSelectedState(false, true, false);
+                                        }
+
+                                        mTiltShiftOperationView.setTilfShiftViewListener(mTiltShiftViewListener);
+                                        mLastEffectKey = mCurTiltShiftEffect.key;
+                                    }
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void fail() {
+
+                        }
+
+                        @Override
+                        public void successForGLSurfaceView() {
+
+                        }
+                    });
+        } else {
+            GetGLSurfaceViewBitmapRendererMethod getRendererMethod = new GetGLSurfaceViewBitmapRendererMethod();
+            getRendererMethod.setWidthHeight(mShowWidth, mShowHeight);
+            getRendererMethod.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+                @Override
+                public void success(Bitmap bitmap) {
+
+                    mTiltShiftRenderMethod = new GLSurfaceViewCompositeRendererMethod();
+                    mTiltShiftRenderMethod.setBitmap(bitmap);
+                    mTiltShiftRenderMethod.setShowBitmapWidth(mShowWidth);
+                    mTiltShiftRenderMethod.setShowBitmapHeight(mShowHeight);
+
+                    mActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateSelectedState(false, false, true);
+                        }
+                    });
+                }
+
+                @Override
+                public void fail() {
+
+                }
+
+                @Override
+                public void successForGLSurfaceView() {
+
+                }
+            });
+
+            mSDKManager.showPhoto(getRendererMethod);
+        }
+    }
+
+    private ParamVecItem[] updateTiltShiftParam(Effect effect, String pictureEffectKey,
+                                                String blurEffectKey, String paramKey,
+                                                int circleRateIndex, MakePhotoModel model) {
+        ParamVecItem pictureParamItem = (ParamVecItem) effect.getParamItem(paramKey, pictureEffectKey);
+        ParamVecItem blurParamItem = (ParamVecItem) effect.getParamItem(paramKey, blurEffectKey);
+
+        float[] pictureParamValues = pictureParamItem.getValues();
+        float[] blurParamValues = blurParamItem.getValues();
+        for (int i = 0; i < pictureParamValues.length; i++) {
+            if (i == (circleRateIndex + 1)) {
+                continue;
+            }
+            blurParamValues[i] = pictureParamValues[i];
+        }
+
+        if (Integer.MAX_VALUE != circleRateIndex) {
+            pictureParamValues[circleRateIndex + 1] = 0.05f;
+        }
+
+        blurParamItem.setValues(blurParamValues);
+        pictureParamItem.setValues(pictureParamValues);
+
+        model.setParams(pictureParamItem.effectKey, pictureParamItem.key, pictureParamItem.value);
+        model.setParams(blurParamItem.effectKey, blurParamItem.key, blurParamItem.value);
+
+        return new ParamVecItem[]{pictureParamItem, blurParamItem};
+    }
+
+    private void updateSelectedState(boolean circle, boolean line, boolean close) {
+        mTiltShiftCloseBtn.setSelected(close);
+        mTiltShiftCircleBtn.setSelected(circle);
+        mTiltShiftLineBtn.setSelected(line);
+    }
+
+    private void quitTiltShiftAdjust() {
+
+        hideScrollView(mTitleTextView, mSeekBarLayout, null);
+
+        if (null != mComparePGGLSurfaceView && null != mTiltShiftOperationView) {
+            mComparePGGLSurfaceView.removeView(mTiltShiftOperationView);
+        }
+
+        if (null != mComparePGGLSurfaceView && null != mTiltShiftMaskView) {
+            mComparePGGLSurfaceView.removeView(mTiltShiftMaskView);
+            mTiltShiftMaskView.setImageBitmap(null);
+        }
+
+        if (null != mTiltShiftRenderMethod && null != mCompositeForPathRendererMethod) {
+            if (mTiltShiftRenderMethod.getBitmap() != mCompositeForPathRendererMethod.getBitmap()) {
+                mTiltShiftRenderMethod.setBitmap(null);
+            }
+        }
+
+        mIsInTiltShiftAdjust = false;
+
+        if (null != mCompositeForPathRendererMethod) {
+            mCompositeForPathRendererMethod.setRendererMethodActionListener(
+                    new EffectGroupRendererMethod.RendererMethodActionListener() {
+                        @Override
+                        public void success(Bitmap bitmap) {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void fail() {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void successForGLSurfaceView() {
+                            mActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+                                }
+                            });
+                        }
+                    });
+        }
+
+    }
+
+    private void confirmTiltShiftChange() {
+        mLastEffectKey = null;
+        mLastCircleParamValue = null;
+        mLastLineParamValue1 = null;
+        mLastLineParamValue2 = null;
+
+        MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+        MakePhotoModel tiltShiftModel = makePhotoModelArray[Effect.Type.TiltShift.ordinal()];
+        if (null == tiltShiftModel) {
+            List<Effect> effectList = mCurrentCompositeEffect.effectList;
+            if (null != effectList) {
+                int index = Integer.MAX_VALUE;
+                for (int i = 0; i < effectList.size(); i++) {
+                    Effect compareEffect = effectList.get(i);
+                    if (compareEffect.type.equals(Effect.Type.TiltShift.name())) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (Integer.MAX_VALUE != index) {
+                    effectList.remove(index);
+                }
+            }
+            return;
+        }
+
+        Effect effect = tiltShiftModel.getEffect();
+        List<Effect> effectList = mCurrentCompositeEffect.effectList;
+        if (null != effectList) {
+            int index = Integer.MAX_VALUE;
+            for (int i = 0; i < effectList.size(); i++) {
+                Effect compareEffect = effectList.get(i);
+                if (compareEffect.type.equals(effect.type)) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (Integer.MAX_VALUE != index) {
+                effectList.remove(index);
+            }
+        }
+
+        if (null != effect) {
+            mCurrentCompositeEffect.addEffect(effect);
+            effect.paramStr = effect.getParam().toString();
+        }
+    }
+
+    private void cancelTiltShiftChange() {
+        if (null == mLastEffectKey) {
+            mTiltShiftOperationView.clearTiltShift();
+            mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()] = null;
+            mCurTiltShiftEffect = null;
+        } else {
+            mCurTiltShiftEffect = mEffectModel.getEffectByKey(mLastEffectKey);
+            Effect effect = mCurrentCompositeEffect.getEffect(mLastEffectKey);
+            mCurTiltShiftEffect.paramStr = effect.paramStr;
+            mCurTiltShiftEffect.buildParamByParamStr();
+            MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+            TiltShiftMakePhotoModel makePhotoModel = (TiltShiftMakePhotoModel)
+                    makePhotoModelArray[Effect.Type.TiltShift.ordinal()];
+            if (null == makePhotoModel) {
+                makePhotoModel = new TiltShiftMakePhotoModel();
+                makePhotoModelArray[Effect.Type.TiltShift.ordinal()] = makePhotoModel;
+            }
+
+            makePhotoModel.setEffect(mCurTiltShiftEffect);
+            makePhotoModel.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PIC);
+
+            if (mLastEffectKey.equals(TiltShiftCircle.class.getSimpleName())) {
+                ParamVecItem circleParamItem = (ParamVecItem) mCurTiltShiftEffect.getParamItem(
+                        TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM, TiltShiftCircle.EFFECT_KEY_SINGLE);
+                circleParamItem.value = mLastCircleParamValue;
+                updateTiltShiftParam(mCurTiltShiftEffect, TiltShiftCircle.EFFECT_KEY_SINGLE,
+                        TiltShiftCircle.EFFECT_KEY_BLUR, TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM,
+                        2, makePhotoModel);
+                mLastCircleParamValue = null;
+            } else {
+                ParamVecItem lineParamItem1 = (ParamVecItem) mCurTiltShiftEffect.getParamItem(
+                        TiltShiftLine.PARAM_KEY_LINE_PARAM1, TiltShiftLine.EFFECT_KEY_SINGLE);
+                ParamVecItem lineParamItem2 = (ParamVecItem) mCurTiltShiftEffect.getParamItem(
+                        TiltShiftLine.PARAM_KEY_LINE_PARAM2, TiltShiftLine.EFFECT_KEY_SINGLE);
+                lineParamItem1.value = mLastLineParamValue1;
+                lineParamItem2.value = mLastLineParamValue2;
+                updateTiltShiftParam(mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                        TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM1,
+                        Integer.MAX_VALUE, makePhotoModel);
+                updateTiltShiftParam(mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                        TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM2,
+                        1, makePhotoModel);
+                mLastLineParamValue1 = null;
+                mLastLineParamValue2 = null;
+            }
+        }
+
+        makePhoto();
+
+        mLastEffectKey = null;
+    }
+
+    private PGEditTiltShiftView.TiltShiftViewListener mTiltShiftViewListener
+            = new PGEditTiltShiftView.TiltShiftViewListener() {
+
+        @Override
+        public void move() {
+            if (null == mCurTiltShiftEffect) {
+                return;
+            }
+
+            MakePhotoModel[] effectModeArray = new MakePhotoModel[Effect.Type.values().length];
+            TiltShiftMakePhotoModel model = new TiltShiftMakePhotoModel();
+            model.setEffect(mCurTiltShiftEffect);
+            model.setMakeType(TiltShiftMakePhotoModel.MAKE_TYPE_PREVIEW);
+
+            if (mCurTiltShiftEffect.key.equals(TiltShiftCircle.class.getSimpleName())) {
+                ParamVecItem[] paramVecItems = updateTiltShiftParam(
+                        mCurTiltShiftEffect, TiltShiftCircle.EFFECT_KEY_SINGLE,
+                        TiltShiftCircle.EFFECT_KEY_BLUR, TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM,
+                        2, mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()]);
+
+                ParamFloatItem circleStrongParamItem = (ParamFloatItem) mCurTiltShiftEffect.getParamItem(
+                        TiltShiftCircle.PARAM_KEY_CIRCLE_STRONG_PARAM, TiltShiftCircle.EFFECT_KEY_BLUR);
+                mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()]
+                        .setParams(circleStrongParamItem.effectKey, circleStrongParamItem.key,
+                                String.valueOf(circleStrongParamItem.value));
+
+                model.setParams(paramVecItems[0].effectKey, paramVecItems[0].key, paramVecItems[0].value);
+                model.setParams(paramVecItems[1].effectKey, paramVecItems[1].key, paramVecItems[1].value);
+
+            } else if (mCurTiltShiftEffect.key.equals(TiltShiftLine.class.getSimpleName())) {
+
+                ParamVecItem[] paramVecItems1 = updateTiltShiftParam(
+                        mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                        TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM1,
+                        Integer.MAX_VALUE, mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()]);
+                ParamVecItem[] paramVecItems2 = updateTiltShiftParam(
+                        mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                        TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM2,
+                        1, mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()]);
+
+                ParamFloatItem lineStrongParamItem = (ParamFloatItem) mCurTiltShiftEffect.getParamItem(
+                        TiltShiftLine.PARAM_KEY_LINE_STRONG_PARAM, TiltShiftLine.EFFECT_KEY_BLUR);
+                mMakePhotoModelArray[Effect.Type.TiltShift.ordinal()]
+                        .setParams(lineStrongParamItem.effectKey, lineStrongParamItem.key,
+                                String.valueOf(lineStrongParamItem.value));
+
+                model.setParams(paramVecItems1[0].effectKey, paramVecItems1[0].key, paramVecItems1[0].value);
+                model.setParams(paramVecItems2[0].effectKey, paramVecItems2[0].key, paramVecItems2[0].value);
+                model.setParams(paramVecItems1[1].effectKey, paramVecItems1[1].key, paramVecItems1[1].value);
+                model.setParams(paramVecItems2[1].effectKey, paramVecItems2[1].key, paramVecItems2[1].value);
+            } else {
+                return;
+            }
+
+            effectModeArray[Effect.Type.TiltShift.ordinal()] = model;
+            mTiltShiftRenderMethod.setEffectModeArray(effectModeArray);
+            mSDKManager.showPhoto(mTiltShiftRenderMethod);
+        }
+
+        @Override
+        public void stop() {
+            GetGLSurfaceViewBitmapRendererMethod method = new GetGLSurfaceViewBitmapRendererMethod();
+            method.setWidthHeight(mCompositeForPathRendererMethod.getShowBitmapWidth(),
+                    mCompositeForPathRendererMethod.getShowBitmapHeight());
+            method.setRendererMethodActionListener(new EffectGroupRendererMethod.RendererMethodActionListener() {
+                @Override
+                public void success(Bitmap bitmap) {
+
+                    if (null == mHandler) {
+                        return;
+                    }
+                    mHandler.obtainMessage(MSG_MAKE_TILT_SHIFT, bitmap).sendToTarget();
+                }
+
+                @Override
+                public void fail() {
+
+                }
+
+                @Override
+                public void successForGLSurfaceView() {
+
+                }
+            });
+            mSDKManager.showPhoto(method);
+        }
+    };
+
+    private View.OnClickListener mOnCloseBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mTiltShiftOperationView.clearTiltShift();
+
+            MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+            mCompositeForPathRendererMethod.setRendererMethodActionListener(null);
+            makePhotoModelArray[Effect.Type.TiltShift.ordinal()] = null;
+            mCurTiltShiftEffect = null;
+            makePhoto();
+            updateSelectedState(false, false, true);
+        }
+    };
+
+    private View.OnClickListener mOnCircleBtnClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+
+            final MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+            final MakePhotoModel tiltShiftModel;
+            if (null != makePhotoModelArray[Effect.Type.TiltShift.ordinal()]) {
+                tiltShiftModel = makePhotoModelArray[Effect.Type.TiltShift.ordinal()];
+            } else {
+                tiltShiftModel = new TiltShiftMakePhotoModel();
+                makePhotoModelArray[Effect.Type.TiltShift.ordinal()] = tiltShiftModel;
+            }
+
+            if (null == mCurTiltShiftCircle) {
+                mCurTiltShiftCircle = new TiltShiftCircle();
+            }
+
+            mCurTiltShiftEffect = mCurTiltShiftCircle;
+
+            tiltShiftModel.setEffect(mCurTiltShiftEffect);
+
+            ParamVecItem[] paramVecItems = updateTiltShiftParam(
+                    mCurTiltShiftEffect, TiltShiftCircle.EFFECT_KEY_SINGLE,
+                    TiltShiftCircle.EFFECT_KEY_BLUR, TiltShiftCircle.PARAM_KEY_CIRCLE_PARAM,
+                    2, tiltShiftModel);
+
+            ParamFloatItem circleStrongParamItem = (ParamFloatItem) mCurTiltShiftEffect.getParamItem(
+                    TiltShiftCircle.PARAM_KEY_CIRCLE_STRONG_PARAM, TiltShiftCircle.EFFECT_KEY_BLUR);
+            tiltShiftModel.setParams(circleStrongParamItem.effectKey, circleStrongParamItem.key,
+                    String.valueOf(circleStrongParamItem.value));
+
+            mTiltShiftOperationView.setTilfShiftViewListener(mTiltShiftViewListener);
+            mTiltShiftOperationView.initCircleTiltShift(paramVecItems[0]);
+            updateSelectedState(true, false, false);
+        }
+    };
+
+    private View.OnClickListener mOnLineBtnClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            final MakePhotoModel[] makePhotoModelArray = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+            final MakePhotoModel tiltShiftModel;
+            if (null != makePhotoModelArray[Effect.Type.TiltShift.ordinal()]) {
+                tiltShiftModel = makePhotoModelArray[Effect.Type.TiltShift.ordinal()];
+            } else {
+                tiltShiftModel = new TiltShiftMakePhotoModel();
+                makePhotoModelArray[Effect.Type.TiltShift.ordinal()] = tiltShiftModel;
+            }
+
+            if (null == mCurTiltShiftLine) {
+                mCurTiltShiftLine = new TiltShiftLine();
+            }
+
+            mCurTiltShiftEffect = mCurTiltShiftLine;
+
+            tiltShiftModel.setEffect(mCurTiltShiftLine);
+
+            ParamVecItem[] paramVecItems1 = updateTiltShiftParam(
+                    mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                    TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM1,
+                    Integer.MAX_VALUE, tiltShiftModel);
+            ParamVecItem[] paramVecItems2 = updateTiltShiftParam(
+                    mCurTiltShiftEffect, TiltShiftLine.EFFECT_KEY_SINGLE,
+                    TiltShiftLine.EFFECT_KEY_BLUR, TiltShiftLine.PARAM_KEY_LINE_PARAM2,
+                    1, tiltShiftModel);
+
+            ParamFloatItem lineStrongParamItem = (ParamFloatItem) mCurTiltShiftEffect.getParamItem(
+                    TiltShiftLine.PARAM_KEY_LINE_STRONG_PARAM, TiltShiftLine.EFFECT_KEY_BLUR);
+            tiltShiftModel.setParams(lineStrongParamItem.effectKey, lineStrongParamItem.key,
+                    String.valueOf(lineStrongParamItem.value));
+
+            mTiltShiftOperationView.setTilfShiftViewListener(mTiltShiftViewListener);
+            mTiltShiftOperationView.initLineTiltShift(paramVecItems1[0], paramVecItems2[0]);
+            updateSelectedState(false, true, false);
+        }
+    };
+
+    private void showScrollView(View titleView, View seekView) {
+
+        Animation slideInFromTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromTopAnimation.setDuration(400);
+        titleView.startAnimation(slideInFromTopAnimation);
+        titleView.setVisibility(View.VISIBLE);
+
+        Animation slideInFromBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0);
+        slideInFromBottomAnimation.setDuration(400);
+        seekView.startAnimation(slideInFromBottomAnimation);
+        seekView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideScrollView(View titleView, final View seekView, Animation.AnimationListener listener) {
+
+        Animation slideOutToBottomAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 1.0f);
+        slideOutToBottomAnimation.setDuration(400);
+        slideOutToBottomAnimation.setAnimationListener(listener);
+        seekView.startAnimation(slideOutToBottomAnimation);
+        seekView.setVisibility(View.GONE);
+
+        Animation slideOutToTopAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -1.0f);
+        slideOutToTopAnimation.setDuration(400);
+        titleView.startAnimation(slideOutToTopAnimation);
+        titleView.setVisibility(View.GONE);
+    }
+
+    private PhotoSaveController.SaveCallback mSaveCallback
+            = new PhotoSaveController.SaveCallback() {
+        @Override
+        public void onSaveFinished(String photoPath) {
+            saveFinish(mActivity, photoPath);
+        }
+
+        @Override
+        public void onSaveFailed() {
+            if (null == mActivity) {
+                return;
+            }
+
+            if (mActivity.isFinishing()) {
+                return;
+            }
+
+            if (null != mProgressLayout) {
+                mProgressLayout.setVisibility(View.GONE);
+            }
+
+            ToastUtils.makeText(mActivity, R.string.composite_save_photo_failed, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    protected void saveFinish(Activity activity, String photoPath) {
+        if (null == activity) {
+            return;
+        }
+
+        if (activity.isFinishing()) {
+            return;
+        }
+
+        mLastSavePath = photoPath;
+        mIsSaved = true;
+        // TODO 更改为从配置文件获取返回界面
+        Intent intent = new Intent(activity, MixShareActivity.class);
+        intent.putExtra(MixShareActivity.EXTRA_PHOTO_PATH, photoPath);
+        intent.putExtra(MixShareActivity.EXTRA_ORG_PHOTO_PATH, mPath);
+
+        MakePhotoModel[] makePhotoModels
+                = mCompositeForPathRendererMethod.getMakePhotoModelArray();
+        CompositeEffect compositeEffect = new CompositeEffect();
+        for (MakePhotoModel makePhotoModel : makePhotoModels) {
+            if (makePhotoModel != null) {
+                compositeEffect.addEffect(makePhotoModel.getEffect());
+            }
+        }
+
+        intent.putExtra(MixShareActivity.EXTRA_COMPOSITE_EFFECT,
+                compositeEffect.getJsonFilterInfo(activity));
+        activity.startActivity(intent);
+    }
+
+    private CompositeDataReceiver mCompositeDataReceiver = new CompositeDataReceiver();
+    private CompositeDataReceiver.ICompositeDataObserver mCompositeDataObserver
+            = new CompositeDataReceiver.ICompositeDataObserver() {
+
+        @Override
+        public void onCompositeDataReceived(Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(CompositeDataReceiver.ACTION_UPDATE_COMPOSITE_EFFECT)) {
+                mEffectsViewGroup.removeAllChildViews();
+                showComposites(1);  //选中第二个，因为第一个永远是无特效
+            }
+        }
+    };
+
+    private static final String INSTANCE_STATE_PATH = "instance_state_path";
+    public void onSaveInstanceState(Bundle outState) {
+        if (null != mPath) {
+            outState.putString(INSTANCE_STATE_PATH, mPath);
+        }
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        if (null != savedInstanceState) {
+            mPath = savedInstanceState.getString(INSTANCE_STATE_PATH);
+        }
+    }
+}

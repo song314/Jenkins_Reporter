@@ -1,0 +1,22 @@
+package com.pinguo.edit.sdk.widget;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import com.handmark.pulltorefresh.library.PullToRefreshHorizontalScrollView;
+
+/**
+ * Created by taoli on 14-7-1.
+ */
+public class EditPtrHorizontalScrollView extends PullToRefreshHorizontalScrollView {
+    public EditPtrHorizontalScrollView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        setMode(Mode.BOTH);
+        getLoadingLayoutProxy().setLoadingImageViewVisible(false);
+        getLoadingLayoutProxy().setLoadingProgressVisible(false);
+
+    }
+}

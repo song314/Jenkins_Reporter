@@ -1,0 +1,33 @@
+commit 82fc209de229570f4a35a0f663dda24d28059fb6
+tree 10546d85144ff394ac232f129797fcb6b3d1dbc3
+parent 568f33a22fe874d48727fb53d958acd939ec8b5b
+author huowaa <huowaa@gmail.com> 1417271192 +0800
+committer huowaa <huowaa@gmail.com> 1417271192 +0800
+
+    【陈杰】：修改index名称
+
+:100644 100644 fa4707cc3fece1feab39809509caf7fdd380af7a 32b9adb8224e2950e9f631df59c8afcd5405ce85 M	script/sdkAdvancePacker.py
+:100644 100644 a9b096914a232c72269d605ad8b25ea7ca80194c 369fd387879676646c42dfb5a81452f1f0e9f735 M	script/sdkEffectPacker.py
+
+commit 568f33a22fe874d48727fb53d958acd939ec8b5b
+tree 489e996b091aa83dc71111ea263d65edb0a24706
+parent b70f472d772bce76dc95c3b962cdf6877a395b45
+author huowaa <huowaa@gmail.com> 1417077140 +0800
+committer huowaa <huowaa@gmail.com> 1417077140 +0800
+
+    【陈杰】：脚本修改
+    1、没得的就不给：需要重写Param生成: done
+    2、typeKey -> eftGroupKey: done
+    3、外键
+    4、displayInfo+type
+    5、+usage字段
+
+:100644 100644 93ed82efd8be82d7f74295d74c6005b7c1ba6c3e c31e60a7e63a408fe8be47b2ab687aa17562e07a M	script/data/advance-sdk.xls
+:100644 100644 a85604c41059baf2ae2d697f7ab1d82dc7d97936 1731055441df33a0b797373964f954d57fc8dda3 M	script/data/filters-sdk.xls
+:100644 100644 1e13fcde300b5c50788720ee2f3943b051c896c0 877377b0be153a59c941332c84c9f5531fb4e4e3 M	script/data/frames-sdk.xls
+:100644 100644 26a8ee95d20dcaefa19c541c13b164b240a528cf cff1a1e62eba04125532de5af66a28a41acaeca6 M	script/data/lightings-sdk.xls
+:100644 100644 613ceed1d11dc28bd4ad7d880aa89bd458a4c1df 5282094dba1af752a28e08f7805a42c0f1892aaa M	script/data/tiltshift-sdk.xls
+:100644 100644 641a9bcc58690643ce3d7dba7f54ed672e925aa8 fa4707cc3fece1feab39809509caf7fdd380af7a M	script/sdkAdvancePacker.py
+:100644 100644 e5b502b582c2bc591e9a47a1b89b00b42675ed37 ed18e76311b61fd99c86fe9bbd68e346beecfcc0 M	script/sdkBasePacker.py
+:100644 100644 4fa21157ab36adba8f1da4c7b77c076d1cbbe352 a9b096914a232c72269d605ad8b25ea7ca80194c M	script/sdkEffectPacker.py
+:100644 100644 6e1138567f1b78c128226e223de36e508198e47d 451fd1cf0b5d33ace5517bb3be90fc9ba8c89917 M	script/sdkParamPacker.py

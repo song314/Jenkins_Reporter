@@ -1,0 +1,33 @@
+package com.pinguo.edit.sdk.camera.focus;
+
+import android.graphics.Point;
+
+/**
+ * Created by wangqinlong on 11/5/13.
+ */
+public interface IAutoFocusCallBack {
+
+    public void autoFocus();
+
+    public void cancelAutoFocus();
+
+    public boolean capture();
+
+    public void setFocusParameters();
+
+    public void showStart();
+
+    public void showSuccess(boolean timeout);
+
+    public void showFail(boolean timeout);
+
+    public void clear();
+
+    public void onSetFocusArea(int x, int y, int previewW, int previewH);
+
+    public void onSetFocusSize(int x, int y);
+
+    public void onResetFocusArea();
+
+    public Point getFocusSize();
+}

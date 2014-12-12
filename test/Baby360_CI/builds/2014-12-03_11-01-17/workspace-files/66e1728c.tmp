@@ -1,0 +1,11 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 单个特效的需求项
+ */
+public class EffectRequirement extends Requirement {
+    public List<Device> unsupport = new ArrayList<Device>();
+}

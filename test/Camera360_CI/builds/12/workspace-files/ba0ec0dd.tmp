@@ -1,0 +1,141 @@
+package com.pinguo.edit.sdk.camera.ui;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+
+import com.pinguo.edit.sdk.camera.entity.Rotatable;
+import com.pinguo.edit.sdk.camera.setting.CameraPrefKeys;
+import com.pinguo.edit.sdk.camera.setting.IconListPreference;
+import com.pinguo.edit.sdk.camera.setting.PreferenceGroup;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * 相机页面顶部view
+ *
+ * @author Tsmile
+ */
+public class CameraTopMenuView extends RelativeLayout implements Rotatable, View.OnClickListener {
+    private ImageButton mSwitchCameraItem;
+    private ImageButton mFlashItem;
+
+    //Listener
+    private ICameraTopMenuListener mListener;
+    private ImageButton mCloseBtn;
+
+    public CameraTopMenuView(Context context) {
+        super(context);
+    }
+
+    public CameraTopMenuView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public CameraTopMenuView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
+    public void setListener(ICameraTopMenuListener listener) {
+        mListener = listener;
+    }
+
+    @Override
+    protected void onFinishInflate() {
+        mSwitchCameraItem = (ImageButton) findViewById(
+                ResourceHelper.getId(getContext(), "btn_switch_camera"));
+        mFlashItem = (ImageButton) findViewById(
+                ResourceHelper.getId(getContext(), "btn_flash_mode"));
+        mSwitchCameraItem.setOnClickListener(this);
+        mFlashItem.setOnClickListener(this);
+
+        mCloseBtn = (ImageButton) findViewById(
+                ResourceHelper.getId(getContext(), "close_btn"));
+        mCloseBtn.setOnClickListener(this);
+    }
+
+    @Override
+    public void setOrientation(int orientation, boolean animation) {
+
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        if (view == mCloseBtn) {
+            if (mListener != null) {
+                mListener.onCloseBtnClick();
+            }
+            return;
+        }
+
+        if (view.getId() == mSwitchCameraItem.getId()) {
+            if (mListener != null) {
+                mListener.onSwitchCameraClick();
+            }
+            return;
+        }
+
+        if (view.getId() == mFlashItem.getId()) {
+            IconListPreference prefFlash = (IconListPreference) PreferenceGroup.get().findPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+            if (null != prefFlash && 0 < prefFlash.getEntries().length) {
+                int newPos = (prefFlash.getCurrValueIndex() + 1) % prefFlash.getEntries().length;
+                prefFlash.setValueIndex(newPos);
+                if (null != mListener) {
+                    mListener.onFlashModeClick();
+                }
+
+                int[] iconIds = prefFlash.getIconIds();
+                if (null != iconIds && -1 != newPos) {
+                    ImageButton flashMode = mFlashItem;
+                    if (null == prefFlash.getIconIds() || flashMode.isPressed()) {
+                        flashMode.setImageResource(iconIds[newPos]);
+                    } else {
+                        iconIds = prefFlash.getIconIds();
+                        flashMode.setImageResource(iconIds[newPos]);
+                    }
+                }
+            }
+            return;
+        }
+    }
+
+    public void updateView() {
+        if (mListener != null) {
+            if (mListener.couldSwitchCamera()) {
+                mSwitchCameraItem.setVisibility(View.VISIBLE);
+            } else {
+                mSwitchCameraItem.setVisibility(View.GONE);
+            }
+
+            initFlashMode();
+        }
+    }
+
+    /**
+     * 初始化闪光模式
+     */
+    public void initFlashMode() {
+        final IconListPreference prefFlash = (IconListPreference) PreferenceGroup.get()
+                .findPreference(CameraPrefKeys.KEY_CAMERA_FLASH_MODE);
+        if (null != prefFlash && 0 < prefFlash.getEntries().length) {
+            mFlashItem.setEnabled(true);
+            int[] iconIds = prefFlash.getIconIds();
+            mFlashItem.setImageResource(iconIds[prefFlash.getCurrValueIndex()]);
+        } else {
+            mFlashItem.setEnabled(false);
+        }
+    }
+
+    public interface ICameraTopMenuListener {
+
+        public boolean couldSwitchCamera();
+
+        public void onSwitchCameraClick();
+
+        public void onFlashModeClick();
+
+        public void onCloseBtnClick();
+    }
+}

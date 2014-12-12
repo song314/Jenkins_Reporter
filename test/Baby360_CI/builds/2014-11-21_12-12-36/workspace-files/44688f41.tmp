@@ -1,0 +1,97 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.type;
+
+import android.content.Context;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.Effect;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.Param;
+import us.pinguo.android.effect.group.sdk.effect.model.entity.param.ParamFloatItem;
+
+/**
+ * Created by huowaa on 14-7-1.
+ */
+public class EnhanceHdr extends Effect{
+    private static final String TAG = EnhanceHdr.class.getSimpleName();
+
+    public static final String EFFECT_KEY_HDR_LIGHT_L = "HDR_Light_L";
+    public static final String EFFECT_KEY_HDR_AUTO_LEVEL = "Enhance_AutoLevel";
+
+    public static final String PARAM_KEY_LEVEL = "Level";   // 自动色阶程度,取值范围 0~2,默认0
+    public static final String PARAM_KEY_SHADOW = "Shadow"; // 同时变化,取值范围:-1 ~ 1,默认 0
+    public static final String PARAM_KEY_HIGHLIGHT = "Highlight";
+
+    public EnhanceHdr () {
+        this.type = Type.EnhanceHdr.name();
+        this.key = EnhanceHdr.class.getSimpleName();
+        this.gpuCmdStr = String.copyValueOf(Effect.ENHANCE_HDR_CMD.toCharArray()) ;
+
+        this.icon = "composite_sdk_hdr_normal";
+        this.name = "composite_sdk_hdr";
+
+        param = new Param();
+        ParamFloatItem level = new ParamFloatItem(PARAM_KEY_LEVEL, EFFECT_KEY_HDR_AUTO_LEVEL, 0f, 2f, 0.01f, 0f, 0f);
+        ParamFloatItem shadow = new ParamFloatItem(PARAM_KEY_SHADOW, EFFECT_KEY_HDR_LIGHT_L, -1f, 1f, 0.01f, 0f, 0f);
+        ParamFloatItem highlight = new ParamFloatItem(PARAM_KEY_HIGHLIGHT, EFFECT_KEY_HDR_LIGHT_L, -1f, 1f, 0.01f, 0f, 0f);
+        param.addParamItem(shadow);
+        param.addParamItem(highlight);
+        param.addParamItem(level);
+
+        this.paramStr = param.toString();
+        buildParamMap(param);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        EnhanceHdr hdr = null;
+
+        try {
+            hdr = (EnhanceHdr) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        if ( null != hdr )
+            return hdr;
+        else
+            return new EnhanceHdr();
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    @Override
+    public List<JSONObject> getEffectInfo(Context context) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("key", type);
+            jsonObject.put("packName", "");
+            jsonObject.put("name", "");
+            if (null != param) {
+                ParamFloatItem item = (ParamFloatItem) param.getParamItemList().get(0);
+                if (item.value == item.defaultValue) {
+                    return null;
+                }
+                jsonObject.put("value", Math.round(item.value / item.step));
+                jsonObject.put("minValue", Math.round(item.min));
+                jsonObject.put("type", 1);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        List<JSONObject> list = new ArrayList<JSONObject>();
+        list.add(jsonObject);
+        return list;
+    }
+}

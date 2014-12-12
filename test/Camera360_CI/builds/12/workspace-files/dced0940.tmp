@@ -1,0 +1,67 @@
+package us.pinguo.android.effect.group.sdk.effect.model.entity.param;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by huowaa on 14-7-2.
+ * 参数记录的基类，包含Float、String等子类
+ */
+public class ParamItem implements Cloneable {
+    private static final String TAG = ParamItem.class.getSimpleName();
+
+    public static final String DRAWABLE_PREFIX = "drawable://";
+
+    @Expose
+    public String key = "";       //参数key
+    @Expose
+    public String effectKey = ""; // 对应的effect key
+    @Expose
+    public String type = ""; // 参数类型
+    @Expose
+    public String icon = ""; // drawable中的icon路径，imageloader风格，"drawable://" + R.drawable.image;
+    @Expose
+    public String name = ""; // 参数名，显示用；为支持多语言，使用String中的key name，如：composite_sdk_advance_base_param_temperature
+
+    public enum Type {
+        FloatItem,    // 浮点类型参数
+        StringItem,   // 字符串类型参数
+        CurveItem,    // e.g. Curve=<R>0=0</R><G>0=0</G><B>0=0</B><A>0=0</A>
+        ColorBalanceItem, // e.g. ColorBalance=0,0,0,0,0,0,0,0,0,1
+        VecItem,      // float矢量参数, e.g. tiltShiftLineParam1=0.5,0.5
+        NoEffectItem // 无特效key类型参数
+    }
+
+    // 参数Type String -> java.lang.reflect.Type的映射表
+    private static Map<String, java.lang.reflect.Type> typeMapper = new HashMap<String, java.lang.reflect.Type>();
+    static {
+        typeMapper.put(Type.FloatItem.name(), new TypeToken<ParamFloatItem>(){}.getType());
+        typeMapper.put(Type.StringItem.name(), new TypeToken<ParamStringItem>(){}.getType());
+        typeMapper.put(Type.CurveItem.name(), new TypeToken<ParamCurveItem>(){}.getType());
+        typeMapper.put(Type.ColorBalanceItem.name(), new TypeToken<ParamColorBalanceItem>(){}.getType());
+        typeMapper.put(Type.VecItem.name(), new TypeToken<ParamVecItem>(){}.getType());
+        typeMapper.put(Type.NoEffectItem.name(), new TypeToken<ParamNoEffectItem>(){}.getType());
+    }
+
+    public static java.lang.reflect.Type getParamItemSubTypeByTypeKey(String type) {
+        return typeMapper.get(type);
+    }
+
+    public ParamItem() {
+
+    }
+
+    public ParamItem(String key, String effectKey, Type type) {
+        this.key = key;
+        this.effectKey = effectKey;
+        this.type = type.name();
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+}

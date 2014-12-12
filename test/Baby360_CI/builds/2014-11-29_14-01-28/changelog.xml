@@ -1,0 +1,9 @@
+commit a232f614edcaaaa7f221b77165e0f1a9176bfd08
+tree 16aa0c9644c3d700900d5a1eccaebfb7d12e0d24
+parent 55576c48c4a54e31e935bc96d422bd1c282edd3f
+author litao <litao@camera360.com> 1417240771 +0800
+committer litao <litao@camera360.com> 1417240771 +0800
+
+    ［李涛］错误日志在控制台打印
+
+:100644 100644 1339310ce8fc7cdd257fc0ed776cc18f3ef70b90 252677ea5b5fd9b50937a0f7a7d0e01876770972 M	src/com/pinguo/mix/AppCrashHandler.java

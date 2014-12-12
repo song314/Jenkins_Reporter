@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation">
+
+    <!-- camera module begin-->
+    <string-array name="composite_sdk_pref_camera_flashmode_entries">
+        <item>@string/composite_sdk_pref_camera_flashmode_entry_on</item>
+        <item>@string/composite_sdk_pref_camera_flashmode_entry_off</item>
+    </string-array>
+    <string-array name="composite_sdk_pref_camera_flashmode_entryvalues">
+        <item>on</item>
+        <item>off</item>
+    </string-array>
+    <string-array name="composite_sdk_pref_camera_focusmode_default_array">
+        <item>continuous</item>
+        <item>auto</item>
+    </string-array>
+    <!-- camera module end-->
+
+</resources>

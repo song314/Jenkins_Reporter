@@ -1,0 +1,98 @@
+package us.pinguo.android.effect.group.sdk.group;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by pinguo on 14-7-24.
+ */
+public class CompositeSaveListDialog extends Dialog {
+
+    private Context mContext;
+    private View mRootView;
+    private View mQuitView;
+    private View mSendPhotoView;
+    private View mSaveView;
+    private OnItemClickListener mOnItemClickListener;
+
+    public CompositeSaveListDialog(Activity activity) {
+
+        super(activity, ResourceHelper.getStyle(activity.getApplicationContext(), "CompositeSDKThemeDialog"));
+        mContext = activity.getApplicationContext();
+        setContentView(ResourceHelper.getLayout(mContext, "composite_sdk_save_list"));
+
+        mRootView = findViewById(ResourceHelper.getId(mContext, "root"));
+        mRootView.setOnClickListener(mOnClickListener);
+        mQuitView = findViewById(ResourceHelper.getId(mContext, "quit"));
+        mQuitView.setOnClickListener(mOnClickListener);
+
+        mSendPhotoView = findViewById(ResourceHelper.getId(mContext, "send_photo"));
+        mSendPhotoView.setOnClickListener(mOnClickListener);
+
+        mSaveView = findViewById(ResourceHelper.getId(mContext, "save"));
+        mSaveView.setOnClickListener(mOnClickListener);
+    }
+
+    public void toggleSaveView(boolean enable) {
+        if (null == mSaveView) {
+            return;
+        }
+
+        if (enable) {
+            mSaveView.setVisibility(View.VISIBLE);
+        } else {
+            mSaveView.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        WindowManager m = (WindowManager) getContext()
+                .getSystemService(Context.WINDOW_SERVICE);
+        Display d = m.getDefaultDisplay();
+        WindowManager.LayoutParams p = getWindow().getAttributes();
+        p.width = d.getWidth();
+        getWindow().setGravity(Gravity.BOTTOM);
+        getWindow().setWindowAnimations(ResourceHelper.getStyle(mContext, "CompositeSDKPopupDialog"));
+        getWindow().setAttributes(p);
+    }
+
+    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mRootView == v || mQuitView == v) {
+                dismiss();
+
+            } else if (mSendPhotoView == v) {
+                dismiss();
+                if (null != mOnItemClickListener) {
+                    mOnItemClickListener.onSavePhotoClick();
+                }
+
+            } else if (mSaveView == v) {
+                if (null != mOnItemClickListener) {
+                    mOnItemClickListener.onSaveEffectClick();
+                }
+            }
+        }
+    };
+
+    public interface OnItemClickListener {
+        void onSavePhotoClick();
+        void onSaveEffectClick();
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mOnItemClickListener = listener;
+    }
+}

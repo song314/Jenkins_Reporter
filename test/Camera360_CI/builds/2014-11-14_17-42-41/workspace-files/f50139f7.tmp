@@ -1,0 +1,214 @@
+package us.pinguo.android.effect.group.sdk.view;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.*;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * Created by pinguo on 14-6-7.
+ */
+public class VerticalScrollImageView extends RelativeLayout implements View.OnTouchListener,AbsListView.OnScrollListener{
+
+    private final static String TAG = VerticalScrollImageView.class.getSimpleName();
+
+    private Context mContext;
+    private ListView mListView;
+    private ImageView mImageView;
+    private ImageView mImageViewInListView;
+
+    private Animation mHideAnimation;
+    private Animation mShowAnimation;
+
+    private VerticalScrollListener mVerticalScrollListener;
+    private int mPhotoHeight;
+    private int mMoveStart;
+
+    private float mShowTopRate;
+    private float mShowButtomRate;
+
+    private Bitmap mCropBitmap;
+
+    public VerticalScrollImageView(Context context) {
+        super(context);
+        mContext = context;
+
+        init();
+    }
+
+    public VerticalScrollImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        mContext = context;
+
+        init();
+    }
+
+    public VerticalScrollImageView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        mContext = context;
+
+        init();
+    }
+
+    public void setScrollListener(VerticalScrollListener scrollListener){
+        this.mVerticalScrollListener = scrollListener;
+    }
+
+    private void init(){
+        View view = LayoutInflater.from(mContext).inflate(
+                ResourceHelper.getIdByName(getContext(), "layout", "composite_sdk_scroll_imageview"), this, true);
+        mListView = (ListView)view.findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "scroll_photo"));
+        mImageView = (ImageView)view.findViewById(
+                ResourceHelper.getIdByName(getContext(), "id", "show_photo"));
+
+
+        mHideAnimation = new AlphaAnimation(0f, 0f);
+        mHideAnimation.setDuration(0);
+        mHideAnimation.setFillAfter(true);
+        mHideAnimation.setFillBefore(false);
+
+        mShowAnimation = new AlphaAnimation(0f, 1f);
+        mShowAnimation.setDuration(0);
+        mShowAnimation.setFillAfter(true);
+        mShowAnimation.setFillBefore(false);
+
+        mListView.startAnimation(mHideAnimation);
+
+    }
+
+    public void initPhotoInfo(Bitmap bitmap,int photoHeight,int photoWidth,int showHeight){
+
+        mPhotoHeight = photoHeight;
+        mImageViewInListView = new ImageView(mContext);
+        mImageViewInListView.setImageBitmap(bitmap);
+        AbsListView.LayoutParams layoutParams = new AbsListView.LayoutParams(photoWidth,photoHeight);
+        mImageViewInListView.setLayoutParams(layoutParams);
+
+        ScrollAdapter scrollAdapter = new ScrollAdapter(mImageViewInListView);
+        mListView.setAdapter(scrollAdapter);
+
+        RelativeLayout.LayoutParams listViewLayoutParams = new RelativeLayout.LayoutParams(photoWidth,LayoutParams.WRAP_CONTENT);
+        listViewLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        mListView.setLayoutParams(listViewLayoutParams);
+
+        RelativeLayout.LayoutParams imageViewLayoutParams = new RelativeLayout.LayoutParams(photoWidth,showHeight);
+        imageViewLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        mImageView.setLayoutParams(imageViewLayoutParams);
+    }
+
+    public void initTopButtomRate(float topRate,float buttomRate,boolean isSquare){
+        this.mShowTopRate = topRate;
+        this.mShowButtomRate = buttomRate;
+
+        if(!isSquare){
+            mListView.setOnTouchListener(this);
+            mListView.setOnScrollListener(this);
+        }
+    }
+
+    public float getShowTopRate(){
+        return this.mShowTopRate;
+    }
+
+    public float getShowButtomRate(){
+        return this.mShowButtomRate;
+    }
+
+    public synchronized void showCropPhoto(Bitmap bitmap){
+        Bitmap lastBitmap = mCropBitmap;
+        mCropBitmap = bitmap;
+        mImageView.setImageBitmap(bitmap);
+        if(lastBitmap!=null){
+            lastBitmap.recycle();
+        }
+    }
+
+    public synchronized Bitmap getCropPhoto(){
+        return mCropBitmap;
+    }
+
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mListView.startAnimation(mShowAnimation);
+
+                break;
+            case MotionEvent.ACTION_UP:
+                mListView.startAnimation(mHideAnimation);
+
+
+                break;
+
+            default:
+                break;
+        }
+        return v.onTouchEvent(event);
+
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+        if(scrollState == ListView.SCREEN_STATE_ON){
+            mMoveStart = mImageViewInListView.getBottom();
+        }else if(scrollState == ListView.SCREEN_STATE_OFF){
+            int moveEnd = mImageViewInListView.getBottom();
+            int moveY = mMoveStart - moveEnd;
+
+            if(mVerticalScrollListener!=null){
+                mVerticalScrollListener.actionDown(moveY);
+            }
+
+        }
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+    }
+
+    public static class ScrollAdapter extends BaseAdapter{
+
+        private ImageView mImageView;
+
+        public ScrollAdapter(ImageView imageView){
+            this.mImageView = imageView;
+        }
+
+        @Override
+        public int getCount() {
+            return 1;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return position;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            return mImageView;
+        }
+    }
+
+    public static interface VerticalScrollListener{
+
+        public void actionDown(int move);
+
+    }
+}

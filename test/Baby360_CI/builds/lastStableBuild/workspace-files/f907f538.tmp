@@ -1,0 +1,94 @@
+package com.pinguo.edit.sdk.option.view;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.Camera360Lib.ui.imageloader.ImageLoaderView;
+import com.pinguo.edit.sdk.R;
+
+/**
+ * Created by zengchumeng on 14-9-2.
+ */
+public class SettingItemMore extends RelativeLayout {
+    private static final String TAG = SettingItemMore.class.getSimpleName();
+    private TextView mTitle;
+    private TextView mSummary;
+    private ImageView mIcon;
+    private ImageView mNew;
+    private RoundImageView mNewCustom;
+
+    public SettingItemMore(Context context) {
+        super(context);
+    }
+
+    public SettingItemMore(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
+
+    public SettingItemMore(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        initView(context, attributeSet);
+    }
+
+    private void initView(Context context, AttributeSet attributeSet) {
+        TypedArray a = context.obtainStyledAttributes(attributeSet, R.styleable.SettingItem);
+        float textSize = a.getDimension(R.styleable.SettingItem_showTextSize, 15f);
+        int textColor = a.getColor(R.styleable.SettingItem_showTextColor, Color.parseColor("#7b8085"));
+        boolean showUpDivider = a.getBoolean(R.styleable.SettingItem_showUpDivider, true);
+
+        View root = null;
+        if (showUpDivider) {
+            root = LayoutInflater.from(context).inflate(R.layout.layout_setting_item_more, this);
+        } else {
+            root = LayoutInflater.from(context).inflate(R.layout.layout_setting_item_more_no_divider, this);
+        }
+        mTitle = (TextView) root.findViewById(R.id.option_item_title);
+        mTitle.setTextSize(textSize);
+        mTitle.setTextColor(textColor);
+        mIcon = (ImageView) root.findViewById(R.id.option_item_icon);
+        mSummary = (TextView) root.findViewById(R.id.option_item_summary);
+        mNew = (ImageView) root.findViewById(R.id.option_item_new);
+        mNewCustom = (RoundImageView) root.findViewById(R.id.option_item_new_custom);
+    }
+
+    public ImageView getIcon() {
+        return mIcon;
+    }
+
+    public TextView getTitle() {
+        return mTitle;
+    }
+
+    public TextView getSummary() {
+        return mSummary;
+    }
+
+    public ImageView getNewIcon() {
+        return mNew;
+    }
+
+    public ImageLoaderView getNewIconCustom() {
+        return mNewCustom;
+    }
+
+    public void setAllItemEnable(boolean enable) {
+        if (!enable) {
+            mTitle.setTextColor(Color.parseColor("#abb2ba"));
+            mIcon.setAlpha(150);
+        } else {
+            GLogger.v(TAG, "enable : " + enable);
+            mTitle.setTextColor(Color.parseColor("#7b8085"));
+            mIcon.setAlpha(255);
+        }
+        this.setClickable(enable);
+        this.setEnabled(enable);
+    }
+}

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:gravity="center"
+              android:background="@drawable/composite_sdk_common_dialog_bg"
+              android:layout_width="wrap_content"
+              android:layout_height="match_parent"
+              android:paddingBottom="20dp">
+
+
+    <RelativeLayout
+        android:id="@+id/title_lay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/title_lay_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/dialog_title"
+                android:textColor="#5cd2e6"
+                android:textSize="30sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/composite_sdk_new_version"
+                android:gravity="center">
+            </TextView>
+
+            <TextView
+                android:id="@+id/dialog_title_1"
+                android:textColor="#FFFFFFFF"
+                android:textSize="26sp"
+                android:layout_gravity="bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/composite_sdk_showup">
+            </TextView>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/divider"
+            android:layout_width="wrap_content"
+            android:layout_height="1sp"
+            android:layout_alignLeft="@id/title_lay_1"
+            android:layout_alignRight="@id/title_lay_1"
+            android:layout_below="@id/title_lay_1"
+            android:src="@drawable/composite_sdk_update_title_divider">
+        </ImageView>
+
+        <TextView
+            android:id="@+id/dialog_version"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@id/title_lay_1"
+            android:layout_alignBottom="@id/divider"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:background="@drawable/composite_sdk_version_name_bg"
+            android:gravity="center">
+        </TextView>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/dialog_tv"
+        android:textColor="#FFFFFFFF"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title_lay"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center">
+    </TextView>
+
+    <Button
+        android:id="@+id/update_btn"
+        android:textColor="#FFFFFFFF"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_below="@id/dialog_tv"
+        android:text="@string/composite_sdk_version_update"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/composite_sdk_update_update_btn">
+    </Button>
+
+    <Button
+        android:id="@+id/later_btn"
+        android:textColor="#FFFFFFFF"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/update_btn"
+        android:text="@string/composite_sdk_version_update_later"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/composite_sdk_update_later_btn">
+    </Button>
+
+    <Button
+        android:id="@+id/ignore_btn"
+        android:textColor="#FFFFFFFF"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/later_btn"
+        android:text="@string/composite_sdk_version_update_ignore"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/composite_sdk_update_ignore_btn">
+    </Button>
+
+</RelativeLayout>

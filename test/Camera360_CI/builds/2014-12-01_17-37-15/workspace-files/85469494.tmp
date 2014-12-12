@@ -1,0 +1,530 @@
+package com.pinguo.edit.sdk.option.feedback;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.lib.util.SystemUtils;
+import com.pinguo.edit.sdk.option.message.PGMessage;
+import com.pinguo.edit.sdk.option.message.PGMessageManager;
+import com.pinguo.edit.sdk.option.push.utils.PushSimpleBean;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class Camera360FeedbackActivity extends Activity implements OnClickListener {
+    public static final String UPDATE_UI_ACTION = "com.pinguo.camear360.feedback.updateui.broadcast";
+    public static final String EXTRA_KEY_NEW_MESSAGE = "new_message_key";
+    public static final String EXTRA_KEY_CAN_LOGGIN_FLAG = "can_login_flag";
+    private static final String TAG = "test";
+    private static final Uri BASEURI = Camera360FeedbackDatabaseField.CONTENT_URI;
+    private static final int MESSAGE_UPDATE_UI = 0;
+    @SuppressLint("HandlerLeak")
+    private Handler mHander = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSAGE_UPDATE_UI:
+                    updateFeedbackUI();
+                    break;
+            }
+        }
+
+    };
+    private static long TIME_INTERBAL = 5 * 1000L;
+    private ListView mFeedbackList;
+    private Camera360FeedbackAdapter mFeedbackAdapter;
+    private Button mBackButton;
+    private Button mSubmitFeedbackButton;
+    private EditText mFeedbackMessage;
+    private boolean mDestory = false;
+    private ContentResolver mContentResolver;
+    private ProgressDialog mWaitProgressDialog;
+    private UpdateUIBroadcastReceiver mBroadcast;
+    private String mIntentType;
+    private int mRepeatCount = 1;
+    private ApiQueryFeedbackData mQueryFeedbackDataFuture;
+    private ApiUploadFeedbackData mUploadFeedbackDataFuture;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.umeng_fb_activity_conversation);
+        PGMessageManager.getInstance().setContext(this);
+//        UmengStatistics.Personal.personalRegisterLayShow(0);
+        updateData();
+        initViews();
+        updateFeedbackUI();
+//        PGMessageManager.getInstance().setUpdateListener(this);
+    }
+
+    private void updateData() {
+        Camera360FeedbackData newMsg = (Camera360FeedbackData) getIntent().getSerializableExtra(EXTRA_KEY_NEW_MESSAGE);
+        if (newMsg != null) {
+            // 插入一条新消息
+            sendMessage(newMsg);
+        }
+
+        if (PushSimpleBean.ACTION_FEEDBACK.equals(getIntent().getStringExtra(PushSimpleBean.ACTION_FEEDBACK))) {
+//            UmengStatistics.Push.pushSimple(1);
+            mIntentType = PushSimpleBean.ACTION_FEEDBACK;
+        } else {
+            //更新一次对话小C消息
+            PGMessageManager.getInstance().update(null);
+        }
+    }
+
+    /**
+     * 删除数据库里面整个表
+     */
+    private void deleteFeedbackTable() {
+        int deleteCount = mContentResolver.delete(BASEURI, null, null);
+        GLogger.i("test", "deleteCount=" + deleteCount);
+    }
+
+    /**
+     * 批量插入数据库
+     */
+    private void bulkInsertFeedback(ContentValues[] list) {
+        mContentResolver.bulkInsert(BASEURI, list);
+    }
+
+    /**
+     * 将某一条记录加入到数据库里面
+     *
+     * @param feedbackData
+     */
+    private void insertFeedbackInfoToDatabase(Camera360FeedbackData feedbackData) {
+        ContentValues values = new ContentValues();
+        values.put(Camera360FeedbackDatabaseField.MESSAGE, feedbackData.getMessage().trim());
+        values.put(Camera360FeedbackDatabaseField.NAME, feedbackData.getName());
+        values.put(Camera360FeedbackDatabaseField.TIME, feedbackData.getTime());
+        values.put(Camera360FeedbackDatabaseField.STATUS, feedbackData.getStatus());
+        mContentResolver.insert(BASEURI, values);
+    }
+
+    private void initViews() {
+        //清除new标签
+        List<PGMessage> list = PGMessageManager.getInstance().getMsgList();
+        for (PGMessage message : list) {
+            message.hasReaded = true;
+        }
+        PGMessageManager.getInstance().updateLocalMsgs(list);
+
+
+        mContentResolver = getContentResolver();
+        mFeedbackList = (ListView) findViewById(R.id.umeng_fb_reply_list);
+        mBackButton = (Button) findViewById(R.id.umeng_fb_back);
+        mBackButton.setOnClickListener(this);
+
+        mSubmitFeedbackButton = (Button) findViewById(R.id.umeng_fb_send);
+        mSubmitFeedbackButton.setOnClickListener(this);
+
+        mFeedbackMessage = (EditText) findViewById(R.id.umeng_fb_reply_content);
+    }
+
+    @Override
+    protected void onResume() {
+        if (!PushSimpleBean.ACTION_FEEDBACK.equals(mIntentType)) {
+            //开启查询线程
+            queryFeedbackDataFromServer();
+            if (mBroadcast == null) {
+                mBroadcast = new UpdateUIBroadcastReceiver();
+                registerReceiver(mBroadcast, new IntentFilter(UPDATE_UI_ACTION));
+            }
+        }
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mBroadcast != null) {
+            unregisterReceiver(mBroadcast);
+            mBroadcast = null;
+        }
+//        CameraBusinessSettingModel.instance().setUnreadFeedbackCount(0);
+        mFeedbackAdapter.clearUserInfo();
+        mHander.removeMessages(MESSAGE_UPDATE_UI);
+        dismissProgressDialog();
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDestory = true;
+        if (mQueryFeedbackDataFuture != null) {
+            mQueryFeedbackDataFuture.cancel(true);
+        }
+        if (mUploadFeedbackDataFuture != null) {
+            mUploadFeedbackDataFuture.cancel(true);
+        }
+//        PGMessageManager.getInstance().setUpdateListener(null);
+        super.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id) {
+            case R.id.umeng_fb_back:
+                finish();
+                break;
+            case R.id.umeng_fb_send:
+                String feedbackMessage = mFeedbackMessage.getText().toString();
+                if (TextUtils.isEmpty(feedbackMessage)) {
+                    return;
+                }
+                //隐藏软件盘
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(mFeedbackMessage.getWindowToken(), 0);
+
+                //移除两端的引号
+                feedbackMessage = feedbackMessage.trim();
+                Camera360FeedbackData feedbackData = new Camera360FeedbackData(feedbackMessage, "me", -1L, 0);
+                boolean res = sendMessage(feedbackData);
+                if (!res)
+                    return;
+                //清空输入框
+                mFeedbackMessage.setText("");
+                break;
+            case R.id.umeng_fb_reply_content:
+                mFeedbackMessage.setFocusable(true);
+                break;
+        }
+
+    }
+
+    private boolean sendMessage(Camera360FeedbackData message) {
+        if (!SystemUtils.hasNet(getApplicationContext())) {
+            Toast.makeText(this, R.string.no_network_connection_toast, Toast.LENGTH_LONG).show();
+            return false;
+        }
+        //List<CMessage> lists = new ArrayList<CMessage>();
+        CMessage cMessage = new CMessage();
+        cMessage.feedbackData = message;
+        cMessage.type = CMessage.TYPE_FEEDBACK_SEND;
+        //lists.add(cMessage);
+        uploadFeedbackDataToServer(cMessage);
+        return true;
+    }
+
+    /**
+     * 向服务器查询反馈数据
+     */
+    private void queryFeedbackDataFromServer() {
+        // new Camera360FeedbackQueryThread(this, this, null).start();
+        if (mQueryFeedbackDataFuture != null) {
+            mQueryFeedbackDataFuture.cancel(true);
+        }
+        mQueryFeedbackDataFuture = new ApiQueryFeedbackData(this, null);
+        mQueryFeedbackDataFuture.get(new AsyncResult<String>() {
+            @Override
+            public void onSuccess(final String s) {
+                Log.i("test", "服务器返回的反馈数据:" + s);
+                new Thread() {
+                    public void run() {
+                        try {
+                            JSONObject object = new JSONObject(s);
+                            @SuppressWarnings("unchecked")
+                            Iterator<String> keys = object.keys();
+                            while (keys.hasNext()) {
+                                String key = keys.next();
+                                if (key.equals("status")) {
+                                    int status = object.getInt(key);
+                                    if (status != 200) {
+                                        break;
+                                    }
+                                } else if (key.equals("dialogs")) {
+                                    JSONArray array = object.getJSONArray(key);
+                                    parseQueryDataFromServer(array);
+                                }
+                            }
+                            if (!mDestory) {
+                                mHander.sendEmptyMessage(MESSAGE_UPDATE_UI);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
+    }
+
+    /**
+     * 反馈数据到服务器
+     *
+     * @param cMessage
+     */
+    private void uploadFeedbackDataToServer(final CMessage cMessage) {
+        if (mUploadFeedbackDataFuture != null) {
+            mUploadFeedbackDataFuture.cancel(true);
+        }
+        mUploadFeedbackDataFuture = new ApiUploadFeedbackData(this, cMessage);
+        showProgressDialog();
+        mUploadFeedbackDataFuture.get(new AsyncResult<String>() {
+            @Override
+            public void onSuccess(final String s) {
+                dismissProgressDialog();
+                new Thread() {
+                    public void run() {
+                        try {
+                            JSONObject object = new JSONObject(s);
+                            @SuppressWarnings("unchecked")
+                            Iterator<String> keys = object.keys();
+                            while (keys.hasNext()) {
+                                String key = keys.next();
+                                if (key.equals("status")) {
+                                    int status = object.getInt(key);
+                                    if (status != 200) {
+                                        break;
+                                    }
+                                } else if (key.equals("dialogs")) {
+                                    JSONArray array = object.getJSONArray(key);
+                                    parseUploadDataFromServer(array);
+                                }
+                            }
+                            if (!mDestory) {
+                                mHander.sendEmptyMessage(MESSAGE_UPDATE_UI);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                dismissProgressDialog();
+                showUploadErrorMessage();
+                if (mRepeatCount <= Constant.DEFAULT_MAX_RETRIES) {
+                    mHander.postDelayed(new ReUploadFeedbackMessage(cMessage), TIME_INTERBAL);
+                    TIME_INTERBAL = TIME_INTERBAL * 2;
+                    mRepeatCount++;
+                }
+            }
+        });
+    }
+
+    /**
+     * 解析从服务器返回的反馈信息
+     *
+     * @param array
+     * @return
+     */
+    private void parseQueryDataFromServer(JSONArray array) {
+        try {
+            ArrayList<Camera360FeedbackData> dataLists = new ArrayList<Camera360FeedbackData>();
+            if (array != null) {
+                int size = array.length();
+                if (size > 0) {
+                    for (int i = 0; i < size; i++) {
+                        JSONObject object = array.getJSONObject(i);
+                        @SuppressWarnings("unchecked")
+                        Iterator<String> keys = object.keys();
+                        Camera360FeedbackData itemData = new Camera360FeedbackData();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            if (key.equals("msg")) {
+                                String message = object.getString(key);
+                                itemData.setMessage(message);
+                            } else if (key.equals("name")) {
+                                itemData.setName(object.getString(key));
+                            } else if (key.equals("time")) {
+                                itemData.setTime(object.getLong(key));
+                            }
+                        }
+                        dataLists.add(itemData);
+                    }
+                }
+            }
+            int size = dataLists.size();
+            if (size > 0) {
+                deleteFeedbackTable();
+                ContentValues[] values = new ContentValues[size];
+                for (int i = 0; i < size; i++) {
+                    Camera360FeedbackData itemData = dataLists.get(i);
+                    values[i] = new ContentValues();
+                    values[i].put(Camera360FeedbackDatabaseField.MESSAGE, itemData.getMessage());
+                    values[i].put(Camera360FeedbackDatabaseField.NAME, itemData.getName());
+                    values[i].put(Camera360FeedbackDatabaseField.TIME, itemData.getTime());
+                    values[i].put(Camera360FeedbackDatabaseField.STATUS, itemData.getStatus());
+                }
+                bulkInsertFeedback(values);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 解析上报反馈数据后服务器返回的数据
+     *
+     * @param array
+     */
+    private void parseUploadDataFromServer(JSONArray array) {
+        try {
+            if (array != null) {
+                int size = array.length();
+                if (size > 0) {
+                    for (int i = 0; i < size; i++) {
+                        JSONObject object = array.getJSONObject(i);
+                        @SuppressWarnings("unchecked")
+                        Iterator<String> keys = object.keys();
+                        Camera360FeedbackData itemData = new Camera360FeedbackData();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            if (key.equals("msg")) {
+                                String message = object.getString(key);
+                                itemData.setMessage(message);
+                            } else if (key.equals("name")) {
+                                itemData.setName(object.getString(key));
+                            } else if (key.equals("time")) {
+                                itemData.setTime(object.getLong(key));
+                            }
+                        }
+                        //设置默认反馈消息发送成功
+                        insertFeedbackInfoToDatabase(itemData);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateFeedbackUI() {
+        List<CMessage> lists = CMessageManager.getInstance().getCMessageList();
+        if (mFeedbackAdapter == null) {
+            mFeedbackAdapter = new Camera360FeedbackAdapter(this, lists);
+            mFeedbackAdapter.setFeedbackDatas(lists);
+            mFeedbackList.setAdapter(mFeedbackAdapter);
+        } else {
+            mFeedbackAdapter.setFeedbackDatas(lists);
+        }
+        mFeedbackList.setSelection(mFeedbackAdapter.getCount());
+        //图片与文字链接点击事件
+        mFeedbackList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                GLogger.v(TAG, "position: " + position);
+                CMessage cMessage = (CMessage) mFeedbackAdapter.getItem(position);
+                String intentUrl = cMessage.messageData.getInteractionUrl();
+//                doIntent(intentUrl);
+            }
+        });
+//        mFeedbackAdapter.setOnItemCClickListener(new Camera360FeedbackAdapter.MessageClickListener() {
+//
+//            @Override
+//            public void OnTextClick(int postion) {
+//                CMessage cMessage = (CMessage) mFeedbackAdapter.getItem(postion);
+//                String intentUrl = cMessage.messageData.getInteractionUrl();
+//                doIntent(intentUrl);
+//                finish();
+//            }
+//        });
+    }
+
+//    /**
+//     * 根据服务端给的跳转链接，进行相应的跳转
+//     * 需要以前消息中的应用内跳转判断
+//     *
+//     * @param intentUrl
+//     */
+//    private void doIntent(String intentUrl) {
+//        GLogger.v(TAG, "intentUrl: " + intentUrl);
+//        InteractionFactory factory = new InteractionFactory(Camera360FeedbackActivity.this);
+//        Interaction interaction = factory.create(intentUrl);
+//        interaction.onClick(intentUrl, StoreActivity.EFFECT_SHOP_USE_TYPE_CAMERA);
+//    }
+
+    public void showProgressDialog() {
+        if (mWaitProgressDialog != null && mWaitProgressDialog.isShowing()) {
+            return;
+        }
+        mWaitProgressDialog = new ProgressDialog(this);
+        mWaitProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mWaitProgressDialog.setCancelable(false);
+        mWaitProgressDialog.setCanceledOnTouchOutside(false);
+        mWaitProgressDialog.show();
+    }
+
+    public void dismissProgressDialog() {
+        if (mWaitProgressDialog != null && mWaitProgressDialog.isShowing()) {
+            mWaitProgressDialog.dismiss();
+        }
+        mWaitProgressDialog = null;
+    }
+
+    private void showUploadErrorMessage() {
+        Toast toast = Toast.makeText(Camera360FeedbackActivity.this, R.string.feedback_upload_fail, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+    }
+
+//    @Override
+//    public void valid(boolean bool) {
+//        if (bool) {
+//            mHander.sendEmptyMessage(MESSAGE_UPDATE_UI);
+//        }
+//    }
+
+    private class ReUploadFeedbackMessage implements Runnable {
+        CMessage feedbackMessage;
+
+        public ReUploadFeedbackMessage(CMessage feedbackMessage) {
+            this.feedbackMessage = feedbackMessage;
+        }
+
+        @Override
+        public void run() {
+            if (feedbackMessage != null) {
+                uploadFeedbackDataToServer(feedbackMessage);
+            }
+        }
+
+    }
+
+    private class UpdateUIBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            queryFeedbackDataFromServer();
+        }
+    }
+}

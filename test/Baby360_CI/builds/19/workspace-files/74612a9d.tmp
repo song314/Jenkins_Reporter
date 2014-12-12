@@ -1,0 +1,106 @@
+package com.pinguo.mix.api;
+
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
+/**
+ * 实体父类
+ * Created by pinguo on 14-4-9.
+ */
+public abstract class BaseBean<T> implements Serializable {
+
+    public void parseJsonToObj(String jsonString) throws JSONException {
+        if (null == jsonString) {
+            return;
+        }
+
+        Type type = ((ParameterizedType) ((Object) this).getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
+        Gson gson = new Gson();
+        T obj = gson.fromJson(jsonString, type);
+
+        if (!isValid(obj)) {
+            throw new JSONException("Failed to parse json: Lost attributes.");
+        }
+
+        try {
+            copy(obj, this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public JSONObject formJsonFromObj(T obj) throws JSONException {
+        if (null == obj) {
+            return null;
+        }
+        if (!isValid(obj)) {
+            throw new JSONException("Failed to form json: Lost attributes.");
+        }
+
+        Type type = ((ParameterizedType) ((Object) this).getClass().getGenericSuperclass())
+                .getActualTypeArguments()[0];
+
+        Gson gson = new Gson();
+        String json = gson.toJson(obj, type);
+        return new JSONObject(json);
+    }
+
+    /**
+     * 验证解析对象是否非法：例如重要字段不存在
+     *
+     * @return
+     */
+    protected abstract boolean isValid(T obj);
+
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (null == o) return false;
+        if (this == o) return true;
+        if (o.getClass() != ((Object) this).getClass()) return false;
+        final BaseBean other = (BaseBean) o;
+        return (((Object) this).hashCode() == ((Object) other).hashCode());
+    }
+
+    private void copy(Object obj1, Object obj2) throws Exception {
+        Method[] method1 = obj1.getClass().getMethods();
+        Method[] method2 = obj2.getClass().getMethods();
+        String methodName1;
+        String methodFix1;
+        String methodName2;
+        String methodFix2;
+
+        for (Method aMethod1 : method1) {
+            methodName1 = aMethod1.getName();
+            methodFix1 = methodName1.substring(3, methodName1.length());
+            if (methodName1.startsWith("get")) {
+                for (Method aMethod2 : method2) {
+                    methodName2 = aMethod2.getName();
+                    methodFix2 = methodName2.substring(3, methodName2.length());
+                    if (methodName2.startsWith("set")) {
+                        if (methodFix2.equals(methodFix1)) {
+                            Object[] objs1 = new Object[0];
+                            Object[] objs2 = new Object[1];
+                            objs2[0] = aMethod1.invoke(obj1, objs1);
+                            aMethod2.invoke(obj2, objs2);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+}

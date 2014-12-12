@@ -1,0 +1,86 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.pinguo.edit.sdk.camera.setting;
+
+import com.pinguo.edit.sdk.camera.entity.IntArray;
+
+import java.util.List;
+
+/**
+ * A {@code ListPreference} where each entry has a corresponding icon.
+ */
+public class IconListPreference extends ListPreference {
+    private int mIconIds[];
+    private boolean mUseSingleIcon;
+    protected String mKey;
+
+    /**
+     * 构造不对外提供
+     *
+     * @param key
+     * @param titleId
+     */
+    public IconListPreference(String key, String titleId) {
+        super(key, titleId);
+        mKey = key;
+    }
+
+    public int[] getIconIds() {
+        return mIconIds;
+    }
+
+    public boolean getUseSingleIcon() {
+        return mUseSingleIcon;
+    }
+
+    public void setIconIds(int[] iconIds) {
+        mIconIds = iconIds;
+    }
+
+    public void setUseSingleIcon(boolean useSingle) {
+        mUseSingleIcon = useSingle;
+    }
+
+    @Override
+    public void filterUnsupported(List<String> supported) {
+        CharSequence entryValues[] = getEntryValues();
+        IntArray iconIds = new IntArray();
+        for (int i = 0, len = entryValues.length;
+             i < len;
+             i++) {
+            if (supported.indexOf(entryValues[i].toString()) >= 0) {
+                if (mIconIds != null) {
+                    iconIds.add(mIconIds[i]);
+                }
+            }
+        }
+
+        if (mIconIds != null) {
+            mIconIds = iconIds.toArray(new int[iconIds.size()]);
+        }
+        super.filterUnsupported(supported);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        IconListPreference obj = (IconListPreference) super.clone();
+        if (mIconIds != null) {
+            obj.mIconIds = mIconIds;
+        }
+        return obj;
+    }
+}

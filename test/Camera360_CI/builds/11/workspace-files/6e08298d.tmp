@@ -1,0 +1,30 @@
+package com.pinguo.edit.sdk.filter.square;
+
+/**
+ * Created by zhongzheng on 14-10-28.
+ */
+public class FilterSquareConst {
+    public static final int NUM_ITEMS = 2;
+
+    public static CharSequence[] ITEMS_TITLE = {"热门", "精选"};
+
+    public static final String[] IMAGES = new String[]{
+            // Heavy images
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+            "http://img1.cache.netease.com/catchpic/A/A9/A9D98040B397C366AE93E67871346561.jpg",
+            "http://img1.cache.netease.com/catchpic/A/A9/A9D98040B397C366AE93E67871346561.jpg",
+            "http://img1.cache.netease.com/catchpic/A/A9/A9D98040B397C366AE93E67871346561.jpg",
+            "http://img1.cache.netease.com/catchpic/A/A9/A9D98040B397C366AE93E67871346561.jpg",
+            "http://pic.viewpics.cn/2011/07/03/naichaMMzhangzetianzuixinzhaopian/18.jpg",
+            "http://pic.viewpics.cn/2011/07/03/naichaMMzhangzetianzuixinzhaopian/18.jpg",
+            "http://pic.viewpics.cn/2011/07/03/naichaMMzhangzetianzuixinzhaopian/18.jpg",
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+            "http://fujian.xabbs.com/forum/201109/02/160646nn9hjjiimixvkxhe.jpg",
+    };
+
+    public static final CharSequence TAB_EMPTY_TITLE = "";
+    public static final CharSequence TAB_EMPTY_CONTENT = "";
+}

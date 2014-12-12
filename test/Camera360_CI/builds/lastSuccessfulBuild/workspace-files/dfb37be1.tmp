@@ -1,0 +1,257 @@
+package us.pinguo.androidsdk;
+
+import android.content.Context;
+import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
+import android.os.Build;
+import android.util.AttributeSet;
+import android.view.SurfaceHolder;
+
+import com.pinguo.Camera360Lib.log.GLogger;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
+import us.pinguo.android.effect.group.sdk.effect.model.EffectFactory;
+
+public class PGGLSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, SDKReloadResourceListener {
+    private static final String TAG = PGGLSurfaceView.class.getSimpleName();
+    private transient int mRendererPointer = 0;
+    private Context context = null;
+    private PGRendererMethod method = null;
+    private transient int state = 0x00;
+    private boolean needReload = false;
+    private static final int STATE_INIT = 0x01;
+    private static final int STATE_RELOAD = 0x02;
+    private static final int STATE_DRAW = 0x03;
+    private static final int STATE_DESTROY = 0x04;
+    private final byte[] sdkLock = new byte[0];
+    private int fps = 0;
+    private int fpsCount = 0;
+    private long startTime = 0l;
+    private boolean needRefreshMethod = false;
+    private PGGLListener listener = null;
+    private int surfaceTextureName = -1;
+
+    public static interface PGGLListener {
+        void glCreated(GL10 gl);
+
+        void glDestroyed();
+    }
+
+    public PGGLSurfaceView(Context context) {
+        super(context);
+        this.context = context;
+        init();
+    }
+
+    public PGGLSurfaceView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        this.context = context;
+        init();
+    }
+
+    private void init() {
+        getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        setEGLContextClientVersion(2);
+        if (Build.VERSION.SDK_INT > 8) {
+            setEGLConfigChooser(8, 8, 8, 8, 0, 0);
+        } else {
+            setEGLConfigChooser(5, 6, 5, 0, 0, 0);
+        }
+        setRenderer(this);
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        method = null;
+        needRefreshMethod = true;
+        GLogger.i(TAG, "surfaceCreated");
+        super.surfaceCreated(holder);
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        GLogger.i(TAG, "surfaceDestroyed");
+        method = null;
+        needRefreshMethod = true;
+        super.surfaceDestroyed(holder);
+    }
+
+    public void renderAction(PGRendererMethod action) {
+        if (action == null || mRendererPointer == 0) {
+            method = null;
+            return;
+        }
+        method = action;
+        if (needRefreshMethod) {
+            GLogger.e(TAG, "resetRenderMethod");
+            method.resetRenderMethod();
+            needRefreshMethod = false;
+        }
+        action.setRendererPointer(mRendererPointer);
+        requestRender();
+    }
+
+    @Override
+    public void onDrawFrame(GL10 gl) {
+        switch (state) {
+            case STATE_INIT:
+                synchronized (sdkLock) {
+                    if (mRendererPointer == 0) {
+                        GLogger.v(TAG, "STATE_INIT");
+                        mRendererPointer = PGNativeMethod.createAndroidSDK(getKey(), context, EffectFactory.getShaderFile(getContext()));
+                        GLogger.i(TAG, "-------------初始化createAndroidSDK：" + mRendererPointer);
+//                        GPUImageSdkFactory.registerSDK(this);
+                        if (needReload) {
+                            state = STATE_RELOAD;
+                            requestRender();
+                        } else {
+                            state = STATE_DRAW;
+                        }
+                        if (this.listener != null) {
+                            this.listener.glCreated(gl);
+                        }
+                    }
+                }
+                break;
+            case STATE_RELOAD:
+                synchronized (sdkLock) {
+                    if (mRendererPointer != 0) {
+                        PGNativeMethod.loadResource(mRendererPointer, EffectFactory.getShaderFile(getContext()));
+                        state = STATE_DRAW;
+                        needReload = false;
+                    }
+                }
+                break;
+            case STATE_DRAW:
+                if (method != null) {
+                    method.rendererAction();
+                    if (fpsCount == 0) {
+                        startTime = System.currentTimeMillis();
+                        fpsCount++;
+                    } else {
+                        long stopTime = System.currentTimeMillis();
+                        if (stopTime - startTime < 1000) {
+                            fpsCount++;
+                        } else {
+                            fps = fpsCount;
+                            GLogger.d(TAG, "fps is:" + fps);
+                            fpsCount = 0;
+                        }
+                    }
+                }
+                break;
+            case STATE_DESTROY:
+                if (mRendererPointer != 0) {
+                    GLogger.i(TAG, "-------------销毁destroyAndroidSDK:" + mRendererPointer);
+//                    GPUImageSdkFactory.unregisterSDK(this);
+                    PGNativeMethod.destroyAndroidSDK(mRendererPointer);
+                    synchronized (sdkLock) {
+                        mRendererPointer = 0;
+                        method = null;
+                        sdkLock.notifyAll();
+                    }
+                }
+                if (this.listener != null) {
+                    this.listener.glDestroyed();
+                }
+                break;
+            default:
+                //nothing to do
+        }
+    }
+
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        int[] textures = new int[1];
+        gl.glGenTextures(1, textures, 0);
+        surfaceTextureName = textures[0];
+        synchronized (sdkLock) {
+            if (mRendererPointer == 0) {
+                mRendererPointer = PGNativeMethod.createAndroidSDK(getKey(), context, EffectFactory.getShaderFile(getContext()));
+                GLogger.i(TAG, "-------------初始化createAndroidSDK：" + mRendererPointer);
+//                GPUImageSdkFactory.registerSDK(this);
+                state = STATE_DRAW;
+                if (this.listener != null) {
+                    this.listener.glCreated(gl);
+                }
+            }
+        }
+    }
+
+    public int getSurfaceTextureName() {
+        return this.surfaceTextureName;
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        if (method != null) {
+            method.setScreenSize(true, width, height);
+        }
+        //nothing to do
+    }
+
+    public int getFps() {
+        return this.fps;
+    }
+
+    /**
+     * 此函数必须在Activity的onPause调用，且必须在spuer.onPause()之前
+     */
+    @Override
+    public void onPause() {
+        GLogger.e(TAG, "onPause");
+        synchronized (sdkLock) {
+            if (mRendererPointer != 0) {
+                synchronized (sdkLock) {
+                    state = STATE_DESTROY;
+                    requestRender();
+                    try {
+                        sdkLock.wait();
+                    } catch (InterruptedException e) {
+                        //nothing to do;
+                    }
+                }
+            }
+        }
+        GLogger.e(TAG, "onPause release sdkLock");
+        super.onPause();
+        needRefreshMethod = true;
+    }
+
+    @Override
+    public void onResume() {
+        needRefreshMethod = true;
+        super.onResume();
+        synchronized (sdkLock) {
+            GLogger.e(TAG, "onResume");
+            if (mRendererPointer == 0) {
+                state = STATE_INIT;
+                requestRender();
+            }
+        }
+    }
+
+    @Override
+    public void reloadResources() {
+        needReload = true;
+        requestRender();
+    }
+
+    private String getKey() {
+        return getContext().getString(getContext().getResources().getIdentifier("composite_sdk_key", "string", getContext().getPackageName()));
+    }
+
+    /**
+     * 设置PGGL的监听事件，如果设置该监听，请在退出不使用时，请将该监听置为null
+     *
+     * @param listener
+     */
+    public void setListener(PGGLListener listener) {
+        this.listener = listener;
+    }
+
+
+}

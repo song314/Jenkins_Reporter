@@ -1,0 +1,75 @@
+package com.pinguo.mix;
+
+import android.content.Context;
+
+import com.umeng.analytics.MobclickAgent;
+
+/**
+ * Created by taoli on 14-8-22.
+ */
+public class StatisticManager {
+
+    public static final String KEY_ACTION_SAVE_PICTURE_QUICK = "Action_Save_Picture_Quick";
+    public static final String KEY_ACTION_SAVE_PICTURE_QUICK_BUILT_IN = "Action_Save_Picture_Quick_Built_In";
+    public static final String KEY_ACTION_SAVE_PICTURE_QUICK_CUSTOM = "Action_Save_Picture_Quick_Custom";
+    public static final String KEY_ACTION_SAVE_PICTURE_MIX = "Action_Save_Picture_Quick_Mix";
+
+    public static final String KEY_ACTION_SAVE_FILTER = "Action_Save_Filter";
+
+    public static final String KEY_ACTION_START_FROM_OTHER_APP = "Action_Start_From_Other_App";
+    public static final String KEY_ACTION_START_FROM_IMAGE_CAPTURE = "Action_Start_From_Image_Capture";
+    public static final String KEY_ACTION_START_FROM_EDIT = "Action_Start_From_Edit";
+    public static final String KEY_ACTION_START_FROM_SEND = "Action_Start_From_Send";
+    public static final String KEY_ACTION_START_FROM_GET_CONTENT = "Action_Start_From_Get_Content";
+    public static final String KEY_ACTION_START_FROM_CHOOSER = "Action_Start_From_Chooser";
+
+    public static final String KEY_ACTION_CROP_BY_SQUARE = "Action_Crop_By_Square";
+    public static final String KEY_ACTION_CROP_BY_FULL_SIZE = "Action_Crop_By_Full_Size";
+    public static final String KEY_FAILED_FILTER_SHARE_UPLOAD_IMAGE = "Failed_FilterShare_UploadImage";
+    public static final String KEY_ACTION_FILTER_SHARE_UPLOAD_IMAGE = "Action_FilterShare_UploadImage";
+    public static final String KEY_ACTION_UPDATE_FUNCTION = "Action_Update_Function";
+    public static final String KEY_ACTION_HOME_FUNCTION_CAPTURE = "Action_Home_Function_Capture";
+    public static final String KEY_ACTION_HOME_FUNCTION_GALLERY = "Action_Home_Function_Gallery";
+    public static final String KEY_ACTION_HOME_FUNCTION_FILTERSQUARE = "Action_Home_Function_FilterSquare";
+    public static final String KEY_ACTION_HOME_FUNCTION_QUIT = "Action_Home_Function_Quit";
+    public static final String KEY_ACTION_TAKE_PHOTO_CONTINUITY = "Action_Takephoto_Continuity";
+    public static final String KEY_PAGE_FAST_EDIT_NUMBER_CAPTURE = "Page_Fastedit_Number_Capture";
+    public static final String KEY_PAGE_FAST_EDIT_NUMBER_GALLERY = "Page_Fastedit_Number_Gallery";
+    public static final String KEY_ACTION_FAST_EDIT_MIX = "Action_Fastedit_mix";
+    public static final String KEY_ACTION_GIVE_UP_FUNCTION = "Action_Giveup_Function";
+    public static final String KEY_ACTION_SHARE_PHOTO_FUNCTION = "Action_Sharephoto_Function";
+    public static final String KEY_ACTION_SHARE_PHOTO_SITE = "Action_Sharephoto_Site_Wechat";
+    public static final String KEY_ACTION_SHARE_FILTER_FUNCTION = "Action_Sharefilter_Function";
+    public static final String KEY_ACTION_RATE_FUNCTION = "Action_Rate_Function";
+    public static final String KEY_SUCCESS_SHARE_PROCESS_NUMBER = "Success_Shareprocess_Number";
+    public static final String KEY_FAIL_SHARE_PROCESS_NUMBER = "Fail_Shareprocess_Number";
+    public static final String KEY_SUCCESS_SHARE_FILTER_NUMBER = "Success_Sharepfilter_Number";
+    public static final String KEY_FAIL_SHARE_FILTER_NUMBER = "Fail_Sharefilter_Number";
+    public static final String KEY_ERROR_FORCE_CLOSE = "Error_Force_Close";;
+    public static final String KEY_ERROR_SAVE_PHOTO = "Error_Save_Photo";
+
+    //1.2.1
+    public static final String KEY_ACTION_SAVE_PICTURE_QUICK_NONE = "Action_Save_Picture_Quick_None";
+    public static final String KEY_ACTION_CROP_FAIL = "Action_Crop_Fail";
+    public static final String KEY_ACTION_SHAREPROCESS_NUMBER = "Action_Shareprocess_Number";
+    public static final String KEY_ACTION_SHARE_FILTER_NUMBER = "Action_Sharefilter_Number";
+    public static final String KEY_PAGE_FAST_EDIT_NUMBER_OTHER = "Page_Fastedit_Number_other";
+
+    public static final void init(Context context) {
+        MobclickAgent.onResume(context);
+    }
+
+    public static final void destroy(Context context) {
+        MobclickAgent.onPause(context);
+    }
+
+    public static final void onEvent(Context context, String parentKey, String childKey) {
+        MobclickAgent.onEvent(context, parentKey, childKey);
+    }
+
+    public static final void onEvent(Context context, String parentKey) {
+        MobclickAgent.onEvent(context, parentKey);
+    }
+
+}
+

@@ -1,0 +1,63 @@
+package com.pinguo.edit.sdk.filter.square.fragment;
+
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v4.view.ViewPager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.filter.square.BaseTitleFragment;
+import com.pinguo.edit.sdk.filter.square.page.PageAdapter;
+import com.pinguo.edit.sdk.filter.square.tab.TabPageIndicator;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+import us.pinguo.android.effect.group.sdk.data.EffectSaveManager;
+
+/**
+ * Created by zhongzheng on 14-11-6.
+ */
+public class FilterSquareList extends BaseTitleFragment implements View.OnClickListener {
+    private PageAdapter mAdapter;
+    private ViewPager mPager;
+    private TabPageIndicator mTab;
+    private View mRetakeButton;
+
+
+    private EffectSaveManager.SaveCallback mSaveCallback;
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Create our Preview view and set it as the content of our activity.
+        // 第一个参数是这个Fragment将要显示的界面布局,第二个参数是这个Fragment所属的Activity,第三个参数是决定此fragment是否附属于Activity
+        View rootView = inflater.inflate(ResourceHelper.getLayout(
+                getActivity(), "composite_sdk_filter_square_list_layout"), container, false);
+        mRetakeButton = rootView.findViewById(ResourceHelper.getId(getActivity(), "re_take"));
+        mRetakeButton.setOnClickListener(this);
+        mAdapter = new PageAdapter(getActivity().getSupportFragmentManager());
+        mPager = (ViewPager) rootView.findViewById(R.id.pager);
+        mTab = (TabPageIndicator) rootView.findViewById(R.id.filter_info_tabs);
+        mTab.setBackgroundColor(Color.WHITE);
+        mPager.setAdapter(mAdapter);
+        mTab.setViewPager(mPager);
+        return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == mRetakeButton) {
+            getActivity().finish();
+        }
+    }
+}

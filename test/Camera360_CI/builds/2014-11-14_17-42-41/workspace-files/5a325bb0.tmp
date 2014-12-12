@@ -1,0 +1,24 @@
+Copying the source file '/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/res/drawable-mdpi' from the workspace to the build folder '/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/builds/2014-11-14_17-42-41/workspace-files/5a325bb0.tmp' on the Jenkins master failed.
+Is the file '/home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/res/drawable-mdpi' a valid filename?
+If you are building on a slave: please check if the file is accessible under '$JENKINS_HOME/[job-name]//home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/res/drawable-mdpi'
+If you are building on the master: please check if the file is accessible under '$JENKINS_HOME/[job-name]/workspace//home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/res/drawable-mdpi'
+java.io.FileNotFoundException: /home/ci-android/.jenkins/jobs/Android-Common-Effect-SDK-CI/workspace/res/drawable-mdpi (是一个目录)
+	at java.io.FileInputStream.open(Native Method)
+	at java.io.FileInputStream.<init>(FileInputStream.java:146)
+	at hudson.FilePath$37.invoke(FilePath.java:1844)
+	at hudson.FilePath$37.invoke(FilePath.java:1839)
+	at hudson.FilePath.act(FilePath.java:922)
+	at hudson.FilePath.act(FilePath.java:895)
+	at hudson.FilePath.copyTo(FilePath.java:1839)
+	at hudson.plugins.analysis.core.HealthAwareRecorder.copyFilesWithAnnotationsToBuildFolder(HealthAwareRecorder.java:398)
+	at hudson.plugins.analysis.core.HealthAwarePublisher.perform(HealthAwarePublisher.java:165)
+	at hudson.plugins.analysis.core.HealthAwareRecorder.perform(HealthAwareRecorder.java:333)
+	at hudson.tasks.BuildStepMonitor$1.perform(BuildStepMonitor.java:20)
+	at hudson.model.AbstractBuild$AbstractBuildExecution.perform(AbstractBuild.java:772)
+	at hudson.model.AbstractBuild$AbstractBuildExecution.performAllBuildSteps(AbstractBuild.java:736)
+	at hudson.model.Build$BuildExecution.post2(Build.java:183)
+	at hudson.model.AbstractBuild$AbstractBuildExecution.post(AbstractBuild.java:685)
+	at hudson.model.Run.execute(Run.java:1757)
+	at hudson.model.FreeStyleBuild.run(FreeStyleBuild.java:43)
+	at hudson.model.ResourceController.execute(ResourceController.java:88)
+	at hudson.model.Executor.run(Executor.java:234)

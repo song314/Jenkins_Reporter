@@ -1,0 +1,86 @@
+package com.pinguo.edit.sdk.login.user;
+
+import com.google.gson.Gson;
+import com.pinguo.edit.sdk.login.model.BaseResponse;
+import com.pinguo.edit.sdk.login.model.User;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
+
+/**
+ * Created by crab on 2014/6/26.
+ */
+public class UserInfoResponse extends BaseResponse<User.Info> {
+    public UserInfoResponse(String responseData, String loginMode) throws JSONException {
+        UserInfoResponse response = this;
+        //noinspection CaughtExceptionImmediatelyRethrown
+        try {
+            JSONObject serverResponse = new JSONObject(responseData);
+            Iterator<String> keys = serverResponse.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (key.equals("status")) {
+                    response.status = serverResponse.getInt(key);
+                } else if (key.equals("message")) {
+                    response.message = serverResponse.getString(key);
+                } else if (key.equals("data")) {
+                    response.data = new User.Info();
+                    //记录登录登录方式
+                    response.data.loginmode = loginMode;
+                    //noinspection EmptyCatchBlock
+                    try {
+                        JSONObject userData = serverResponse.getJSONObject(key);
+                        Iterator<String> userKeys = userData.keys();
+                        while (userKeys.hasNext()) {
+                            String userKey = userKeys.next();
+                            if (userKey.equals("userId")) {
+                                response.data.userId = userData.getString(userKey);
+                            } else if (userKey.equals("email")) {
+                                response.data.email = userData.getString(userKey);
+                            } else if (userKey.equals("avatar")) {
+                                response.data.avatar = userData.getString(userKey);
+                            } else if (userKey.equals("lastLoginTime")) {
+                                response.data.lastLoginTime = userData.getLong(userKey);
+                            } else if (userKey.equals("nickname")) {
+                                response.data.nickname = userData.getString(userKey);
+                            } else if (userKey.equals("description")) {
+                                response.data.description = userData.getString(userKey);
+                            } else if (userKey.equals("gender")) {
+                                response.data.gender = userData.getString(userKey);
+                            } else if (userKey.equals("birthday")) {
+                                response.data.birthday = userData.getString(userKey);
+                            } else if (userKey.equals("certificated")) {
+                                response.data.certificated = userData.getInt(userKey);
+                            } else if (userKey.equals("regDateTime")) {
+                                response.data.regDateTime = userData.getLong(userKey);
+                            } else if (userKey.equals("language")) {
+                                response.data.language = userData.getString(userKey);
+                            } else if (userKey.equals("token")) {
+                                response.data.token = userData.getString(userKey);
+                            } else if (userKey.equals("third")) {
+                                //需要特殊处理
+                                //noinspection EmptyCatchBlock
+                                try {
+                                    JSONObject thirdSites = userData.getJSONObject(userKey);
+                                    Gson gson = new Gson();
+                                    User.Info.ThirdSites sites = gson.fromJson(thirdSites.toString(), User.Info.ThirdSites.class);
+                                    if (sites != null) {
+                                        response.data.third = sites;
+                                    }
+                                } catch (JSONException e) {
+                                }
+                            } else if (userKey.equals("forgetPass")) {
+                                response.data.forgetPass = userData.getInt(userKey);
+                            }
+                        }
+                    } catch (JSONException e) {
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            throw e;
+        }
+    }
+}

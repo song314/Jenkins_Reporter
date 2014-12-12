@@ -1,0 +1,145 @@
+package com.pinguo.intent;
+
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.MediaStore;
+
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import us.pinguo.android.effect.group.sdk.effect.model.entity.CompositeEffect;
+import us.pinguo.sdk.BeautyController;
+import us.pinguo.sdk.GroupActivity;
+
+/**
+ * Created by taoli on 14-9-1.
+ */
+public class IntentBeautyController extends BeautyController {
+    public IntentBeautyController(Activity activity, Bundle savedInstanceState) {
+        super(activity, savedInstanceState);
+    }
+
+    @Override
+    protected void startMixForNewFilter(Activity activity,
+                                        String photoPath,
+                                        String effectPhotoPath) {
+        Intent intent = new Intent(activity, GroupActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, photoPath);
+        intent.putExtra(ConstantUtil.EFFECT_PHOTO_PATH, effectPhotoPath);
+        intent.putExtra(ConstantUtil.FROM_OTHER_APP, true);
+        activity.startActivityForResult(intent, ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE_INTENT);
+    }
+
+    @Override
+    protected void startMixForEditFilter(Activity activity,
+                                         String photoPath,
+                                         String effectPhotoPath,
+                                         CompositeEffect compositeEffect) {
+        Intent intent = new Intent(activity, GroupActivity.class);
+
+        intent.putExtra(ConstantUtil.COMPOSITE_JSON, compositeEffect.toString());
+        intent.putExtra(ConstantUtil.COMPOSITE_KEY, compositeEffect.key);
+        if (!compositeEffect.key.endsWith("None")
+                && compositeEffect.isDefault != 3) {
+            intent.putExtra(ConstantUtil.COMPOSITE_NAME, compositeEffect.name);
+        } else {
+            intent.putExtra(ConstantUtil.COMPOSITE_NAME, "");
+        }
+
+        intent.putExtra(ConstantUtil.PHOTO_PATH, photoPath);
+        intent.putExtra(ConstantUtil.EFFECT_PHOTO_PATH, effectPhotoPath);
+        intent.putExtra(ConstantUtil.FROM_OTHER_APP, true);
+        activity.startActivityForResult(intent, ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE_INTENT);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (ConstantUtil.BEAUTY_ACTIVITY_REQUEST_CODE_INTENT == requestCode) {
+            if (Activity.RESULT_OK == resultCode) {
+                saveFinish(mActivity, data.getStringExtra("path"));
+            }
+        }
+    }
+
+    @Override
+    public void quit(Activity activity) {
+        if (null != activity) {
+            activity.finish();
+        }
+    }
+
+    @Override
+    protected void saveFinish(Activity activity, String photoPath) {
+        Intent intent = activity.getIntent();
+        Bundle bundle = intent.getExtras();
+
+        if (bundle != null) {
+            Uri output = bundle.getParcelable(MediaStore.EXTRA_OUTPUT);
+            if (null != output) {
+                returnDataByFile(activity, photoPath, output);
+            } else {
+                returnDataByPath(activity, photoPath);
+            }
+        } else {
+            returnDataByPath(activity, photoPath);
+        }
+    }
+
+    private void returnDataByPath(Activity activity, String srcPath) {
+        Uri uri = Uri.fromFile(new File(srcPath));
+        Intent intent = new Intent();
+        intent.putExtra("URI", uri);
+        intent.setAction("com.pinguo.edit.sdk.INTENT_FINISH");
+        activity.sendBroadcast(intent);
+        activity.finish();
+    }
+
+    private void returnDataByFile(Activity activity, String srcPath, Uri destUri) {
+
+        OutputStream out = null;
+        InputStream in = null;
+        ContentResolver contentResolver = mActivity.getContentResolver();
+        try {
+            out = contentResolver.openOutputStream(destUri);
+            in = new FileInputStream(srcPath);
+            FileUtils.copyStream(in, out);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        Intent intent = new Intent();
+        intent.putExtra("URI", destUri);
+        intent.setAction("com.pinguo.edit.sdk.INTENT_FINISH");
+        activity.sendBroadcast(intent);
+        activity.finish();
+    }
+}

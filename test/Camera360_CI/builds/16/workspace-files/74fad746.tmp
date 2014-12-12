@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!-- 顶部  -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/main_top"
+        android:layout_alignParentTop="true"
+        android:background="@color/composite_sdk_effect_group_menu_bg">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/composite_sdk_effect_filter_square"
+            android:textSize="46sp"
+            android:textColor="@color/composite_sdk_fiter_square_title" />
+        <TextView
+            android:id="@+id/title_ds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:layout_centerInParent="true"
+            android:layout_below="@id/title"
+            android:text="filter square"
+            android:textSize="18sp"
+            android:textColor="@color/composite_sdk_fiter_square_title" />
+
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/composite_sdk_share_home_btn"
+            android:background="#00000000"
+            android:id="@+id/re_take" />
+    </RelativeLayout>
+
+    <com.pinguo.edit.sdk.filter.square.tab.TabPageIndicator
+        android:id="@+id/filter_info_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"></android.support.v4.view.ViewPager>
+</LinearLayout>

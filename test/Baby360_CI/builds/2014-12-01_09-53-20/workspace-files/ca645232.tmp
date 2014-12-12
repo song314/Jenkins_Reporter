@@ -1,0 +1,222 @@
+/*
+ *                                                                                        
+ * Copyright (c)2010-2012  Pinguo Company
+ *                 品果科技                            版权所有 2010-2012
+ * 
+ * PROPRIETARY RIGHTS of Pinguo Company are involved in the
+ * subject matter of this material.  All manufacturing, reproduction, use,
+ * and sales rights pertaining to this subject matter are governed by the
+ * license agreement.  The recipient of this software implicitly accepts   
+ * the terms of the license.
+ * 本软件文档资料是品果公司的资产,任何人士阅读和使用本资料必须获得
+ * 相应的书面授权,承担保密责任和接受相应的法律约束.
+ * 
+ * FileName:SoundManager.java
+ * Author:litao
+ * Date:2012-11-5 下午4:54:10 
+ * 
+ */
+package com.pinguo.edit.sdk.camera.model;
+
+import android.content.Context;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+import com.pinguo.edit.sdk.camera.util.GAdapter;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+
+/**
+ * @author litao
+ * @Title SoundManager.java
+ * @Package vStudio.Android.Camera360.logics.camera
+ * @Description 管理声音相关操作，非线程安全，必须在主线程中使用
+ * @Date 2012-11-5 下午4:54:10
+ */
+public final class SoundManager {
+
+    private static final String TAG = SoundManager.class.getName();
+    private static SoundManager sSoundManager;
+    private AudioManager mAudioManager;
+    private int curRingerMode;
+    private int prevRingerMode;
+    private int sysRingerMode;
+    private SoundPool mSoundPlayer;
+    private int focusSoundIndex;
+
+    /**
+     * @Description 振动模式.
+     */
+    public static final int RINGER_MODE_VIBERATE = 1;
+    /**
+     * @Description 静音模式.
+     */
+    public static final int RINGER_MODE_SILENT = 0;
+    /**
+     * @Description 普通模式.
+     */
+    public static final int RINGER_MODE_NORMAL = 2;
+
+    private static final int SOUND_QUALITY = 100;
+
+    private SoundManager(Context context) {
+        mAudioManager = (AudioManager) context.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        curRingerMode = getInnerRingerMode(mAudioManager.getRingerMode());
+        prevRingerMode = curRingerMode;
+        sysRingerMode = curRingerMode;
+
+        mSoundPlayer = new SoundPool(1, AudioManager.STREAM_MUSIC, SOUND_QUALITY);
+        focusSoundIndex = mSoundPlayer.load(context,
+                ResourceHelper.getRaw(context, "composite_sdk_focusbeep"), 0);
+    }
+
+    public synchronized static SoundManager getSoundManager(Context context) {
+        if (null == sSoundManager) {
+            sSoundManager = new SoundManager(context);
+        }
+
+        // Fixme: 参考EffectShopModel的单体生命周期管理方式
+        if (sSoundManager.mSoundPlayer == null) {
+            sSoundManager.mSoundPlayer = new SoundPool(1, AudioManager.STREAM_MUSIC, SOUND_QUALITY);
+        }
+
+        return sSoundManager;
+    }
+
+    public void release() {
+        if (null != mSoundPlayer) {
+            mSoundPlayer.release();
+            mSoundPlayer = null;
+        }
+
+        synchronized (this) {
+            sSoundManager = null;
+        }
+    }
+
+    public void volumeAdjustment(boolean isAdd) {
+        if (isAdd) {
+            mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+        } else {
+            mAudioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+        }
+    }
+
+    /**
+     * @param mode 要设置的声音模式
+     * @Description 设置当前声音模式, RINGER_MODE_VIBERATE:震动,
+     * RINGER_MODE_SILENT静音, RINGER_MODE_NORMAL普通.
+     * @author litao
+     */
+    public void setRingerMode(int mode) {
+        // 保存之前的模式
+        prevRingerMode = curRingerMode;
+
+        int sysMode = getSysRingerMode(mode);
+        CMLogger.i(TAG, "setRingerMode sysMode = " + sysMode);
+        if (GAdapter.IS_MI_SERIES) {
+            if (sysMode != RINGER_MODE_SILENT) {
+                mAudioManager.setRingerMode(sysMode);
+            }
+        } else {
+            mAudioManager.setRingerMode(sysMode);
+        }
+
+        // 设置当前模式
+        curRingerMode = mode;
+    }
+
+    /**
+     * @Description 保存当前系统声音设置.
+     * @author litao
+     */
+    public void saveSysRingerMode() {
+        sysRingerMode = mAudioManager.getRingerMode();
+        CMLogger.i(TAG, "saveSysRingerMode sysRingerMode = " + sysRingerMode);
+    }
+
+    public int getRingerMode() {
+        return curRingerMode;
+    }
+
+    public int getPrevRingerMode() {
+        return prevRingerMode;
+    }
+
+    public int getSysRingerMode() {
+        return sysRingerMode;
+    }
+
+    /**
+     * @Description 重置声音模式为上一次选择的模式.
+     * @author litao
+     */
+    public void restoreRingerMode() {
+        int mode = prevRingerMode;
+        setRingerMode(mode);
+    }
+
+    /**
+     * @Description 重置声音模式为系统模式.
+     * @author litao
+     */
+    public void restoreSysRingerMode() {
+        CMLogger.i(TAG, "restoreSysRingerMode sysRingerMode = " + sysRingerMode);
+        int mode = sysRingerMode;
+        setRingerMode(mode);
+    }
+
+    /**
+     * @param
+     * @Description 播放聚焦声音.
+     * @author litao
+     */
+    public void playFocusSound() {
+        if (GAdapter.IS_MI_SERIES) {
+            if (curRingerMode == RINGER_MODE_NORMAL) {
+                mSoundPlayer.play(focusSoundIndex, 1, 1, 0, 0, 1);
+            }
+        } else {
+            mSoundPlayer.play(focusSoundIndex, 1, 1, 0, 0, 1);
+        }
+    }
+
+    private int getSysRingerMode(int mode) {
+
+        int sysMode = mAudioManager.getRingerMode();
+        switch (mode) {
+            case RINGER_MODE_NORMAL:
+                sysMode = AudioManager.RINGER_MODE_NORMAL;
+                break;
+            case RINGER_MODE_VIBERATE:
+                sysMode = AudioManager.RINGER_MODE_VIBRATE;
+                break;
+            case RINGER_MODE_SILENT:
+                sysMode = AudioManager.RINGER_MODE_SILENT;
+                break;
+            default:
+                break;
+        }
+
+        return sysMode;
+    }
+
+    private int getInnerRingerMode(int sysMode) {
+
+        int mode = curRingerMode;
+        switch (sysMode) {
+            case AudioManager.RINGER_MODE_NORMAL:
+                mode = RINGER_MODE_NORMAL;
+                break;
+            case AudioManager.RINGER_MODE_VIBRATE:
+                mode = RINGER_MODE_VIBERATE;
+                break;
+            case AudioManager.RINGER_MODE_SILENT:
+                mode = RINGER_MODE_SILENT;
+                break;
+            default:
+                break;
+        }
+
+        return mode;
+    }
+}

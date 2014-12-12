@@ -1,0 +1,80 @@
+<com.pinguo.ui.widget.ValueSeekLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/seekbar_layout_height"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:weightSum="4"
+        android:background="@color/seek_bar_layout_bg">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/adjust_layout"
+            android:orientation="vertical"
+            android:layout_weight="3"
+            android:visibility="gone"
+            android:gravity="center">
+
+        <com.pinguo.ui.widget.SeekBar
+                android:id="@+id/seek_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="@dimen/seekbar_margin_left"
+                android:layout_marginRight="@dimen/seekbar_margin_right"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/operation_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/seek_bar_button_bg">
+
+        <View
+           android:layout_width="2dp"
+           android:layout_height="44dp"
+           android:background="@color/seek_bar_layout_bg"
+           android:layout_centerInParent="true"
+           android:id="@+id/center_line"/>
+
+        <!-- x图标 -->
+        <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:orientation="vertical"
+           android:background="#0b0b0b"
+           android:gravity="center"
+           android:id="@+id/cancel_btn"
+           android:layout_toLeftOf="@+id/center_line">
+
+           <ImageView
+               android:layout_width="34dp"
+               android:layout_height="34dp"
+               android:src="@drawable/seek_bar_cancel"/>
+
+        </LinearLayout>
+
+        <!-- 勾图标 -->
+        <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:orientation="vertical"
+           android:background="#0b0b0b"
+           android:gravity="center"
+           android:id="@+id/confirm_btn"
+           android:layout_toRightOf="@+id/center_line">
+
+           <ImageView
+               android:layout_width="34dp"
+               android:layout_height="34dp"
+               android:src="@drawable/seek_bar_confirm"/>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+</com.pinguo.ui.widget.ValueSeekLayout>

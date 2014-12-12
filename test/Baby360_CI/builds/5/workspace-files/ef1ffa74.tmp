@@ -1,0 +1,301 @@
+package com.pinguo.edit.sdk.edit;
+
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.RectF;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.pinguo.Camera360Lib.utils.FileUtils;
+import com.pinguo.edit.sdk.R;
+import com.pinguo.edit.sdk.camera.entity.PictureInfo;
+import com.pinguo.edit.sdk.camera.entity.SizeInfo;
+import com.pinguo.edit.sdk.camera.setting.CameraBusinessSettingModel;
+import com.pinguo.edit.sdk.camera.util.Exif;
+import com.pinguo.edit.sdk.utils.ConstantUtil;
+import com.pinguo.edit.sdk.utils.ResourceHelper;
+import com.pinguo.edit.sdk.widget.CompositeSDKDialog;
+import com.pinguo.mix.StatisticManager;
+
+import java.io.File;
+import java.io.IOException;
+
+import us.pinguo.android.effect.group.sdk.androidsdk.SDKManager;
+import us.pinguo.android.effect.group.sdk.androidsdk.model.CropRendererMethodForPictureInfo;
+import us.pinguo.sdk.BeautyActivity;
+
+/**
+ * Created by taoli on 14-6-26.
+ */
+public class PhotoCropActivity extends FragmentActivity implements CropImageView.LoadingListener {
+
+    private CropImageView mCropView;
+    private String mPhotoPath;
+    private SDKManager mSdkManager;
+    private View mProgressView;
+    private ImageButton mCropModeBtn;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(ResourceHelper.getIdByName(this, "layout", "composite_sdk_photo_crop_layout"));
+
+        mProgressView = findViewById(
+                ResourceHelper.getIdByName(this, "id", "progress_layout"));
+
+        mCropView = (CropImageView) findViewById(
+                ResourceHelper.getIdByName(this, "id", "crop_img"));
+        mCropView.setLoadingListener(this);
+
+        mCropModeBtn = (ImageButton) findViewById(
+                ResourceHelper.getIdByName(this, "id", "crop_mode_btn"));
+
+        mPhotoPath = getPhotoPath();
+        if (null != mPhotoPath) {
+            mCropView.setImagePath(mPhotoPath);
+        }
+
+        SizeInfo sizeInfo = mCropView.getCropPictureSize();
+        int mode = mCropView.getCropMode();
+        if (ImageViewTouch.IMAGE_MODE_FIT_LONG_SIDE == mode) {
+            if (sizeInfo.getWidth() > sizeInfo.getHeight()) {
+                mCropModeBtn.setImageResource(
+                        R.drawable.composite_sdk_crop_mode_horizontal_btn);
+            } else {
+                mCropModeBtn.setImageResource(
+                        R.drawable.composite_sdk_crop_mode_vertical_btn);
+            }
+        } else {
+            mCropModeBtn.setImageResource(
+                    R.drawable.composite_sdk_crop_mode_square_btn);
+        }
+
+        mSdkManager = new SDKManager(getApplicationContext());
+    }
+
+    protected String getPhotoPath() {
+        Intent intent = getIntent();
+        return intent.getStringExtra(ConstantUtil.PHOTO_PATH);
+    }
+
+    protected void startEdit(String filePath) {
+
+        StatisticManager.onEvent(this,
+                StatisticManager.KEY_PAGE_FAST_EDIT_NUMBER_GALLERY);
+
+        Intent intent = new Intent(PhotoCropActivity.this, BeautyActivity.class);
+        intent.putExtra(ConstantUtil.PHOTO_PATH, filePath);
+        intent.putExtra(ConstantUtil.PHOTO_TAKEN_TIME, System.currentTimeMillis());
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSdkManager.onResume();
+        StatisticManager.init(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSdkManager.onPause();
+        StatisticManager.destroy(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (null != mCropView) {
+            mCropView.setLoadingListener(null);
+        }
+
+        super.onDestroy();
+    }
+
+    public void confirmCrop(View v) {
+
+        if (!mCropView.isCropSupport()) {
+            Toast.makeText(this, R.string.composite_sdk_crop_not_supported, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (null != mProgressView) {
+            mProgressView.setVisibility(View.VISIBLE);
+        }
+
+        doCrop(mCropView.getCropMode());
+    }
+
+    public void changeCropMode(View v) {
+
+        SizeInfo sizeInfo = mCropView.getCropPictureSize();
+        mCropView.changeCropMode();
+        int mode = mCropView.getCropMode();
+        if (ImageViewTouch.IMAGE_MODE_FIT_LONG_SIDE == mode) {
+            if (sizeInfo.getWidth() > sizeInfo.getHeight()) {
+                mCropModeBtn.setImageResource(
+                        R.drawable.composite_sdk_crop_mode_horizontal_btn);
+            } else {
+                mCropModeBtn.setImageResource(
+                        R.drawable.composite_sdk_crop_mode_vertical_btn);
+            }
+        } else {
+            mCropModeBtn.setImageResource(
+                R.drawable.composite_sdk_crop_mode_square_btn);
+        }
+    }
+
+    protected void doCrop(int mode) {
+        if (mode == ImageViewTouch.IMAGE_MODE_FIT_LONG_SIDE) {
+
+            StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_CROP_BY_SQUARE);
+
+            // make pictureinfo
+            PictureInfo pictureInfo = new PictureInfo();
+            pictureInfo.setFileSavePath(CameraBusinessSettingModel.instance().getPictureSavePath());
+            // 产出的照片比例
+            pictureInfo.setPicScale(1f);
+
+            PackageManager packageManager = getApplicationContext().getPackageManager();
+            String packageName = getApplicationContext().getPackageName();
+            try {
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(
+                        packageName, PackageManager.GET_META_DATA);
+                Bundle metaData = applicationInfo.metaData;
+                Object photoSizeObject = metaData.get("composite_sdk_photo_size");
+                int photoSize = Integer.parseInt(photoSizeObject.toString());
+                pictureInfo.setCropSize(photoSize);
+
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            // 获得提前为照片设置的分辨率
+            pictureInfo.setPicSize(mCropView.getCropPictureSize());
+            pictureInfo.setTakenTime(System.currentTimeMillis());
+
+            // 计算裁剪的rect
+            RectF cutScaleRect = mCropView.getImageRectF();
+            pictureInfo.setCutRect(cutScaleRect);
+            pictureInfo.setOrgFilePath(mPhotoPath);
+
+            String path = getFilesDir().getAbsolutePath()
+                    + File.separator + ConstantUtil.COMPOSITE_PHOTO_NAME;
+            if (!mPhotoPath.endsWith(".png")) {
+                pictureInfo.setRotateOrientation(Exif.getPhotoOrientation(mPhotoPath));
+            } else {
+                pictureInfo.setRotateOrientation(0);
+            }
+
+            pictureInfo.setFileSavePath(path);
+
+            // 裁图等待
+            CropRendererMethodForPictureInfo cropRendererMethod = new CropRendererMethodForPictureInfo(getApplicationContext());
+            cropRendererMethod.setInputPictureInfo(pictureInfo, mPhotoPath,
+                    new CropRendererMethodForPictureInfo.RendererActionListener() {
+                        @Override
+                        public void success(final String path, PictureInfo pictureInfo) {
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (null != mProgressView) {
+                                        mProgressView.setVisibility(View.GONE);
+                                    }
+
+                                    startEdit(path);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void fail() {
+                            runOnUiThread(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    if (null != mProgressView) {
+                                        mProgressView.setVisibility(View.GONE);
+                                    }
+                                    Toast.makeText(PhotoCropActivity.this, R.string.composite_sdk_crop_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+            mSdkManager.makePhoto(cropRendererMethod);
+        } else {
+
+            StatisticManager.onEvent(this, StatisticManager.KEY_ACTION_CROP_BY_FULL_SIZE);
+
+            new AsyncTask<Void, Void, String>() {
+
+                @Override
+                protected void onPostExecute(String path) {
+                    if (null != path) {
+                        startEdit(path);
+                    }
+
+                    if (null != mProgressView) {
+                        mProgressView.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                protected String doInBackground(Void... params) {
+
+                    String path = getFilesDir().getAbsolutePath()
+                            + File.separator + ConstantUtil.COMPOSITE_PHOTO_NAME;
+
+                    try {
+                        FileUtils.copySingleFile(mPhotoPath, path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                    return path;
+                }
+            }.execute();
+        }
+    }
+
+    public void cancelCrop(View v) {
+        finish();
+    }
+
+    @Override
+    public void onLoadingStart() {
+        if (null != mProgressView) {
+            mProgressView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onLoadingFinish(boolean success) {
+        if (null != mProgressView) {
+            mProgressView.setVisibility(View.GONE);
+        }
+
+        if (!success) {
+            final CompositeSDKDialog dialog = new CompositeSDKDialog(this);
+            dialog.setCancelable(false);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.setMessage(R.string.composite_sdk_crop_load_failed);
+            dialog.setNegativeBtn(0, R.string.composite_sdk_ok,
+                    new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    dialog.dismiss();
+                    finish();
+                }
+            });
+            dialog.show();
+        }
+    }
+}

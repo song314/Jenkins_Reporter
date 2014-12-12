@@ -1,0 +1,54 @@
+package com.pinguo.edit.sdk.login.user;
+
+import android.content.Context;
+import android.util.Log;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.pinguo.Camera360Lib.network.HttpStringRequest;
+import com.pinguo.edit.sdk.login.lib.network.ApiAsyncTaskBase;
+import com.pinguo.edit.sdk.login.lib.os.AsyncResult;
+import com.pinguo.edit.sdk.login.model.LoginConfig;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by crab on 14-10-27.
+ */
+public class ApiDeletePhoneUser extends ApiAsyncTaskBase {
+    private String mPhoneNumber;
+
+    public ApiDeletePhoneUser(Context context, String phoneNumber) {
+        super(context);
+        mPhoneNumber = phoneNumber;
+    }
+
+    @Override
+    public void get(AsyncResult result) {
+        String url = LoginConfig.HOST + LoginConfig.PHONE_DELETE_URL;
+        execute(new HttpStringRequest(Request.Method.POST, url) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                LoginConfig.prepareCommonParams(mContext, params);
+                //性别参数
+                params.put("mobile", mPhoneNumber);
+                //获取签名
+                String sig = com.pinguo.Camera360Lib.utils.NetworkUtils.getSigByParamMap(params);
+                params.put("sig", sig);
+                return params;
+            }
+
+            @Override
+            protected void onResponse(String s) {
+                Log.i("test", "删除用户信息:" + s);
+            }
+
+            @Override
+            protected void onErrorResponse(Exception e) {
+                Log.i("test", "删除用户信息:" + e.toString());
+            }
+        });
+    }
+}

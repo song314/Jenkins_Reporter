@@ -1,0 +1,117 @@
+package com.pinguo.edit.sdk.camera.setting;
+
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.hardware.Camera;
+import android.view.Surface;
+import com.pinguo.edit.sdk.camera.model.CameraManager;
+import com.pinguo.edit.sdk.camera.util.ApiHelper;
+import com.pinguo.edit.sdk.camera.util.CMLogger;
+
+/**
+ * Created by geniuslt on 13-7-4.
+ */
+public final class CameraUtils {
+    private static final String TAG = CameraUtils.class.getSimpleName();
+    public static final int ORIENTATION_UNKNOWN = -1;
+
+    /**
+     * 私有构造
+     */
+    private CameraUtils() {
+
+    }
+
+    /**
+     * 取得相机的数量
+     *
+     * @return 相机的数量
+     */
+    @TargetApi(ApiHelper.VERSION_CODES.GINGERBREAD)
+    public static int getCameraNumber() {
+        if (ApiHelper.AFTER_GINGERBREAD) {
+            return Camera.getNumberOfCameras();
+        }
+        return 1;
+    }
+
+    /**
+     * 取得相机方向
+     *
+     * @param cameraId 相机ID
+     * @return 取得相机方向
+     */
+    @TargetApi(ApiHelper.VERSION_CODES.GINGERBREAD)
+    public static int getCameraOrientation(int cameraId) {
+        if (ApiHelper.AFTER_GINGERBREAD) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, info);
+            return info.orientation;
+        } else {
+            return 90;
+        }
+    }
+
+    /**
+     * 取得显示的方向
+     *
+     * @param degrees  角度
+     * @param cameraId 相机ID
+     * @return 角度
+     */
+    @TargetApi(ApiHelper.VERSION_CODES.GINGERBREAD)
+    public static int getDisplayOrientation(int degrees, int cameraId) {
+        // See android.hardware.Camera.setDisplayOrientation for
+        // documentation.
+        if (ApiHelper.AFTER_GINGERBREAD) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, info);
+            int result;
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                result = (info.orientation + degrees) % 360;
+                result = (360 - result) % 360;  // compensate the mirror
+            } else {  // back-facing
+                result = (info.orientation - degrees + 360) % 360;
+            }
+            return result;
+        }
+        return 90;
+    }
+
+    /**
+     * 取得UI的方向
+     *
+     * @param activity
+     * @return
+     */
+    public static int getDisplayRotation(Activity activity) {
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation();
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                return 0;
+            case Surface.ROTATION_90:
+                return 90;
+            case Surface.ROTATION_180:
+                return 180;
+            case Surface.ROTATION_270:
+                return 270;
+        }
+        return 0;
+    }
+
+    public static int getJpegRotation(int uiOrientation, int cameraId) {
+        // See android.hardware.Camera.Parameters.setRotation for
+        // documentation.
+        if (uiOrientation != ORIENTATION_UNKNOWN) {
+            Camera.CameraInfo info = CameraManager.instance().getCameraInfo()[cameraId];
+            CMLogger.i(TAG, "cameraId:" + cameraId + ",CameraInfo.rotation:" + info.orientation + ",uiOrientation:" + uiOrientation);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                return (info.orientation - uiOrientation + 360) % 360;
+            } else { // back-facing camera
+                return (info.orientation + uiOrientation) % 360;
+            }
+        }
+        return 0;
+    }
+}
