@@ -5,6 +5,8 @@ package com.camera360.auto.ci.analyser;
  */
 public abstract class TsAbsAnalyse {
 
+    protected String mKey = null;
+    protected CiResult.CheckType mType;
     protected String mResultPath;
 
     public void setResultPath(String path) {

@@ -9,9 +9,8 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -39,12 +38,13 @@ public class JenkinsAnalyser {
     public static final String DATA_FORMAT_JENKINS_BUILD = "yyyy-MM-dd_HH-mm-ss";
 
     public enum TaskType {
-        ALL,THIS_WEEK
+        ALL, THIS_WEEK
     }
 
     private TaskType mTaskType = TaskType.ALL;
 
     private String mHomePath;
+    private LinkedList<JenkinsResult> mJenkinsResult;
 
     public void setHomePath(String path) {
         System.out.println("set home path : " + path);
@@ -55,32 +55,33 @@ public class JenkinsAnalyser {
         mTaskType = type;
     }
 
-    public LinkedList<JenkinsResult> analyse() {
+    /**
+     * 根据任务类型继续初始化
+     */
+    public void init() {
         final File fJobs = new File(mHomePath);
 
         File[] ciJobs = fJobs.listFiles(new CiJob());
-
-        if (ciJobs == null || ciJobs.length == 0) {
-
-        }
-
-        LinkedList<JenkinsResult> resultList = new LinkedList<JenkinsResult>();
+        mJenkinsResult = new LinkedList<JenkinsResult>();
 
         for (File job : ciJobs) {
             L.i("to analyse job " + job.getName());
             JenkinsResult jenkinsResult = new JenkinsResult();
-            jenkinsResult.result = analyseJob(job);
+            jenkinsResult.result = initJobAnalysers(job);
             jenkinsResult.projectName = job.getName();
-            resultList.add(jenkinsResult);
+            mJenkinsResult.add(jenkinsResult);
         }
-        L.i("------------ analyse completed ");
-
-        return resultList;
     }
 
-    public LinkedList<CiResultSet> analyseJob(File dirJob) {
+    public LinkedList<JenkinsResult> analyse() {
+        for (JenkinsResult jr : mJenkinsResult) {
+            jr.analyse();
+        }
+        return mJenkinsResult;
+    }
+
+    public LinkedList<CiResultSet> initJobAnalysers(File dirJob) {
         final File dirBuild = new File(dirJob.getAbsolutePath() + File.separator + "builds");
-        //TODO
 
         FilenameFilter filter;
 
@@ -95,20 +96,20 @@ public class JenkinsAnalyser {
 
         //过滤build，每天只扫描最后一次成功构建的结果
 
-
         LinkedList<CiResultSet> list = new LinkedList<CiResultSet>();
-
         for (File b : builds) {
             if (b.isDirectory()) {
                 L.i("    to analyse build " + b.getName());
-                CiResultSet aBuildResult = analyseBuild(b);
-                list.add(aBuildResult);
+                CiResultSet ciResultSet = new CiResultSet();
+                ciResultSet.analyseList = initBuildAnalysers(b);
+                list.add(ciResultSet);
             }
         }
         return list;
     }
 
-    public CiResultSet analyseBuild(File buildDir) {
+    private List<TsAbsAnalyse> initBuildAnalysers(File buildDir) {
+        LinkedList<TsAbsAnalyse> list = new LinkedList<TsAbsAnalyse>();
 
         CiResultSet resultSet = new CiResultSet();
         resultSet.date = TimeUtils.getData(buildDir.getName(), DATA_FORMAT_JENKINS_BUILD, TimeZone.getDefault());
@@ -118,36 +119,41 @@ public class JenkinsAnalyser {
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "log");
         la.setCheckType(CiResult.CheckType.Log);
         la.setKeyWord("Finished: SUCCESS");
-        resultSet.success = la.analyse().count > 0;
+//        resultSet.success = la.analyse().count > 0;
+        list.add(la);
 
+        la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "changelog.xml");
         la.setCheckType(CiResult.CheckType.Commits);
         la.setKeyWord("commit ");
         resultSet.resultList.add(la.analyse());
 
+        la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "checkstyle-warnings.xml");
         la.setCheckType(CiResult.CheckType.CheckStyle);
         la.setKeyWord("</warning>");
-        resultSet.resultList.add(la.analyse());
+        list.add(la);
 
+        la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "android-lint-issues.xml");
         la.setCheckType(CiResult.CheckType.Lint);
         la.setKeyWord("</issue>");
-        resultSet.resultList.add(la.analyse());
+        list.add(la);
 
+        la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "/pmd-warnings.xml");
         la.setCheckType(CiResult.CheckType.PMD);
         la.setKeyWord("</bug>");
-        resultSet.resultList.add(la.analyse());
+        list.add(la);
 
+        la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "/pmd-warnings.xml");
         la.setCheckType(CiResult.CheckType.CPD);
         la.setKeyWord("<dry plugin");
-        resultSet.resultList.add(la.analyse());
+        list.add(la);
 
-        return resultSet;
+        return list;
     }
-
 
     private static class CiJob implements FileFilter {
 

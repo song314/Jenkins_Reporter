@@ -10,9 +10,6 @@ import java.io.IOException;
  */
 public class LazyAnalyser extends TsAbsAnalyse {
 
-    private String mKey = null;
-    private CiResult.CheckType mType;
-
     public void setKeyWord(String keyWord) {
       mKey = keyWord;
     }
@@ -26,7 +23,6 @@ public class LazyAnalyser extends TsAbsAnalyse {
 
         CiResult result = new CiResult();
         result.type = mType;
-
 
         File file = new File(mResultPath);
         if (file.exists()) {

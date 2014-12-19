@@ -1,21 +1,46 @@
 package com.camera360.auto.ci;
 
-import com.camera360.auto.ci.analyser.*;
+import com.camera360.auto.ci.analyser.CiResultSet;
+import com.camera360.auto.ci.analyser.JenkinsAnalyser;
+import com.camera360.auto.ci.analyser.JenkinsResult;
 import com.camera360.auto.ci.excel.ExcelWriteAllModel;
-import com.camera360.auto.ci.excel.ExcelWriteModel;
-import com.camera360.auto.ci.utils.L;
-import com.camera360.auto.ci.utils.TimeUtils;
+import org.apache.commons.cli.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.Locale;
 
 /***
  *
  */
 public class Main {
 
+
+    /**
+     * the options to the command line
+     */
+    private static final Options OPTS = new Options();
+
+    static {
+        OPTS.addOption("t", true, "the report type : this_week all every_week");
+        OPTS.addOption("r", true, "Traverse the directory for source files");
+        OPTS.addOption("o", true, "Sets the output file. Defaults to stdout");
+        OPTS.addOption("p", true, "Set the jenkins root dir");
+        OPTS.addOption(
+                "f",
+                true,
+                "Sets the output format. (plain|xml). Defaults to plain");
+        OPTS.addOption("v", false, "Print product version and exit");
+    }
+
+    /**
+     * Stop instances being created.
+     */
+    private Main() {
+    }
 
     public static void main(String[] args) throws IOException {
 	// write your code here
@@ -29,24 +54,47 @@ public class Main {
     }
 
     private static void doTask(String[] args) {
+
+        // parse the parameters
+        final CommandLineParser clp = new PosixParser();
+        CommandLine line = null;
+        try {
+            line = clp.parse(OPTS, args);
+        } catch (final ParseException e) {
+            e.printStackTrace();
+        }
+
+        assert line != null;
+
         JenkinsAnalyser jenkinsAnalyser = new JenkinsAnalyser();
 
-        System.out.println(args);
-        System.out.println(" args.length = " + args.length);
 
-        if (args != null && args.length > 0) {
-
-            for (String str : args) {
-                
+        JenkinsAnalyser.TaskType taskType = JenkinsAnalyser.TaskType.THIS_WEEK;
+        if (line.hasOption("t")) {
+            final String tValue = line.getOptionValue("t");
+            try {
+                taskType = JenkinsAnalyser.TaskType.valueOf(tValue.toUpperCase(Locale.US));
+            } catch (final IllegalArgumentException e) {
+                System.out.println("unknown task type : '" + tValue);
+                System.exit(1);
             }
-
-            jenkinsAnalyser.setHomePath(args[0]);
-        } else {
-//            jenkinsAnalyser.setHomePath(new File("").getCanonicalPath());
-            String path = new File(jenkinsAnalyser.getClass().getResource("").getPath()).getAbsolutePath().split("!")[0].split("file:")[1];
-            jenkinsAnalyser.setHomePath(new File(path).getParent());
-//            jenkinsAnalyser.setHomePath("/Users/tangsong/Dev/open_source/CI_Reporter/test");
         }
+
+        jenkinsAnalyser.setTaskType(taskType);
+
+        if (line.hasOption("p")) {
+            jenkinsAnalyser.setHomePath(line.getOptionValue("p"));
+        } else {
+            try {
+                String path = new File(jenkinsAnalyser.getClass().getResource("").getPath()).getAbsolutePath().split("!")[0].split("file:")[1];
+                jenkinsAnalyser.setHomePath(new File(path).getParent());
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+                jenkinsAnalyser.setHomePath("/Users/tangsong/Dev/open_source/CI_Reporter/test");
+            }
+        }
+
+        jenkinsAnalyser.init();
 
         LinkedList<JenkinsResult> list = jenkinsAnalyser.analyse();
 

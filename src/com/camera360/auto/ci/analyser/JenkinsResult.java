@@ -7,6 +7,7 @@ import java.util.LinkedList;
  */
 public class JenkinsResult {
     public LinkedList<CiResultSet> result;
+
     public String projectName;
 
     @Override
@@ -15,5 +16,11 @@ public class JenkinsResult {
                 "projectName=" + projectName +
                 "result=" + result +
                 '}';
+    }
+
+    public void analyse() {
+        for (CiResultSet set : result) {
+            set.analyse();
+        }
     }
 }
