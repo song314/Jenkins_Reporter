@@ -1,11 +1,13 @@
 package com.camera360.auto.ci.analyser;
 
 import com.camera360.auto.ci.utils.L;
+import com.camera360.auto.ci.utils.StringUtils;
 import com.camera360.auto.ci.utils.TimeUtils;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -90,6 +92,10 @@ public class JenkinsAnalyser {
                 filter = new DateDir();
         }
         File[] builds = dirBuild.listFiles(filter);
+
+        //过滤build，每天只扫描最后一次成功构建的结果
+
+
         LinkedList<CiResultSet> list = new LinkedList<CiResultSet>();
 
         for (File b : builds) {
@@ -152,18 +158,32 @@ public class JenkinsAnalyser {
         }
     }
 
+    /**
+     * just list one build in each day, which must be built successfully &
+     * the last build in the day
+     */
+    private static class OneBuildInDay extends DateDir {
+
+        private File[] mBuild;
+
+        public OneBuildInDay(File[] allBuild) {
+            mBuild = allBuild;
+            Arrays.sort(mBuild);
+        }
+
+        @Override
+        public boolean accept(File dir, String name) {
+            return super.accept(dir, name);
+        }
+    }
+
     private static class DateDir implements FilenameFilter {
         @Override
         public boolean accept(File dir, String name) {
-            return isNumeric(name);
+            return StringUtils.isNumeric(name);
         }
 
-        //TODO move to utils
-        public boolean isNumeric(String str){
-            Pattern pattern = Pattern.compile("(?:[0-9]+[\\-|\\_]{1})+[0-9]+");
-            Matcher isNum = pattern.matcher(str);
-            return isNum.matches();
-        }
+
     }
 
     private static class ThisWeekDirs extends DateDir {
