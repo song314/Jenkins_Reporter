@@ -47,11 +47,12 @@ public class JenkinsAnalyser {
     private LinkedList<JenkinsResult> mJenkinsResult;
 
     public void setHomePath(String path) {
-        System.out.println("set home path : " + path);
+        L.i("set home path : " + path);
         mHomePath = path;
     }
 
     public void setTaskType(TaskType type) {
+        L.i("set setTaskType : " + type);
         mTaskType = type;
     }
 
@@ -65,7 +66,7 @@ public class JenkinsAnalyser {
         mJenkinsResult = new LinkedList<JenkinsResult>();
 
         for (File job : ciJobs) {
-            L.i("to analyse job " + job.getName());
+            L.i("init job " + job.getName());
             JenkinsResult jenkinsResult = new JenkinsResult();
             jenkinsResult.result = initJobAnalysers(job);
             jenkinsResult.projectName = job.getName();
@@ -74,6 +75,7 @@ public class JenkinsAnalyser {
     }
 
     public LinkedList<JenkinsResult> analyse() {
+        L.i("analyse the ci result....");
         for (JenkinsResult jr : mJenkinsResult) {
             jr.analyse();
         }
@@ -99,8 +101,9 @@ public class JenkinsAnalyser {
         LinkedList<CiResultSet> list = new LinkedList<CiResultSet>();
         for (File b : builds) {
             if (b.isDirectory()) {
-                L.i("    to analyse build " + b.getName());
+//                L.i("    to analyse build " + b.getName());
                 CiResultSet ciResultSet = new CiResultSet();
+                ciResultSet.date = TimeUtils.getData(b.getName(), DATA_FORMAT_JENKINS_BUILD, TimeZone.getDefault());
                 ciResultSet.analyseList = initBuildAnalysers(b);
                 list.add(ciResultSet);
             }
@@ -110,9 +113,6 @@ public class JenkinsAnalyser {
 
     private List<TsAbsAnalyse> initBuildAnalysers(File buildDir) {
         LinkedList<TsAbsAnalyse> list = new LinkedList<TsAbsAnalyse>();
-
-        CiResultSet resultSet = new CiResultSet();
-        resultSet.date = TimeUtils.getData(buildDir.getName(), DATA_FORMAT_JENKINS_BUILD, TimeZone.getDefault());
 
         LazyAnalyser la = new LazyAnalyser();
 
@@ -126,7 +126,7 @@ public class JenkinsAnalyser {
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "changelog.xml");
         la.setCheckType(CiResult.CheckType.Commits);
         la.setKeyWord("commit ");
-        resultSet.resultList.add(la.analyse());
+        list.add(la);
 
         la = new LazyAnalyser();
         la.setResultPath(buildDir.getAbsolutePath() + File.separator + "checkstyle-warnings.xml");
