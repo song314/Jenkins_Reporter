@@ -35,6 +35,7 @@ public class Main {
                 true,
                 "Sets the output format. (plain|xml). Defaults to plain");
         OPTS.addOption("v", false, "Print product version and exit");
+        OPTS.addOption("h", false, "Print the help information");
     }
 
     /**
@@ -44,7 +45,6 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-	// write your code here
 
 //        L.i("is the week : " + TimeUtils.isInThisWeek(System.currentTimeMillis() - 3600 * 24 * 5 * 1000));
 //        L.i("is the week : " + TimeUtils.isInThisWeek(TimeUtils.getTimeStamp("2014-12-03_10-23-02", JenkinsAnalyser.DATA_FORMAT_JENKINS_BUILD)));
@@ -63,6 +63,9 @@ public class Main {
             line = clp.parse(OPTS, args);
         } catch (final ParseException e) {
             e.printStackTrace();
+            //TODO
+            L.i("print the help info ");
+            return;
         }
 
         assert line != null;
@@ -77,8 +80,14 @@ public class Main {
                 taskType = JenkinsAnalyser.TaskType.valueOf(tValue.toUpperCase(Locale.US));
             } catch (final IllegalArgumentException e) {
                 L.i("unknown task type : '" + tValue);
-                System.exit(1);
+                return;
             }
+        }
+
+        if (line.hasOption("h")) {
+            //TODO
+            L.i("print the help info ");
+            return;
         }
 
         jenkinsAnalyser.setTaskType(taskType);
@@ -90,7 +99,7 @@ public class Main {
                 String path = new File(jenkinsAnalyser.getClass().getResource("").getPath()).getAbsolutePath().split("!")[0].split("file:")[1];
                 jenkinsAnalyser.setHomePath(new File(path).getParent());
             } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+                L.e("set the debug path: ");
                 jenkinsAnalyser.setHomePath("/home/ci-android/.jenkins/jobs");
             }
         }

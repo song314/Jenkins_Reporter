@@ -47,12 +47,12 @@ public class JenkinsAnalyser {
     private LinkedList<JenkinsResult> mJenkinsResult;
 
     public void setHomePath(String path) {
-        L.i("set home path : " + path);
+        L.i("  ---- config, set home path : " + path);
         mHomePath = path;
     }
 
     public void setTaskType(TaskType type) {
-        L.i("set setTaskType : " + type);
+        L.i("  ---- config, set setTaskType : " + type);
         mTaskType = type;
     }
 

@@ -12,4 +12,9 @@ public class L {
     public static void printProcess() {
         System.out.print(".");
     }
+
+    public static void e(String s) {
+        System.err.println();
+        System.err.print(s);
+    }
 }
