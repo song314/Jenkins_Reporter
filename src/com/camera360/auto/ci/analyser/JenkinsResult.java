@@ -1,5 +1,7 @@
 package com.camera360.auto.ci.analyser;
 
+import com.camera360.auto.ci.utils.L;
+
 import java.util.LinkedList;
 
 /**
@@ -19,8 +21,10 @@ public class JenkinsResult {
     }
 
     public void analyse() {
+        L.i("   analyse project : " + projectName);
         for (CiResultSet set : result) {
             set.analyse();
+            L.printProcess();
         }
     }
 }

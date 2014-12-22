@@ -5,6 +5,11 @@ package com.camera360.auto.ci.utils;
  */
 public class L {
     public static void i(String msg) {
-        System.out.println(msg);
+        System.out.println();
+        System.out.print(msg);
+    }
+
+    public static void printProcess() {
+        System.out.print(".");
     }
 }

@@ -4,6 +4,7 @@ import com.camera360.auto.ci.analyser.CiResultSet;
 import com.camera360.auto.ci.analyser.JenkinsAnalyser;
 import com.camera360.auto.ci.analyser.JenkinsResult;
 import com.camera360.auto.ci.excel.ExcelWriteAllModel;
+import com.camera360.auto.ci.utils.L;
 import org.apache.commons.cli.*;
 
 import java.io.File;
@@ -75,7 +76,7 @@ public class Main {
             try {
                 taskType = JenkinsAnalyser.TaskType.valueOf(tValue.toUpperCase(Locale.US));
             } catch (final IllegalArgumentException e) {
-                System.out.println("unknown task type : '" + tValue);
+                L.i("unknown task type : '" + tValue);
                 System.exit(1);
             }
         }
@@ -90,7 +91,7 @@ public class Main {
                 jenkinsAnalyser.setHomePath(new File(path).getParent());
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
-                jenkinsAnalyser.setHomePath("/Users/tangsong/Dev/open_source/CI_Reporter/test");
+                jenkinsAnalyser.setHomePath("/home/ci-android/.jenkins/jobs");
             }
         }
 
@@ -100,6 +101,9 @@ public class Main {
 
 //        Collections.sort(list, new MySort());
         for (JenkinsResult item : list) {
+            if (item.result == null || item.result.size() == 0) {
+                continue;
+            }
             Collections.sort(item.result, new CiResultSetSort());
         }
 
@@ -108,6 +112,8 @@ public class Main {
 
         ExcelWriteAllModel excelWriteModel = new ExcelWriteAllModel();
         excelWriteModel.write(list);
+
+        L.i(" all task finish..");
     }
 
     public static class MySort implements Comparator<JenkinsResult> {
